@@ -1,0 +1,11 @@
+---
+applications:
+- name: test-europeana-sitemap
+  memory: 2560M
+  instances: 1
+  host: test-europeana-sitemap
+  domain: de.a9sapp.eu
+  path: target/sitemap-1.0-SNAPSHOT.war
+  buildpack: https://github.com/europeana/java-buildpack.git
+  service:
+    - redis2
