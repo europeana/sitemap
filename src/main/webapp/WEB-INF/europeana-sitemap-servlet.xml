@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+
+       xmlns:util="http://www.springframework.org/schema/util"
+       xmlns:context="http://www.springframework.org/schema/context"
+
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/util
+        http://www.springframework.org/schema/util/spring-util.xsd
+        http://www.springframework.org/schema/context
+        http://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+       ">
+    <util:properties id="sitemapProperties" location="classpath:sitemap.properties"/>
+
+    <bean class="eu.europeana.sitemap.mongo.MongoProvider" id="mongoProvider">
+        <constructor-arg value="#{sitemapProperties['mongo.hosts']}"/>
+        <constructor-arg value="#{sitemapProperties['mongo.port']}"/>
+        <constructor-arg value="#{sitemapProperties['mongo.username']}"/>
+        <constructor-arg value="#{sitemapProperties['mongo.password']}"/>
+        <constructor-arg value="#{sitemapProperties['mongo.database']}"/>
+    </bean>
+    <bean class="eu.europeana.sitemap.swift.SwiftProvider" id="swiftProvider">
+        <constructor-arg value="#{sitemapProperties['swift.authUrl']}"/>
+        <constructor-arg value="#{sitemapProperties['swift.username']}"/>
+        <constructor-arg value="#{sitemapProperties['swift.password']}"/>
+        <constructor-arg value="#{sitemapProperties['swift.containerName']}"/>
+        <constructor-arg value="#{sitemapProperties['swift.regionName']}"/>
+        <constructor-arg value="#{sitemapProperties['swift.tenantName']}"/>
+    </bean>
+
+    <bean id="sitemapService" class="eu.europeana.sitemap.service.MongoSitemapService">
+        <property name="mongoProvider" ref="mongoProvider"/>
+        <property name="swiftProvider" ref="swiftProvider"/>
+    </bean>
+
+    <context:component-scan base-package="eu.europeana.sitemap.web"/>
+
+    <mvc:annotation-driven/>
+</beans>
