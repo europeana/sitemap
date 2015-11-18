@@ -26,4 +26,10 @@ public class SitemapGenerationController {
         service.generate();
         return "OK";
     }
+
+    @RequestMapping(value = "delete", method = RequestMethod.GET)
+    public @ResponseBody String delete() throws SitemapNotReadyException{
+        service.delete();
+        return "OK";
+    }
 }
