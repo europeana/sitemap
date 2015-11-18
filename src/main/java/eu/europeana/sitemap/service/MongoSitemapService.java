@@ -8,8 +8,11 @@ import com.mongodb.DBObject;
 import eu.europeana.sitemap.exceptions.SitemapNotReadyException;
 import eu.europeana.sitemap.swift.SwiftProvider;
 import eu.europeana.sitemap.mongo.MongoProvider;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.jclouds.io.Payload;
 import org.jclouds.io.payloads.StringPayload;
+import org.jclouds.openstack.swift.v1.domain.ObjectList;
+import org.jclouds.openstack.swift.v1.domain.SwiftObject;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -81,7 +84,7 @@ public class MongoSitemapService implements SitemapService {
                             .append(PRIORITY_CLOSING).append(LN).append(URL_CLOSING).append(LN);
                     if (i>0 && (i % 45000 == 0 || !cur.hasNext())) {
                         String indexEntry = new StringBuilder().append(INDEX_ENTRY).append(i - 45000).append(TO).append(i).toString();
-                        master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append("http://www.europeana.eu/portal/"+indexEntry)
+                        master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
                                 .append(LN).append(LOC_CLOSING).append(LN)
                                 .append(SITEMAP_CLOSING).append(LN);
                         slave.append(URLSET_HEADER_CLOSING);
@@ -131,5 +134,19 @@ public class MongoSitemapService implements SitemapService {
 
     public void setSwiftProvider(SwiftProvider swiftProvider) {
         this.swiftProvider = swiftProvider;
+    }
+
+    public void delete(){
+        ObjectList list = swiftProvider.getObjectApi().list();
+        log.info("Files to remove: "+ list.size());
+        int i=0;
+        for(SwiftObject obj:list){
+            swiftProvider.getObjectApi().delete(obj.getName());
+            i++;
+            if (i==100){
+                log.info("Removed 100 files");
+            }
+        }
+        log.info("Removed all files");
     }
 }

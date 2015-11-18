@@ -31,11 +31,11 @@ public class VcapPropertyLoaderListener implements
     private final static String REDISHOST = "vcap.services.redis2.credentials.host";
     private final static String REDISPORT = "vcap.services.redis2.credentials.port";
     private final static String REDISPASSWORD = "vcap.services.redis2.credentials.password";
-    private final static String SWIFT_AUTHENTICATION_URL="vcap.services.swift-test.credentials.authentication_uri";
-    private final static String SWIFT_AUTHENTICATION_AV_ZONE="vcap.services.swift-test.credentials.availability_zone";
-    private final static String SWIFT_AUTHENTICATION_TENANT_NAME="vcap.services.swift-test.credentials.tenant_name";
-    private final static String SWIFT_AUTHENTICATION_USER_NAME="vcap.services.swift-test.credentials.user_name";
-    private final static String SWIFT_AUTHENTICATION_PASSWORD="vcap.services.swift-test.credentials.password";
+    private final static String SWIFT_AUTHENTICATION_URL="vcap.services.swift-sitemap.credentials.authentication_uri";
+    private final static String SWIFT_AUTHENTICATION_AV_ZONE="vcap.services.swift-sitemap.credentials.availability_zone";
+    private final static String SWIFT_AUTHENTICATION_TENANT_NAME="vcap.services.swift-sitemap.credentials.tenant_name";
+    private final static String SWIFT_AUTHENTICATION_USER_NAME="vcap.services.swift-sitemap.credentials.user_name";
+    private final static String SWIFT_AUTHENTICATION_PASSWORD="vcap.services.swift-sitemap.credentials.password";
     private static final String VCAP_APPLICATION = "VCAP_APPLICATION";
 
     private static final String VCAP_SERVICES = "VCAP_SERVICES";
