@@ -3,10 +3,7 @@ package eu.europeana.sitemap.web.context; /**
  */
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.springframework.boot.SpringApplication;
-
 import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
 import org.springframework.boot.json.JsonParser;
@@ -16,7 +13,6 @@ import org.springframework.core.Ordered;
 import org.springframework.core.env.*;
 import org.springframework.util.StringUtils;
 import org.springframework.web.context.support.StandardServletEnvironment;
-
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -77,7 +73,7 @@ public class VcapPropertyLoaderListener implements
                 props.setProperty("swift.username", env.getProperty(SWIFT_AUTHENTICATION_USER_NAME));
                 props.setProperty("swift.regionName", env.getProperty(SWIFT_AUTHENTICATION_AV_ZONE));
                 props.setProperty("swift.tenantName", env.getProperty(SWIFT_AUTHENTICATION_TENANT_NAME));
-                props.setProperty("swift.containerName", "sitemap");
+                props.setProperty("swift.containerName", env.getProperty("sitemap"));
             }
 
 
