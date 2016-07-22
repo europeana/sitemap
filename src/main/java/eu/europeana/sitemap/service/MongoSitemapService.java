@@ -69,6 +69,7 @@ public class MongoSitemapService implements SitemapService {
                 DBObject fields = new BasicDBObject();
                 fields.put("about", 1);
                 fields.put("europeanaCompleteness", 1);
+                fields.put("timestampUpdated",1);
                 DBCursor cur = col.find(query, fields).batchSize(45000);
                 log.info ("Got cursor");
                 log.info("Cursor hasNext:" +cur.hasNext());
@@ -83,14 +84,17 @@ public class MongoSitemapService implements SitemapService {
 
                     DBObject obj = cur.next();
                     String about = obj.get("about").toString();
-                    long date =obj.get("timestampUpdated")!=null? (long)obj.get("timestampUpdated"):0;
+                    Date date =obj.get("timestampUpdated")!=null? (Date)obj.get("timestampUpdated"):new Date(0);
                     String update = DateFormatUtils.format(date, DateFormatUtils.ISO_DATE_FORMAT.getPattern());
                     int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
+                    String lastMod = "";
+                    if(date.getTime() >0){
+                       lastMod = LASTMOD_OPENING+update+LASTMOD_CLOSING+LN;
+                    }
                     slave.append(URL_OPENING).append(LN).append(LOC_OPENING).append(LN).append(PORTAL_URL)
                             .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
                             .append(completeness > 9 ? "1.0" : "0." + completeness)
-                            .append(PRIORITY_CLOSING).append(LN).append(LASTMOD_OPENING).append(update)
-                            .append(LASTMOD_CLOSING).append(LN).append(URL_CLOSING).append(LN);
+                            .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
                     if (i>0 && (i % 45000 == 0 || !cur.hasNext())) {
                         String indexEntry = new StringBuilder().append(INDEX_ENTRY).append(i - 45000).append(TO).append(i).toString();
                         master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
