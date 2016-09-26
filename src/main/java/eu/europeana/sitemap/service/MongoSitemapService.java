@@ -30,6 +30,9 @@ public class MongoSitemapService implements SitemapService {
     @Resource
     private SwiftProvider swiftProvider;
 
+    @Resource
+    private ActiveSiteMapService activeSiteMapService;
+
 
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     private static final String SITEMAP_HEADER =
@@ -44,7 +47,7 @@ public class MongoSitemapService implements SitemapService {
     private static final String LN = "\n";
     private static final String PORTAL_URL = "http://www.europeana.eu/portal/record";
     private static final String HTML = ".html";
-    private static final String INDEX_ENTRY = "europeana-sitemap-hashed.xml?from=";
+    private static final String FROM = "?from=";
     private static final String TO = "&to=";
     private static final String SITEMAP_OPENING = "<sitemap>";
     private static final String SITEMAP_CLOSING = "</sitemap>";
@@ -96,7 +99,7 @@ public class MongoSitemapService implements SitemapService {
                             .append(completeness > 9 ? "1.0" : "0." + completeness)
                             .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
                     if (i>0 && (i % 45000 == 0 || !cur.hasNext())) {
-                        String indexEntry = new StringBuilder().append(INDEX_ENTRY).append(i - 45000).append(TO).append(i).toString();
+                        String indexEntry = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
                         master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
                                 .append(LN).append(LOC_CLOSING).append(LN)
                                 .append(SITEMAP_CLOSING).append(LN);
@@ -151,12 +154,13 @@ public class MongoSitemapService implements SitemapService {
     }
 
     public void delete(){
-        swiftProvider.getObjectApi().delete(MASTER_KEY);
         ObjectList list = swiftProvider.getObjectApi().list();
         log.info("Files to remove: "+ list.size());
         int i=0;
         for(SwiftObject obj:list){
-            swiftProvider.getObjectApi().delete(obj.getName());
+            if(obj.getUri().toString().contains(activeSiteMapService.getInactiveFile())){
+                swiftProvider.getObjectApi().delete(obj.getName());
+            }
             i++;
             if (i==100){
                 log.info("Removed 100 files");
@@ -164,4 +168,14 @@ public class MongoSitemapService implements SitemapService {
         }
         log.info("Removed all files");
     }
+
+    @Override
+    public void update() {
+        delete();//First clear all old records from the inactive file
+        generate();//Update records from the inactive file
+        activeSiteMapService.switchFile();//Switch to updated cached files
+
+    }
+
+
 }
