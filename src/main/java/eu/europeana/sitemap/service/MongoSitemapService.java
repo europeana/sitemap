@@ -24,6 +24,7 @@ import java.util.logging.Logger;
  */
 public class MongoSitemapService implements SitemapService {
 
+
     @Resource
     private MongoProvider mongoProvider;
 
@@ -60,62 +61,63 @@ public class MongoSitemapService implements SitemapService {
     private static String status = "initial";
     private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
     private static final int WEEKINSECONDS = 1000 * 60 * 60 * 24 * 7;
-    private static final Logger log= Logger.getLogger(MongoSitemapService.class.getName());
+    private static final Logger log = Logger.getLogger(MongoSitemapService.class.getName());
+
     public void generate() throws SitemapNotReadyException {
         log.info("Status :" + status);
         if (!(status.equalsIgnoreCase("working"))) {
-            if (!checkExists()) {
-                status = "working";
-                DBCollection col = mongoProvider.getCollection();
-                DBObject query = new BasicDBObject();
 
-                DBObject fields = new BasicDBObject();
-                fields.put("about", 1);
-                fields.put("europeanaCompleteness", 1);
-                fields.put("timestampUpdated",1);
+            status = "working";
+            DBCollection col = mongoProvider.getCollection();
+            DBObject query = new BasicDBObject();
+
+            DBObject fields = new BasicDBObject();
+            fields.put("about", 1);
+            fields.put("europeanaCompleteness", 1);
+            fields.put("timestampUpdated", 1);
                 DBCursor cur = col.find(query, fields).batchSize(45000);
-                log.info ("Got cursor");
-                log.info("Cursor hasNext:" +cur.hasNext());
-                int i = 0;
-                StringBuilder master = new StringBuilder();
-                master.append(XML_HEADER).append(LN);
-                master.append(SITEMAP_HEADER).append(LN);
+            log.info("Got cursor");
+            log.info("Cursor hasNext:" + cur.hasNext());
+            int i = 0;
+            StringBuilder master = new StringBuilder();
+            master.append(XML_HEADER).append(LN);
+            master.append(SITEMAP_HEADER).append(LN);
 
-                StringBuilder slave = initializeSlaveGeneration();
-                long startDate = new Date().getTime();
-                while (cur.hasNext()) {
+            StringBuilder slave = initializeSlaveGeneration();
+            long startDate = new Date().getTime();
+            while (cur.hasNext()) {
 
-                    DBObject obj = cur.next();
-                    String about = obj.get("about").toString();
-                    Date date =obj.get("timestampUpdated")!=null? (Date)obj.get("timestampUpdated"):new Date(0);
-                    String update = DateFormatUtils.format(date, DateFormatUtils.ISO_DATE_FORMAT.getPattern());
-                    int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
-                    String lastMod = "";
-                    if(date.getTime() >0){
-                       lastMod = LASTMOD_OPENING+update+LASTMOD_CLOSING+LN;
-                    }
-                    slave.append(URL_OPENING).append(LN).append(LOC_OPENING).append(LN).append(PORTAL_URL)
-                            .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
-                            .append(completeness > 9 ? "1.0" : "0." + completeness)
-                            .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
+                DBObject obj = cur.next();
+                String about = obj.get("about").toString();
+                Date date = obj.get("timestampUpdated") != null ? (Date) obj.get("timestampUpdated") : new Date(0);
+                String update = DateFormatUtils.format(date, DateFormatUtils.ISO_DATE_FORMAT.getPattern());
+                int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
+                String lastMod = "";
+                if (date.getTime() > 0) {
+                    lastMod = LASTMOD_OPENING + update + LASTMOD_CLOSING + LN;
+                }
+                slave.append(URL_OPENING).append(LN).append(LOC_OPENING).append(LN).append(PORTAL_URL)
+                        .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
+                        .append(completeness > 9 ? "1.0" : "0." + completeness)
+                        .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
                     if (i>0 && (i % 45000 == 0 || !cur.hasNext())) {
                         String indexEntry = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
-                        master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
-                                .append(LN).append(LOC_CLOSING).append(LN)
-                                .append(SITEMAP_CLOSING).append(LN);
-                        slave.append(URLSET_HEADER_CLOSING);
-                        saveToSwift(indexEntry, slave.toString());
-                        slave = initializeSlaveGeneration();
-                        long now = new Date().getTime();
-                        log.info("Added "+i+" sitemap entries in " + (now -startDate) +" ms");
-                        startDate = now;
-                    }
-                    i++;
+                    master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
+                            .append(LN).append(LOC_CLOSING).append(LN)
+                            .append(SITEMAP_CLOSING).append(LN);
+                    slave.append(URLSET_HEADER_CLOSING);
+                    saveToSwift(indexEntry, slave.toString());
+                    slave = initializeSlaveGeneration();
+                    long now = new Date().getTime();
+                    log.info("Added " + i + " sitemap entries in " + (now - startDate) + " ms");
+                    startDate = now;
                 }
-                master.append(SITEMAP_HEADER_CLOSING);
-                saveToSwift(MASTER_KEY, master.toString());
-                status = "done";
+                i++;
             }
+            master.append(SITEMAP_HEADER_CLOSING);
+            saveToSwift(MASTER_KEY, master.toString());
+            status = "done";
+
         } else {
             throw new SitemapNotReadyException();
         }
@@ -123,8 +125,8 @@ public class MongoSitemapService implements SitemapService {
 
     private boolean checkExists() {
         SwiftObject exists = swiftProvider.getObjectApi().getWithoutBody(MASTER_KEY);
-        log.info("Exists: "+ (exists!=null));
-        return exists!=null;
+        log.info("Exists: " + (exists != null));
+        return exists != null;
     }
 
     private StringBuilder initializeSlaveGeneration() {
@@ -132,9 +134,9 @@ public class MongoSitemapService implements SitemapService {
     }
 
 
-    private void saveToSwift(String key, String value){
+    private void saveToSwift(String key, String value) {
         Payload payload = new StringPayload(value);
-        swiftProvider.getObjectApi().put(key,payload);
+        swiftProvider.getObjectApi().put(key, payload);
     }
 
     public MongoProvider getMongoProvider() {
@@ -153,16 +155,16 @@ public class MongoSitemapService implements SitemapService {
         this.swiftProvider = swiftProvider;
     }
 
-    public void delete(){
+    public void delete() {
         ObjectList list = swiftProvider.getObjectApi().list();
-        log.info("Files to remove: "+ list.size());
-        int i=0;
-        for(SwiftObject obj:list){
-            if(obj.getUri().toString().contains(activeSiteMapService.getInactiveFile())){
+        log.info("Files to remove: " + list.size());
+        int i = 0;
+        for (SwiftObject obj : list) {
+            if (obj.getName().toString().contains(activeSiteMapService.getInactiveFile())) {
                 swiftProvider.getObjectApi().delete(obj.getName());
             }
             i++;
-            if (i==100){
+            if (i == 100) {
                 log.info("Removed 100 files");
             }
         }
