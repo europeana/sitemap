@@ -52,9 +52,9 @@ public class ActiveSiteMapService {
     public String getInactiveFile() {
         String result;
         if (getActiveFile().equals(EUROPEANA_SITEMAP_HASHED_GREEN)) {
-            result = EUROPEANA_SITEMAP_HASHED_GREEN;
-        } else {
             result = EUROPEANA_SITEMAP_HASHED_BLUE;
+        } else {
+            result = EUROPEANA_SITEMAP_HASHED_GREEN;
         }
         return result;
 
