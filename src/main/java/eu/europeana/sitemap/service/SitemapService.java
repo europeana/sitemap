@@ -6,4 +6,5 @@ package eu.europeana.sitemap.service;
 public interface SitemapService {
     void generate();
     void delete();
+    void update();
 }
