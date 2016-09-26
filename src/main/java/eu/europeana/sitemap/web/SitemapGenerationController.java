@@ -32,4 +32,10 @@ public class SitemapGenerationController {
         service.delete();
         return "OK";
     }
+
+    @RequestMapping(value = "update", method = RequestMethod.GET)
+    public @ResponseBody String update() throws SitemapNotReadyException{
+        service.update();
+        return "OK";
+    }
 }

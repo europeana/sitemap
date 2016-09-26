@@ -37,6 +37,10 @@
         <property name="swiftProvider" ref="swiftProvider"/>
     </bean>
 
+    <bean id="activeSiteMapService" class="eu.europeana.sitemap.service.ActiveSiteMapService">
+        <property name="swiftProvider" ref="swiftProvider"/>
+    </bean>
+
     <context:component-scan base-package="eu.europeana.sitemap.web"/>
 
     <mvc:annotation-driven/>
