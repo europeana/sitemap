@@ -107,10 +107,11 @@ public class MongoSitemapService implements SitemapService {
                             .append(LN).append(LOC_CLOSING).append(LN)
                             .append(SITEMAP_CLOSING).append(LN);
                     slave.append(URLSET_HEADER_CLOSING);
-                    saveToSwift(activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i, slave.toString());
+                    String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
+                    saveToSwift(fileName, slave.toString());
                     slave = initializeSlaveGeneration();
                     long now = new Date().getTime();
-                    log.info("Added " + i + " sitemap entries in " + (now - startDate) + " ms");
+                    log.info("Added " + i + " sitemap entries in " + (now - startDate) + " ms("+fileName+")");
                     startDate = now;
                 }
                 i++;
@@ -118,7 +119,7 @@ public class MongoSitemapService implements SitemapService {
             master.append(SITEMAP_HEADER_CLOSING);
             saveToSwift(MASTER_KEY, master.toString());
             status = "done";
-
+            log.info("Generation complete");
         } else {
             throw new SitemapNotReadyException();
         }
@@ -160,8 +161,10 @@ public class MongoSitemapService implements SitemapService {
         ObjectList list = swiftProvider.getObjectApi().list();
         log.info("Files to remove: " + list.size());
         int i = 0;
+        String inactiveFilename = activeSiteMapService.getInactiveFile();
+        log.info("Deleting all old files with the name "+ inactiveFilename);
         for (SwiftObject obj : list) {
-            if (obj.getName().toString().contains(activeSiteMapService.getInactiveFile())) {
+            if (obj.getName().contains(inactiveFilename)) {
                 swiftProvider.getObjectApi().delete(obj.getName());
             }
             i++;

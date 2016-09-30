@@ -62,8 +62,10 @@ public class ActiveSiteMapService {
 
     public void switchFile() {
         if (getActiveFile().equals(EUROPEANA_SITEMAP_HASHED_GREEN)) {
+            log.info("Switching to "+ EUROPEANA_SITEMAP_HASHED_BLUE);
             saveToSwift(EUROPEANA_SITEMAP_HASHED_BLUE);
         } else {
+            log.info("Switching to "+ EUROPEANA_SITEMAP_HASHED_GREEN);
             saveToSwift(EUROPEANA_SITEMAP_HASHED_GREEN);
         }
     }
@@ -76,8 +78,7 @@ public class ActiveSiteMapService {
      */
     private String saveToSwift(String value) {
         Payload payload = new StringPayload(value);
-        String result = swiftProvider.getObjectApi().put(EUROPEANA_ACTIVE_SITEMAP_CACHE_FILE, payload);
-        return result;
+        return swiftProvider.getObjectApi().put(EUROPEANA_ACTIVE_SITEMAP_CACHE_FILE, payload);
     }
 
 
