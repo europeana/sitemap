@@ -21,18 +21,6 @@ public class SitemapGenerationController {
     @Resource
     private SitemapService service;
 
-    @RequestMapping(value = "generate", method = RequestMethod.GET)
-    public @ResponseBody String generate() throws SitemapNotReadyException{
-        service.generate();
-        return "OK";
-    }
-
-    @RequestMapping(value = "delete", method = RequestMethod.GET)
-    public @ResponseBody String delete() throws SitemapNotReadyException{
-        service.delete();
-        return "OK";
-    }
-
     @RequestMapping(value = "update", method = RequestMethod.GET)
     public @ResponseBody String update() throws SitemapNotReadyException{
         service.update();
