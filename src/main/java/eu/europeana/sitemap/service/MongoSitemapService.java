@@ -84,7 +84,7 @@ public class MongoSitemapService implements SitemapService {
 
                 DBObject obj = cur.next();
                 String about = obj.get("about").toString();
-                Date date = obj.get("timest ampUpdated") != null ? (Date) obj.get("timestampUpdated") : new Date(0);
+                Date date = obj.get("timestampUpdated") != null ? (Date) obj.get("timestampUpdated") : new Date(0);
                 String update = DateFormatUtils.format(date, DateFormatUtils.ISO_DATE_FORMAT.getPattern());
                 int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
                 String lastMod = "";
