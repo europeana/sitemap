@@ -25,22 +25,11 @@ import java.util.logging.Logger;
 public class MongoSitemapService implements SitemapService {
 
 
-    @Resource
-    private MongoProvider mongoProvider;
-
-    @Resource
-    private SwiftProvider swiftProvider;
-
-    @Resource
-    private ActiveSiteMapService activeSiteMapService;
-
-
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     private static final String SITEMAP_HEADER =
             "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
     private static final String URLSET_HEADER =
             "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\" xmlns:geo=\"http://www.google.com/geo/schemas/sitemap/1.0\">";
-
     private static final String URL_OPENING = "<url>";
     private static final String URL_CLOSING = "</url>";
     private static final String LOC_OPENING = "<loc>";
@@ -58,10 +47,16 @@ public class MongoSitemapService implements SitemapService {
     private static final String PRIORITY_CLOSING = "</priority>";
     private static final String LASTMOD_OPENING = "<lastmod>";
     private static final String LASTMOD_CLOSING = "</lastmod>";
-    private static String status = "initial";
     private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
     private static final int WEEKINSECONDS = 1000 * 60 * 60 * 24 * 7;
     private static final Logger log = Logger.getLogger(MongoSitemapService.class.getName());
+    private static String status = "initial";
+    @Resource
+    private MongoProvider mongoProvider;
+    @Resource
+    private SwiftProvider swiftProvider;
+    @Resource
+    private ActiveSiteMapService activeSiteMapService;
 
     public void generate() throws SitemapNotReadyException {
         log.info("Status :" + status);
@@ -75,7 +70,7 @@ public class MongoSitemapService implements SitemapService {
             fields.put("about", 1);
             fields.put("europeanaCompleteness", 1);
             fields.put("timestampUpdated", 1);
-                DBCursor cur = col.find(query, fields).batchSize(45000);
+            DBCursor cur = col.find(query, fields).batchSize(45000);
             log.info("Got cursor");
             log.info("Cursor hasNext:" + cur.hasNext());
             int i = 0;
@@ -89,7 +84,7 @@ public class MongoSitemapService implements SitemapService {
 
                 DBObject obj = cur.next();
                 String about = obj.get("about").toString();
-                Date date = obj.get("timestampUpdated") != null ? (Date) obj.get("timestampUpdated") : new Date(0);
+                Date date = obj.get("timest ampUpdated") != null ? (Date) obj.get("timestampUpdated") : new Date(0);
                 String update = DateFormatUtils.format(date, DateFormatUtils.ISO_DATE_FORMAT.getPattern());
                 int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
                 String lastMod = "";
@@ -100,8 +95,8 @@ public class MongoSitemapService implements SitemapService {
                         .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
                         .append(completeness > 9 ? "1.0" : "0." + completeness)
                         .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
-                    if (i>0 && (i % 45000 == 0 || !cur.hasNext())) {
-                        String indexEntry = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
+                if (i > 0 && (i % 45000 == 0 || !cur.hasNext())) {
+                    String indexEntry = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
                     master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
                             .append(LN).append(LOC_CLOSING).append(LN)
                             .append(SITEMAP_CLOSING).append(LN);
@@ -136,7 +131,26 @@ public class MongoSitemapService implements SitemapService {
 
     private void saveToSwift(String key, String value) {
         Payload payload = new StringPayload(value);
-        swiftProvider.getObjectApi().put(key, payload);
+        String ETag = swiftProvider.getObjectApi().put(key, payload);
+        //Verify Data
+        int nSaveAttempts = 1;
+        boolean siteMapCacheFileExists = (swiftProvider.getObjectApi().getWithoutBody(key) != null);
+        if (ETag == null || !siteMapCacheFileExists) {
+            int MAX_ATTEMPTS = 3;
+            while (nSaveAttempts < MAX_ATTEMPTS && (ETag == null) || !siteMapCacheFileExists) {
+                log.info("Failed to save to swift(ETag=" + key + ",siteMapCacheFileExists=" + siteMapCacheFileExists + ")");
+                try {
+                    long timeout = nSaveAttempts * 1000l;
+                    log.info("Waiting " + nSaveAttempts + "seconds to try again");
+                    wait(timeout);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                log.info("Retrying to save the file");
+                ETag = swiftProvider.getObjectApi().put(key, payload);
+                nSaveAttempts++;
+            }
+        }
     }
 
     public MongoProvider getMongoProvider() {
