@@ -39,7 +39,6 @@ public class MongoSitemapService implements SitemapService {
             "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
     private static final String URLSET_HEADER =
             "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\" xmlns:geo=\"http://www.google.com/geo/schemas/sitemap/1.0\">";
-
     private static final String URL_OPENING = "<url>";
     private static final String URL_CLOSING = "</url>";
     private static final String LOC_OPENING = "<loc>";
@@ -57,12 +56,12 @@ public class MongoSitemapService implements SitemapService {
     private static final String PRIORITY_CLOSING = "</priority>";
     private static final String LASTMOD_OPENING = "<lastmod>";
     private static final String LASTMOD_CLOSING = "</lastmod>";
-    private static String status = "initial";
     private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
     private static final String SLAVE_KEY = "europeana-sitemap-hashed.xml";
     private static final int WEEKINSECONDS = 1000 * 60 * 60 * 24 * 7;
     private static final Logger log = Logger.getLogger(MongoSitemapService.class.getName());
     public static final int NUMBER_OF_ELEMENTS = 45000;
+    private static String status = "initial";
 
     public void generate() throws SitemapNotReadyException {
         log.info("Status :" + status);
@@ -138,7 +137,26 @@ public class MongoSitemapService implements SitemapService {
 
     private void saveToSwift(String key, String value) {
         Payload payload = new StringPayload(value);
-        swiftProvider.getObjectApi().put(key, payload);
+        String ETag = swiftProvider.getObjectApi().put(key, payload);
+        //Verify Data
+        int nSaveAttempts = 1;
+        boolean siteMapCacheFileExists = (swiftProvider.getObjectApi().getWithoutBody(key) != null);
+        if (ETag == null || !siteMapCacheFileExists) {
+            int MAX_ATTEMPTS = 3;
+            while (nSaveAttempts < MAX_ATTEMPTS && (ETag == null) || !siteMapCacheFileExists) {
+                log.info("Failed to save to swift(ETag=" + key + ",siteMapCacheFileExists=" + siteMapCacheFileExists + ")");
+                try {
+                    long timeout = nSaveAttempts * 1000l;
+                    log.info("Waiting " + nSaveAttempts + "seconds to try again");
+                    wait(timeout);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                log.info("Retrying to save the file");
+                ETag = swiftProvider.getObjectApi().put(key, payload);
+                nSaveAttempts++;
+            }
+        }
     }
 
     public MongoProvider getMongoProvider() {
