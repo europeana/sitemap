@@ -24,6 +24,15 @@ import java.util.logging.Logger;
  */
 public class MongoSitemapService implements SitemapService {
 
+    @Resource
+    private MongoProvider mongoProvider;
+
+    @Resource
+    private SwiftProvider swiftProvider;
+
+    @Resource
+    private ActiveSiteMapService activeSiteMapService;
+
 
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     private static final String SITEMAP_HEADER =
@@ -48,15 +57,11 @@ public class MongoSitemapService implements SitemapService {
     private static final String LASTMOD_OPENING = "<lastmod>";
     private static final String LASTMOD_CLOSING = "</lastmod>";
     private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
+    private static final String SLAVE_KEY = "europeana-sitemap-hashed.xml";
     private static final int WEEKINSECONDS = 1000 * 60 * 60 * 24 * 7;
     private static final Logger log = Logger.getLogger(MongoSitemapService.class.getName());
+    public static final int NUMBER_OF_ELEMENTS = 45000;
     private static String status = "initial";
-    @Resource
-    private MongoProvider mongoProvider;
-    @Resource
-    private SwiftProvider swiftProvider;
-    @Resource
-    private ActiveSiteMapService activeSiteMapService;
 
     public void generate() throws SitemapNotReadyException {
         log.info("Status :" + status);
@@ -70,7 +75,7 @@ public class MongoSitemapService implements SitemapService {
             fields.put("about", 1);
             fields.put("europeanaCompleteness", 1);
             fields.put("timestampUpdated", 1);
-            DBCursor cur = col.find(query, fields).batchSize(45000);
+            DBCursor cur = col.find(query, fields).batchSize(NUMBER_OF_ELEMENTS);
             log.info("Got cursor");
             log.info("Cursor hasNext:" + cur.hasNext());
             int i = 0;
@@ -96,15 +101,16 @@ public class MongoSitemapService implements SitemapService {
                         .append(completeness > 9 ? "1.0" : "0." + completeness)
                         .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
                 if (i > 0 && (i % 45000 == 0 || !cur.hasNext())) {
-                    String indexEntry = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
+                    String indexEntry = SLAVE_KEY + FROM + (i - 45000) + TO + i;
                     master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
                             .append(LN).append(LOC_CLOSING).append(LN)
                             .append(SITEMAP_CLOSING).append(LN);
                     slave.append(URLSET_HEADER_CLOSING);
-                    saveToSwift(indexEntry, slave.toString());
+                    String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
+                    saveToSwift(fileName, slave.toString());
                     slave = initializeSlaveGeneration();
                     long now = new Date().getTime();
-                    log.info("Added " + i + " sitemap entries in " + (now - startDate) + " ms");
+                    log.info("Added " + i + " sitemap entries in " + (now - startDate) + " ms("+fileName+")");
                     startDate = now;
                 }
                 i++;
@@ -112,7 +118,7 @@ public class MongoSitemapService implements SitemapService {
             master.append(SITEMAP_HEADER_CLOSING);
             saveToSwift(MASTER_KEY, master.toString());
             status = "done";
-
+            log.info("Generation complete");
         } else {
             throw new SitemapNotReadyException();
         }
@@ -173,8 +179,10 @@ public class MongoSitemapService implements SitemapService {
         ObjectList list = swiftProvider.getObjectApi().list();
         log.info("Files to remove: " + list.size());
         int i = 0;
+        String inactiveFilename = activeSiteMapService.getInactiveFile();
+        log.info("Deleting all old files with the name "+ inactiveFilename);
         for (SwiftObject obj : list) {
-            if (obj.getName().toString().contains(activeSiteMapService.getInactiveFile())) {
+            if (obj.getName().contains(inactiveFilename)) {
                 swiftProvider.getObjectApi().delete(obj.getName());
             }
             i++;
