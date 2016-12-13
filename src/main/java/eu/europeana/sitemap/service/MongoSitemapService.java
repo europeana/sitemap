@@ -50,7 +50,6 @@ public class MongoSitemapService implements SitemapService {
     private static final String LASTMOD_CLOSING = "</lastmod>";
     private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
     private static final String SLAVE_KEY = "europeana-sitemap-hashed.xml";
-    private static final int WEEKINSECONDS = 1000 * 60 * 60 * 24 * 7;
     private static final Logger log = Logger.getLogger(MongoSitemapService.class.getName());
     private static String status = "initial";
     public static final int NUMBER_OF_ELEMENTS = 45000;
@@ -95,13 +94,13 @@ public class MongoSitemapService implements SitemapService {
                         .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
                         .append(completeness > 9 ? "1.0" : "0." + completeness)
                         .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
-                if (i > 0 && (i % 45000 == 0 || !cur.hasNext())) {
-                    String indexEntry = activeSiteMapService.getInactiveFile() + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
+                if (i > 0 && (i % NUMBER_OF_ELEMENTS == 0 || !cur.hasNext())) {
+                    String indexEntry = SLAVE_KEY + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
                     master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
                             .append(LN).append(LOC_CLOSING).append(LN)
                             .append(SITEMAP_CLOSING).append(LN);
                     slave.append(URLSET_HEADER_CLOSING);
-                    String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
+                    String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
                     saveToSwift(fileName, slave.toString());
                     slave = initializeSlaveGeneration();
                     long now = new Date().getTime();
