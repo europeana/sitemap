@@ -14,6 +14,7 @@ import org.jclouds.io.Payload;
 import org.jclouds.io.payloads.StringPayload;
 import org.jclouds.openstack.swift.v1.domain.ObjectList;
 import org.jclouds.openstack.swift.v1.domain.SwiftObject;
+import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.Date;
@@ -23,15 +24,6 @@ import java.util.logging.Logger;
  * Created by ymamakis on 11/16/15.
  */
 public class MongoSitemapService implements SitemapService {
-
-    @Resource
-    private MongoProvider mongoProvider;
-
-    @Resource
-    private SwiftProvider swiftProvider;
-
-    @Resource
-    private ActiveSiteMapService activeSiteMapService;
 
 
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -58,16 +50,18 @@ public class MongoSitemapService implements SitemapService {
     private static final String LASTMOD_CLOSING = "</lastmod>";
     private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
     private static final String SLAVE_KEY = "europeana-sitemap-hashed.xml";
-    private static final int WEEKINSECONDS = 1000 * 60 * 60 * 24 * 7;
     private static final Logger log = Logger.getLogger(MongoSitemapService.class.getName());
-    public static final int NUMBER_OF_ELEMENTS = 45000;
     private static String status = "initial";
+    public static final int NUMBER_OF_ELEMENTS = 45000;
+
+    @Resource
+    private MongoProvider mongoProvider;
+    @Resource
+    private SwiftProvider swiftProvider;
+    @Resource
+    private ActiveSiteMapService activeSiteMapService;
 
     public void generate() throws SitemapNotReadyException {
-        log.info("Status :" + status);
-        if (!(status.equalsIgnoreCase("working"))) {
-
-            status = "working";
             DBCollection col = mongoProvider.getCollection();
             DBObject query = new BasicDBObject();
 
@@ -100,13 +94,13 @@ public class MongoSitemapService implements SitemapService {
                         .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
                         .append(completeness > 9 ? "1.0" : "0." + completeness)
                         .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
-                if (i > 0 && (i % 45000 == 0 || !cur.hasNext())) {
-                    String indexEntry = SLAVE_KEY + FROM + (i - 45000) + TO + i;
+                if (i > 0 && (i % NUMBER_OF_ELEMENTS == 0 || !cur.hasNext())) {
+                    String indexEntry = SLAVE_KEY + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
                     master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
                             .append(LN).append(LOC_CLOSING).append(LN)
                             .append(SITEMAP_CLOSING).append(LN);
                     slave.append(URLSET_HEADER_CLOSING);
-                    String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - 45000) + TO + i;
+                    String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
                     saveToSwift(fileName, slave.toString());
                     slave = initializeSlaveGeneration();
                     long now = new Date().getTime();
@@ -117,11 +111,7 @@ public class MongoSitemapService implements SitemapService {
             }
             master.append(SITEMAP_HEADER_CLOSING);
             saveToSwift(MASTER_KEY, master.toString());
-            status = "done";
-            log.info("Generation complete");
-        } else {
-            throw new SitemapNotReadyException();
-        }
+        log.info("Generation complete");
     }
 
     private boolean checkExists() {
@@ -140,23 +130,28 @@ public class MongoSitemapService implements SitemapService {
         String ETag = swiftProvider.getObjectApi().put(key, payload);
         //Verify Data
         int nSaveAttempts = 1;
-        boolean siteMapCacheFileExists = (swiftProvider.getObjectApi().getWithoutBody(key) != null);
-        if (ETag == null || !siteMapCacheFileExists) {
+        boolean siteMapCacheFileExists = checkIfFileExists(key);
+        if (StringUtils.isEmpty(ETag) || !siteMapCacheFileExists) {
             int MAX_ATTEMPTS = 3;
-            while (nSaveAttempts < MAX_ATTEMPTS && (ETag == null) || !siteMapCacheFileExists) {
-                log.info("Failed to save to swift(ETag=" + key + ",siteMapCacheFileExists=" + siteMapCacheFileExists + ")");
+            while (nSaveAttempts < MAX_ATTEMPTS && (StringUtils.isEmpty(ETag) || !siteMapCacheFileExists)) {
+                log.info("Failed to save to swift(Filename=" + key + ",siteMapCacheFileExists=" + siteMapCacheFileExists + ")");
                 try {
-                    long timeout = nSaveAttempts * 1000l;
-                    log.info("Waiting " + nSaveAttempts + "seconds to try again");
-                    wait(timeout);
+                    long timeout = nSaveAttempts * 5000l;
+                    log.info("Waiting " + timeout / 1000 + "seconds to try again");
+                    Thread.sleep(timeout);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
                 log.info("Retrying to save the file");
                 ETag = swiftProvider.getObjectApi().put(key, payload);
+                siteMapCacheFileExists = checkIfFileExists(key);
                 nSaveAttempts++;
             }
         }
+    }
+
+    private boolean checkIfFileExists(String key) {
+        return swiftProvider.getObjectApi().getWithoutBody(key) != null;
     }
 
     public MongoProvider getMongoProvider() {
@@ -180,12 +175,12 @@ public class MongoSitemapService implements SitemapService {
         log.info("Files to remove: " + list.size());
         int i = 0;
         String inactiveFilename = activeSiteMapService.getInactiveFile();
-        log.info("Deleting all old files with the name "+ inactiveFilename);
+        log.info("Deleting all old files with the name " + inactiveFilename);
         for (SwiftObject obj : list) {
             if (obj.getName().contains(inactiveFilename)) {
                 swiftProvider.getObjectApi().delete(obj.getName());
+                i++;
             }
-            i++;
             if (i == 100) {
                 log.info("Removed 100 files");
             }
@@ -195,11 +190,16 @@ public class MongoSitemapService implements SitemapService {
 
     @Override
     public void update() {
-        delete();//First clear all old records from the inactive file
-        generate();//Update records from the inactive file
-        activeSiteMapService.switchFile();//Switch to updated cached files
+        log.info("Status :" + status);
+        if (!(status.equalsIgnoreCase("working"))) {
+            status = "working";
+            delete();//First clear all old records from the inactive file
+            generate();//Update records from the inactive file
+            activeSiteMapService.switchFile();//Switch to updated cached files
+            status = "done";
+        } else {
+            throw new SitemapNotReadyException();
+        }
 
     }
-
-
 }
