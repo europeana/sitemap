@@ -23,22 +23,21 @@
         <constructor-arg value="#{sitemapProperties['mongo.password']}"/>
         <constructor-arg value="#{sitemapProperties['mongo.database']}"/>
     </bean>
-    <bean class="eu.europeana.sitemap.swift.SwiftProvider" id="swiftProvider">
-        <constructor-arg value="#{sitemapProperties['swift.authUrl']}"/>
-        <constructor-arg value="#{sitemapProperties['swift.username']}"/>
-        <constructor-arg value="#{sitemapProperties['swift.password']}"/>
-        <constructor-arg value="#{sitemapProperties['swift.containerName']}"/>
-        <constructor-arg value="#{sitemapProperties['swift.regionName']}"/>
-        <constructor-arg value="#{sitemapProperties['swift.tenantName']}"/>
+
+    <bean class="eu.europeana.features.S3ObjectStorageClient" id="objectStorageProvider">
+        <constructor-arg value="#{sitemapProperties['s3.key']}"/>
+        <constructor-arg value="#{sitemapProperties['s3.secret']}"/>
+        <constructor-arg value="#{sitemapProperties['s3.region']}"/>
+        <constructor-arg value="#{sitemapProperties['s3.bucket']}"/>
     </bean>
 
     <bean id="sitemapService" class="eu.europeana.sitemap.service.MongoSitemapService">
         <property name="mongoProvider" ref="mongoProvider"/>
-        <property name="swiftProvider" ref="swiftProvider"/>
+        <property name="objectStorageProvider" ref="objectStorageProvider"/>
     </bean>
 
     <bean id="activeSiteMapService" class="eu.europeana.sitemap.service.ActiveSiteMapService">
-        <property name="swiftProvider" ref="swiftProvider"/>
+        <property name="objectStorageProvider" ref="objectStorageProvider"/>
     </bean>
 
     <context:component-scan base-package="eu.europeana.sitemap.web"/>
