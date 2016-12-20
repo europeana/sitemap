@@ -1,6 +1,7 @@
 package eu.europeana.sitemap.service;
 
-import eu.europeana.sitemap.swift.SwiftProvider;
+import eu.europeana.domain.StorageObject;
+import eu.europeana.features.ObjectStorageClient;
 import org.apache.commons.io.IOUtils;
 import org.jclouds.io.Payload;
 import org.jclouds.io.payloads.StringPayload;
@@ -10,6 +11,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -21,22 +23,24 @@ public class ActiveSiteMapService {
 
     public static final String EUROPEANA_SITEMAP_HASHED_GREEN = "europeana-sitemap-hashed-green.xml";
     public static final String EUROPEANA_SITEMAP_HASHED_BLUE = "europeana-sitemap-hashed-blue.xml";
-    public static final String EUROPEANA_ACTIVE_SITEMAP_CACHE_FILE = "europeana-sitemap-active-xml-file.txt";
+    public static final String EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE = "europeana-sitemap-active-xml-file.txt";
     @Resource
-    private SwiftProvider swiftProvider;
+    private ObjectStorageClient objectStorageProvider;
 
 
     public String getActiveFile() {
         String result = "";
-        String activeSiteMapFile = EUROPEANA_ACTIVE_SITEMAP_CACHE_FILE;
-        if (swiftProvider.getObjectApi().getWithoutBody(activeSiteMapFile) == null) {
+        String activeSiteMapFile = EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE;
+        Optional<StorageObject> withoutBody = objectStorageProvider.getWithoutBody(activeSiteMapFile);
+        if (!withoutBody.isPresent()) {
             //In case that the active indication file does not exist, so we create one
-            saveToSwift(EUROPEANA_SITEMAP_HASHED_GREEN);
+            saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
             return EUROPEANA_SITEMAP_HASHED_GREEN;
         } else {
             try {
                 StringWriter writer = new StringWriter();
-                InputStream in = swiftProvider.getObjectApi().get(activeSiteMapFile).getPayload().openStream();
+                Optional<StorageObject> storageObject = objectStorageProvider.get(activeSiteMapFile);
+                InputStream in = storageObject.get().getPayload().openStream();
                 IOUtils.copy(in, writer);
                 result = writer.toString();
                 in.close();
@@ -62,11 +66,11 @@ public class ActiveSiteMapService {
 
     public void switchFile() {
         if (getActiveFile().equals(EUROPEANA_SITEMAP_HASHED_GREEN)) {
-            log.info("Switching to "+ EUROPEANA_SITEMAP_HASHED_BLUE);
-            saveToSwift(EUROPEANA_SITEMAP_HASHED_BLUE);
+            log.info("Switching to " + EUROPEANA_SITEMAP_HASHED_BLUE);
+            saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_BLUE);
         } else {
-            log.info("Switching to "+ EUROPEANA_SITEMAP_HASHED_GREEN);
-            saveToSwift(EUROPEANA_SITEMAP_HASHED_GREEN);
+            log.info("Switching to " + EUROPEANA_SITEMAP_HASHED_GREEN);
+            saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
         }
     }
 
@@ -76,17 +80,17 @@ public class ActiveSiteMapService {
      * @param value corresponds to {@link SwiftObject#getPayload()}
      * @return {@link SwiftObject#getETag()} of the object.
      */
-    private String saveToSwift(String value) {
+    private String saveToStorageProvider(String value) {
         Payload payload = new StringPayload(value);
-        return swiftProvider.getObjectApi().put(EUROPEANA_ACTIVE_SITEMAP_CACHE_FILE, payload);
+        return objectStorageProvider.put(EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE, payload);
     }
 
 
-    public SwiftProvider getSwiftProvider() {
-        return swiftProvider;
+    public ObjectStorageClient getObjectStorageProvider() {
+        return objectStorageProvider;
     }
 
-    public void setSwiftProvider(SwiftProvider swiftProvider) {
-        this.swiftProvider = swiftProvider;
+    public void setObjectStorageProvider(ObjectStorageClient objectStorageProvider) {
+        this.objectStorageProvider = objectStorageProvider;
     }
 }
