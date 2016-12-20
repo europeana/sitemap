@@ -32,6 +32,8 @@ public class ActiveSiteMapService {
         String result = "";
         String activeSiteMapFile = EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE;
         Optional<StorageObject> withoutBody = objectStorageProvider.getWithoutBody(activeSiteMapFile);
+        StorageObject storageObjectValue = null;
+        InputStream in=null;
         if (!withoutBody.isPresent()) {
             //In case that the active indication file does not exist, so we create one
             saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
@@ -40,14 +42,23 @@ public class ActiveSiteMapService {
             try {
                 StringWriter writer = new StringWriter();
                 Optional<StorageObject> storageObject = objectStorageProvider.get(activeSiteMapFile);
-                InputStream in = storageObject.get().getPayload().openStream();
+                storageObjectValue = storageObject.get();
+                in = storageObjectValue.getPayload().openStream();
                 IOUtils.copy(in, writer);
                 result = writer.toString();
                 in.close();
+                storageObjectValue.getPayload().close();
 
             } catch (IOException e) {
                 log.log(Level.SEVERE, String.format("Error while processing the file: %s to determen the current active site map", activeSiteMapFile), e.getCause());
 
+            }finally {
+                if (in != null) {
+                    IOUtils.closeQuietly(in);
+                }
+                if (storageObjectValue != null) {
+                    IOUtils.closeQuietly(storageObjectValue.getPayload());
+                }
             }
         }
         return result;
