@@ -5,19 +5,19 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import eu.europeana.domain.StorageObject;
+import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SitemapNotReadyException;
 import eu.europeana.sitemap.mongo.MongoProvider;
-import eu.europeana.sitemap.swift.SwiftProvider;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
-import org.jclouds.io.Payload;
-import org.jclouds.io.payloads.StringPayload;
-import org.jclouds.openstack.swift.v1.domain.ObjectList;
-import org.jclouds.openstack.swift.v1.domain.SwiftObject;
+import org.jclouds.io.payloads.ByteArrayPayload;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.util.Date;
+import java.util.List;
+import java.util.Optional;
 import java.util.logging.Logger;
 
 /**
@@ -57,67 +57,61 @@ public class MongoSitemapService implements SitemapService {
     @Resource
     private MongoProvider mongoProvider;
     @Resource
-    private SwiftProvider swiftProvider;
+    private ObjectStorageClient objectStorageProvider;
     @Resource
     private ActiveSiteMapService activeSiteMapService;
 
     public void generate() throws SitemapNotReadyException {
-            DBCollection col = mongoProvider.getCollection();
-            DBObject query = new BasicDBObject();
+        DBCollection col = mongoProvider.getCollection();
+        DBObject query = new BasicDBObject();
 
-            DBObject fields = new BasicDBObject();
-            fields.put("about", 1);
-            fields.put("europeanaCompleteness", 1);
-            fields.put("timestampUpdated", 1);
-            DBCursor cur = col.find(query, fields).batchSize(NUMBER_OF_ELEMENTS);
-            log.info("Got cursor");
-            log.info("Cursor hasNext:" + cur.hasNext());
-            int i = 0;
-            StringBuilder master = new StringBuilder();
-            master.append(XML_HEADER).append(LN);
-            master.append(SITEMAP_HEADER).append(LN);
+        DBObject fields = new BasicDBObject();
+        fields.put("about", 1);
+        fields.put("europeanaCompleteness", 1);
+        fields.put("timestampUpdated", 1);
+        DBCursor cur = col.find(query, fields).batchSize(NUMBER_OF_ELEMENTS);
+        log.info("Got cursor");
+        log.info("Cursor hasNext:" + cur.hasNext());
+        int i = 0;
+        StringBuilder master = new StringBuilder();
+        master.append(XML_HEADER).append(LN);
+        master.append(SITEMAP_HEADER).append(LN);
 
-            StringBuilder slave = initializeSlaveGeneration();
-            long startDate = new Date().getTime();
-            while (cur.hasNext()) {
+        StringBuilder slave = initializeSlaveGeneration();
+        long startDate = new Date().getTime();
+        while (cur.hasNext()) {
 
-                DBObject obj = cur.next();
-                String about = obj.get("about").toString();
-                Date date = obj.get("timestampUpdated") != null ? (Date) obj.get("timestampUpdated") : new Date(0);
-                String update = DateFormatUtils.format(date, DateFormatUtils.ISO_DATE_FORMAT.getPattern());
-                int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
-                String lastMod = "";
-                if (date.getTime() > 0) {
-                    lastMod = LASTMOD_OPENING + update + LASTMOD_CLOSING + LN;
-                }
-                slave.append(URL_OPENING).append(LN).append(LOC_OPENING).append(LN).append(PORTAL_URL)
-                        .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
-                        .append(completeness > 9 ? "1.0" : "0." + completeness)
-                        .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
-                if (i > 0 && (i % NUMBER_OF_ELEMENTS == 0 || !cur.hasNext())) {
-                    String indexEntry = SLAVE_KEY + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
-                    master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
-                            .append(LN).append(LOC_CLOSING).append(LN)
-                            .append(SITEMAP_CLOSING).append(LN);
-                    slave.append(URLSET_HEADER_CLOSING);
-                    String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
-                    saveToSwift(fileName, slave.toString());
-                    slave = initializeSlaveGeneration();
-                    long now = new Date().getTime();
-                    log.info("Added " + i + " sitemap entries in " + (now - startDate) + " ms("+fileName+")");
-                    startDate = now;
-                }
-                i++;
+            DBObject obj = cur.next();
+            String about = obj.get("about").toString();
+            Date date = obj.get("timestampUpdated") != null ? (Date) obj.get("timestampUpdated") : new Date(0);
+            String update = DateFormatUtils.format(date, DateFormatUtils.ISO_DATE_FORMAT.getPattern());
+            int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
+            String lastMod = "";
+            if (date.getTime() > 0) {
+                lastMod = LASTMOD_OPENING + update + LASTMOD_CLOSING + LN;
             }
-            master.append(SITEMAP_HEADER_CLOSING);
-            saveToSwift(MASTER_KEY, master.toString());
+            slave.append(URL_OPENING).append(LN).append(LOC_OPENING).append(LN).append(PORTAL_URL)
+                    .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
+                    .append(completeness > 9 ? "1.0" : "0." + completeness)
+                    .append(PRIORITY_CLOSING).append(lastMod).append(LN).append(URL_CLOSING).append(LN);
+            if (i > 0 && (i % NUMBER_OF_ELEMENTS == 0 || !cur.hasNext())) {
+                String indexEntry = SLAVE_KEY + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
+                master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
+                        .append(LN).append(LOC_CLOSING).append(LN)
+                        .append(SITEMAP_CLOSING).append(LN);
+                slave.append(URLSET_HEADER_CLOSING);
+                String fileName = activeSiteMapService.getInactiveFile() + FROM + (i - NUMBER_OF_ELEMENTS) + TO + i;
+                saveToSwift(fileName, slave.toString());
+                slave = initializeSlaveGeneration();
+                long now = new Date().getTime();
+                log.info("Added " + i + " sitemap entries in " + (now - startDate) + " ms(" + fileName + ")");
+                startDate = now;
+            }
+            i++;
+        }
+        master.append(SITEMAP_HEADER_CLOSING);
+        saveToSwift(MASTER_KEY, master.toString());
         log.info("Generation complete");
-    }
-
-    private boolean checkExists() {
-        SwiftObject exists = swiftProvider.getObjectApi().getWithoutBody(MASTER_KEY);
-        log.info("Exists: " + (exists != null));
-        return exists != null;
     }
 
     private StringBuilder initializeSlaveGeneration() {
@@ -126,8 +120,8 @@ public class MongoSitemapService implements SitemapService {
 
 
     private void saveToSwift(String key, String value) {
-        Payload payload = new StringPayload(value);
-        String ETag = swiftProvider.getObjectApi().put(key, payload);
+        ByteArrayPayload payload = new ByteArrayPayload(value.getBytes());
+        String ETag = objectStorageProvider.put(key, payload);
         //Verify Data
         int nSaveAttempts = 1;
         boolean siteMapCacheFileExists = checkIfFileExists(key);
@@ -143,7 +137,7 @@ public class MongoSitemapService implements SitemapService {
                     e.printStackTrace();
                 }
                 log.info("Retrying to save the file");
-                ETag = swiftProvider.getObjectApi().put(key, payload);
+                ETag = objectStorageProvider.put(key, payload);
                 siteMapCacheFileExists = checkIfFileExists(key);
                 nSaveAttempts++;
             }
@@ -151,7 +145,7 @@ public class MongoSitemapService implements SitemapService {
     }
 
     private boolean checkIfFileExists(String key) {
-        return swiftProvider.getObjectApi().getWithoutBody(key) != null;
+        return objectStorageProvider.getWithoutBody(key).isPresent();
     }
 
     public MongoProvider getMongoProvider() {
@@ -162,23 +156,29 @@ public class MongoSitemapService implements SitemapService {
         this.mongoProvider = mongoProvider;
     }
 
-    public SwiftProvider getSwiftProvider() {
-        return swiftProvider;
+    public ObjectStorageClient getObjectStorageProvider() {
+        return objectStorageProvider;
     }
 
-    public void setSwiftProvider(SwiftProvider swiftProvider) {
-        this.swiftProvider = swiftProvider;
+    public void setObjectStorageProvider(ObjectStorageClient objectStorageProvider) {
+        this.objectStorageProvider = objectStorageProvider;
     }
 
     public void delete() {
-        ObjectList list = swiftProvider.getObjectApi().list();
-        log.info("Files to remove: " + list.size());
+        List<StorageObject> list = objectStorageProvider.list();
+        if(list.isEmpty()){
+            log.info("No files to remove.");
+        }else{
+            //Files consist of N Blue + N Green + EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE
+            log.info("Files to remove: " + ((list.size()/2)-1));
+        }
+
         int i = 0;
         String inactiveFilename = activeSiteMapService.getInactiveFile();
         log.info("Deleting all old files with the name " + inactiveFilename);
-        for (SwiftObject obj : list) {
+        for (StorageObject obj : list) {
             if (obj.getName().contains(inactiveFilename)) {
-                swiftProvider.getObjectApi().delete(obj.getName());
+                objectStorageProvider.delete(obj.getName());
                 i++;
             }
             if (i == 100) {
