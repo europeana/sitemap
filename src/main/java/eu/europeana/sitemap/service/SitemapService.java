@@ -6,7 +6,7 @@ package eu.europeana.sitemap.service;
 
 /**
  * Makes the sitemap available for google
- * @See https://support.google.com/webmasters/answer/183668?hl=en
+ * see also https://support.google.com/webmasters/answer/183668?hl=en
  */
 public interface SitemapService {
     void update();
