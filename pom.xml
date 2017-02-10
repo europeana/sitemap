@@ -6,19 +6,22 @@
     <artifactId>sitemap</artifactId>
     <version>1.1-SNAPSHOT</version>
     <packaging>war</packaging>
-    <build>
-        <plugins>
-            <plugin>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
+    <name>Europeana Sitemap</name>
+
+    <scm>
+        <connection>scm:git:git@github.com:europeana/europeana-sitemap.git</connection>
+        <developerConnection>scm:git:git@github.com:europeana/europeana-sitemap.git</developerConnection>
+        <tag>HEAD</tag>
+        <url>https://github.com/europeana/europeana-sitemap</url>
+    </scm>
 
     <dependencies>
+        <dependency>
+            <groupId>eu.europeana</groupId>
+            <artifactId>object-storage</artifactId>
+            <version>1.2</version>
+        </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot</artifactId>
@@ -65,7 +68,6 @@
             <version>4.1.3.RELEASE</version>
         </dependency>
 
-
         <dependency>
             <groupId>redis.clients</groupId>
             <artifactId>jedis</artifactId>
@@ -98,5 +100,59 @@
             <version>1.2</version>
         </dependency>
     </dependencies>
+
+    <build>
+        <!-- Set a fixed name for easy deployment -->
+        <finalName>sitemap</finalName>
+
+        <plugins>
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+
+            <!-- Create build date and number and add it to build.info file -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>buildnumber-maven-plugin</artifactId>
+                <version>1.3</version>
+                <configuration>
+                    <shortRevisionLength>10</shortRevisionLength>
+                    <timestampFormat>{0,date,yyyy-MM-dd HH:mm:ss}</timestampFormat>
+                    <revisionOnScmFailure>-na-</revisionOnScmFailure>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>create</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-war-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <webResources>
+                        <resource>
+                            <directory>src/main/resources</directory>
+                            <filtering>true</filtering>
+                            <includes>
+                                <include>**/build.txt</include>
+                            </includes>
+                        </resource>
+                    </webResources>
+                    <failOnMissingWebXml>false</failOnMissingWebXml>
+                </configuration>
+            </plugin>
+
+        </plugins>
+    </build>
 
 </project>
