@@ -26,7 +26,7 @@ services:
 
     #   Mount point for application in tomcat(the target folder on your workspace is directly mounted to the tomcat container)
     volumes:
-      - ../target/sitemap-1.0-SNAPSHOT:/tomcat/webapps/sitemap
+      - ../target/sitemap:/tomcat/webapps/sitemap
     # Map ports from tomcat container to the local machine
     ports:
     #local:container
