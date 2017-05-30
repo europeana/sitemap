@@ -75,14 +75,19 @@ public class ActiveSiteMapService {
 
     }
 
-    public void switchFile() {
+    /**
+     * Switch between blue/green sitemap files
+     * @return the now active sitemap file name
+     */
+    public String switchFile() {
+        String result;
         if (getActiveFile().equals(EUROPEANA_SITEMAP_HASHED_GREEN)) {
-            log.info("Switching to " + EUROPEANA_SITEMAP_HASHED_BLUE);
-            saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_BLUE);
+            result = EUROPEANA_SITEMAP_HASHED_BLUE;
         } else {
-            log.info("Switching to " + EUROPEANA_SITEMAP_HASHED_GREEN);
-            saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
+            result = EUROPEANA_SITEMAP_HASHED_GREEN;
         }
+        saveToStorageProvider(result);
+        return result;
     }
 
     /**
