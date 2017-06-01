@@ -17,8 +17,17 @@ public class MongoProvider {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoProvider.class);
 
+    private MongoClient mongoClient;
     private DBCollection collection;
 
+    /**
+     * Setup a new connection to the Mongo database
+     * @param mongoHosts
+     * @param port
+     * @param username
+     * @param password
+     * @param database
+     */
     public MongoProvider(String mongoHosts, String port, String username, String password, String database) {
 
         String[] addresses = mongoHosts.split(",");
@@ -31,13 +40,20 @@ public class MongoProvider {
             MongoCredential credential = MongoCredential.createCredential(username, database, password.toCharArray());
             List<MongoCredential> credentials = new ArrayList<>();
             credentials.add(credential);
-            MongoClient mongoClient = new MongoClient(mongoAddresses, credentials);
+            this.mongoClient = new MongoClient(mongoAddresses, credentials);
             LOG.info("Connected to Mongo at "+mongoAddresses);
 
-            collection = mongoClient.getDB(database).getCollection("record");
+            this.collection = this.mongoClient.getDB(database).getCollection("record");
         } catch (UnknownHostException e) {
-            e.printStackTrace();
+            LOG.error("Error connecting to Mongo server "+mongoAddresses, e);
         }
+    }
+
+    /**
+     * Close the connection to mongo
+     */
+    public void close() {
+        mongoClient.close();
     }
 
     public DBCollection getCollection() {

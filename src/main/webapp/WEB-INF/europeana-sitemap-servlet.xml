@@ -16,7 +16,7 @@
        ">
     <util:properties id="sitemapProperties" location="classpath:sitemap.properties"/>
 
-    <bean class="eu.europeana.sitemap.mongo.MongoProvider" id="mongoProvider">
+    <bean class="eu.europeana.sitemap.mongo.MongoProvider" id="mongoProvider" destroy-method="close">
         <constructor-arg value="#{sitemapProperties['mongo.hosts']}"/>
         <constructor-arg value="#{sitemapProperties['mongo.port']}"/>
         <constructor-arg value="#{sitemapProperties['mongo.username']}"/>
