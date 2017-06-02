@@ -12,4 +12,23 @@ public interface SitemapService {
      * then create a new sitemap and finally switching to the blue/green instances.
      */
     void update();
+
+    /**
+     * Retrieve a list of all files that are stored at our object provider's bucket
+     * @return list of stored sitemap files
+     */
+    String getFiles();
+
+    /**
+     * Retrieve the contents of a particular file stored at our object provider's bucket
+     * @param fileName the name of the requested file
+     * @return contents of stored sitemap file in xml
+     */
+    String getFile(String fileName);
+
+    /**
+     * Retrieve the (currently active instance of the) sitemap index file
+     * @return active index file as a string
+     */
+    String getIndexFile();
 }

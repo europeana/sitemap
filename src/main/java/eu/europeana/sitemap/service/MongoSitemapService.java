@@ -9,6 +9,7 @@ import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SitemapNotReadyException;
 import eu.europeana.sitemap.mongo.MongoProvider;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.jclouds.io.payloads.ByteArrayPayload;
@@ -19,8 +20,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringWriter;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by ymamakis on 11/16/15.
@@ -34,7 +39,9 @@ public class MongoSitemapService implements SitemapService {
     private static final String SITEMAP_HEADER =
             "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
     private static final String URLSET_HEADER =
-            "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\" xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\" xmlns:geo=\"http://www.google.com/geo/schemas/sitemap/1.0\">";
+            "<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\""+
+                    " xmlns:image=\"http://www.google.com/schemas/sitemap-image/1.1\""+
+                    " xmlns:geo=\"http://www.google.com/geo/schemas/sitemap/1.0\">";
     private static final String URL_OPENING = "<url>";
     private static final String URL_CLOSING = "</url>";
     private static final String LOC_OPENING = "<loc>";
@@ -70,7 +77,10 @@ public class MongoSitemapService implements SitemapService {
     private String status = "initial";
 
 
-    public void generate() throws SitemapNotReadyException {
+    /**
+     * Generate a new sitemap
+     */
+    public void generate() {
         DBCollection col = mongoProvider.getCollection();
 
         DBObject query = new BasicDBObject();
@@ -224,25 +234,73 @@ public class MongoSitemapService implements SitemapService {
     @Override
     public void update() {
         LOG.info("Status: " + status);
+        // TODO instead of locking based on the status variable, it would be much better to lock based on a file placed in the storage provider.
+        // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
+        // clean any remaining lock from to failed applications.
         if ("working".equalsIgnoreCase(status)) {
             throw new SitemapNotReadyException();
         } else {
-            status = "working";
-            LOG.info("Starting update process...");
+            try {
+                status = "working";
+                LOG.info("Starting update process...");
 
-            // First clear all old records from the inactive file
-            delete();
+                // First clear all old records from the inactive file
+                delete();
 
-            // Then write records to the inactive file
-            long startTime = new Date().getTime();
-            generate();
-            LOG.info("Sitemap generation completed in "+ (new Date().getTime() - startTime) / 1000 +" seconds");
+                // Then write records to the inactive file
+                long startTime = new Date().getTime();
+                generate();
+                LOG.info("Sitemap generation completed in " + (new Date().getTime() - startTime) / 1000 + " seconds");
 
-            String activeFile = activeSiteMapService.switchFile(); //Switch to updated cached files
-            LOG.info("Switched active sitemap to "+activeFile);
-
-            status = "done";
+                String activeFile = activeSiteMapService.switchFile(); //Switch to updated cached files
+                LOG.info("Switched active sitemap to " + activeFile);
+            } finally {
+                status = "done";
+                LOG.info("Status: " + status);
+            }
         }
 
     }
+
+    /**
+     * @see SitemapService#getFiles()
+     */
+    @Override
+    public String getFiles() {
+        StringBuilder result = new StringBuilder();
+        List<StorageObject> files = objectStorageProvider.list();
+        for (StorageObject file : files) {
+            result.append(file.getName());
+            result.append("</br>\n");
+        }
+        return result.toString();
+    }
+
+    /**
+     * @see SitemapService#getFile(String)
+     */
+    @Override
+    public String getFile(String fileName) {
+        Optional<StorageObject> indexFile = objectStorageProvider.get(fileName);
+        if (indexFile.isPresent()) {
+            try (StringWriter writer = new StringWriter(); InputStream in = indexFile.get().getPayload().openStream()) {
+                IOUtils.copy(in, writer);
+                return writer.toString();
+            } catch (IOException e) {
+                String msg = "Error reading file "+fileName;
+                LOG.error(msg, e);
+                return msg;
+            }
+        }
+        return "File "+fileName+" not found";
+    }
+
+    /**
+     * @see SitemapService#getIndexFile()
+     */
+    @Override
+    public String getIndexFile() {
+        return getFile(MASTER_KEY);
+    }
+
 }

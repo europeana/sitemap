@@ -1,6 +1,7 @@
 package eu.europeana.sitemap.mongo;
 
 import com.mongodb.*;
+import org.apache.commons.lang.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,10 +38,14 @@ public class MongoProvider {
                 ServerAddress mongoAddress = new ServerAddress(address, Integer.parseInt(port));
                 mongoAddresses.add(mongoAddress);
             }
-            MongoCredential credential = MongoCredential.createCredential(username, database, password.toCharArray());
-            List<MongoCredential> credentials = new ArrayList<>();
-            credentials.add(credential);
-            this.mongoClient = new MongoClient(mongoAddresses, credentials);
+            if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
+                MongoCredential credential = MongoCredential.createCredential(username, database, password.toCharArray());
+                List<MongoCredential> credentials = new ArrayList<>();
+                credentials.add(credential);
+                this.mongoClient = new MongoClient(mongoAddresses, credentials);
+            } else {
+                this.mongoClient = new MongoClient(mongoAddresses);
+            }
             LOG.info("Connected to Mongo at "+mongoAddresses);
 
             this.collection = this.mongoClient.getDB(database).getCollection("record");
@@ -53,9 +58,13 @@ public class MongoProvider {
      * Close the connection to mongo
      */
     public void close() {
+        LOG.info("Shutting down connections to Mongo...");
         mongoClient.close();
     }
 
+    /**
+     * @return Retrieve the entire record collection from our mongo database
+     */
     public DBCollection getCollection() {
         return collection;
     }
