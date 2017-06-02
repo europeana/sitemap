@@ -15,6 +15,7 @@
         version="2.5">
 
     <display-name>Sitemap</display-name>
+    <description>This application generates a sitemap for all Europeana records</description>
 
     <listener>
         <listener-class>eu.europeana.sitemap.web.context.VcapPropertyLoaderListener</listener-class>
