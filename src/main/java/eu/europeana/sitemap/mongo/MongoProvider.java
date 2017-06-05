@@ -1,7 +1,10 @@
 package eu.europeana.sitemap.mongo;
 
-import com.mongodb.*;
-import org.apache.commons.lang.*;
+import com.mongodb.DBCollection;
+import com.mongodb.MongoClient;
+import com.mongodb.MongoCredential;
+import com.mongodb.ServerAddress;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

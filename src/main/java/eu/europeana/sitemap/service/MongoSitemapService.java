@@ -23,6 +23,7 @@ import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -35,6 +36,7 @@ public class MongoSitemapService implements SitemapService {
 
     private static final Logger LOG = LoggerFactory.getLogger(MongoSitemapService.class);
 
+    /** XML definitions **/
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
     private static final String SITEMAP_HEADER =
             "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
@@ -47,7 +49,8 @@ public class MongoSitemapService implements SitemapService {
     private static final String LOC_OPENING = "<loc>";
     private static final String LOC_CLOSING = "</loc>";
     private static final String LN = "\n";
-    private static final String PORTAL_URL = "http://www.europeana.eu/portal/record";
+    private static final String PORTAL_URL = "http://www.europeana.eu/portal";
+    private static final String RECORD_URL = PORTAL_URL+"/record";
     private static final String HTML = ".html";
     private static final String FROM = "?from=";
     private static final String TO = "&to=";
@@ -62,7 +65,13 @@ public class MongoSitemapService implements SitemapService {
     private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
     private static final String SLAVE_KEY = "europeana-sitemap-hashed.xml";
 
-    public static final int NUMBER_OF_ELEMENTS = 45000;
+    /** Used mongo fields **/
+    private static final String ABOUT = "about";
+    private static final String LASTUPDATED = "timestampUpdated";
+    private static final String COMPLETENESS = "europeanaCompleteness";
+
+
+    public static final int NUMBER_OF_ELEMENTS = 45_000;
 
     @Resource
     private MongoProvider mongoProvider;
@@ -86,13 +95,13 @@ public class MongoSitemapService implements SitemapService {
         DBObject query = new BasicDBObject();
         // 2017-05-30 as part of ticket #624 we are filtering records based on completeness value.
         // This is an experiment to see if high-quality records improve the number of indexed records
-        LOG.info("Filtering records based on Europeana Completeness score of at least "+minRecordCompleteness);
-        query.put("europeanaCompleteness", new BasicDBObject( "$gte", minRecordCompleteness));
+        LOG.info("Filtering records based on Europeana Completeness score of at least {}", minRecordCompleteness);
+        query.put(COMPLETENESS, new BasicDBObject( "$gte", minRecordCompleteness));
 
         DBObject fields = new BasicDBObject();
-        fields.put("about", 1);
-        fields.put("europeanaCompleteness", 1);
-        fields.put("timestampUpdated", 1);
+        fields.put(ABOUT, 1);
+        fields.put(COMPLETENESS, 1);
+        fields.put(LASTUPDATED, 1);
 
         LOG.info("Starting record query...");
         DBCursor cur = col.find(query, fields).batchSize(NUMBER_OF_ELEMENTS);
@@ -113,29 +122,26 @@ public class MongoSitemapService implements SitemapService {
         while (cur.hasNext()) {
 
             DBObject obj = cur.next();
-            String about = obj.get("about").toString();
-            int completeness = Integer.parseInt(obj.get("europeanaCompleteness").toString());
-            Object timestampUpdated = obj.get("timestampUpdated");
+            String about = obj.get(ABOUT).toString();
+            int completeness = Integer.parseInt(obj.get(COMPLETENESS).toString());
+            Object timestampUpdated = obj.get(LASTUPDATED);
             // very old records do not have a timestampUpdated or timestampCreated field
-            StringBuilder lastModified = new StringBuilder();
-            if (timestampUpdated != null) {
-                lastModified.append(LASTMOD_OPENING);
-                lastModified.append(DateFormatUtils.format((Date) timestampUpdated, DateFormatUtils.ISO_DATE_FORMAT.getPattern()));
-                lastModified.append(LASTMOD_CLOSING);
-                lastModified.append(LN);
-            }
+            Date dateUpdated = (timestampUpdated == null ? null : (Date) timestampUpdated);
 
-            slave.append(URL_OPENING).append(LN).append(LOC_OPENING).append(LN).append(PORTAL_URL)
-                    .append(about).append(HTML).append(LN).append(LOC_CLOSING).append(PRIORITY_OPENING)
-                    .append(completeness > 9 ? "1.0" : "0." + completeness)
-                    .append(PRIORITY_CLOSING).append(lastModified.toString()).append(LN).append(URL_CLOSING).append(LN);
+            slave.append(URL_OPENING).append(LN)
+                    .append(LOC_OPENING).append(RECORD_URL).append(about).append(HTML).append(LOC_CLOSING).append(LN)
+                    .append(PRIORITY_OPENING).append(completeness > 9 ? "1.0" : ("0." + completeness)).append(PRIORITY_CLOSING).append(LN)
+                    .append(generateLastModified(dateUpdated).toString())
+                    .append(URL_CLOSING).append(LN);
             nrRecords++;
 
             // add sitemap closing tags
             if (nrRecords > 0 && (nrRecords % NUMBER_OF_ELEMENTS == 0 || !cur.hasNext())) {
                 String indexEntry = SLAVE_KEY + FROM + (nrRecords - NUMBER_OF_ELEMENTS) + TO + nrRecords;
-                master.append(SITEMAP_OPENING).append(LN).append(LOC_OPENING).append(StringEscapeUtils.escapeXml("http://www.europeana.eu/portal/" + indexEntry))
-                        .append(LN).append(LOC_CLOSING).append(LN)
+                master.append(SITEMAP_OPENING).append(LN)
+                        .append(LOC_OPENING).append(StringEscapeUtils.escapeXml(PORTAL_URL + "/" + indexEntry)).append(LOC_CLOSING).append(LN)
+                        // TODO if we can compare a sitemap file with the previous version, we can check if it has changed and include a lastmodified?
+                        //.append(generateLastModified(new Date()).toString())
                         .append(SITEMAP_CLOSING).append(LN);
                 slave.append(URLSET_HEADER_CLOSING);
                 String fileName = activeSiteMapService.getInactiveFile() + FROM + (nrRecords - NUMBER_OF_ELEMENTS) + TO + nrRecords;
@@ -143,42 +149,57 @@ public class MongoSitemapService implements SitemapService {
                 slave = initializeSlaveGeneration();
                 nrSitemaps++;
                 long now = new Date().getTime();
-                LOG.info("Records processed = "+nrRecords+". Created sitemap file "+fileName+" in " + (now - fileStartTime) + " ms");
+                LOG.info("Created sitemap file {} in {} ms", fileName, (now-fileStartTime));
                 fileStartTime = now;
             }
         }
         cur.close();
         master.append(SITEMAP_HEADER_CLOSING);
         saveToStorage(MASTER_KEY, master.toString());
-        LOG.info("Records processed = "+nrRecords+". Writen " +nrSitemaps+ " sitemap files and 1 sitemap index file");
+        LOG.info("Records processed {}, written {} sitemap files and 1 sitemap index file", nrRecords, nrSitemaps);
     }
 
     private StringBuilder initializeSlaveGeneration() {
         return new StringBuilder().append(XML_HEADER).append(LN).append(URLSET_HEADER).append(LN);
     }
 
+    private StringBuilder generateLastModified(Date lastModifiedDate) {
+        StringBuilder result = new StringBuilder();
+        if (lastModifiedDate != null) {
+            result.append(LASTMOD_OPENING);
+            result.append(DateFormatUtils.format(lastModifiedDate, DateFormatUtils.ISO_DATE_FORMAT.getPattern()));
+            result.append(LASTMOD_CLOSING);
+            result.append(LN);
+        }
+        return result;
+    }
+
+
     private void saveToStorage(String key, String value) {
-        ByteArrayPayload payload = new ByteArrayPayload(value.getBytes());
-        String ETag = objectStorageProvider.put(key, payload);
-        //Verify Data
-        int nSaveAttempts = 1;
-        boolean siteMapCacheFileExists = checkIfFileExists(key);
-        if (StringUtils.isEmpty(ETag) || !siteMapCacheFileExists) {
-            int MAX_ATTEMPTS = 3;
-            while (nSaveAttempts < MAX_ATTEMPTS && (StringUtils.isEmpty(ETag) || !siteMapCacheFileExists)) {
-                LOG.info("Failed to save to storage provider (Filename=" + key + ",siteMapCacheFileExists=" + siteMapCacheFileExists + ")");
-                try {
-                    long timeout = nSaveAttempts * 5000l;
-                    LOG.info("Waiting " + timeout / 1000 + "seconds to try again");
-                    Thread.sleep(timeout);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                LOG.info("Retrying to save the file");
-                ETag = objectStorageProvider.put(key, payload);
-                siteMapCacheFileExists = checkIfFileExists(key);
-                nSaveAttempts++;
+        try {
+            ByteArrayPayload payload = new ByteArrayPayload(value.getBytes("UTF-8"));
+            String eTag = objectStorageProvider.put(key, payload);
+            //Verify Data
+            int nSaveAttempts = 1;
+            boolean siteMapCacheFileExists = checkIfFileExists(key);
+            if (StringUtils.isEmpty(eTag) || !siteMapCacheFileExists) {
+                    int maxAttempts = 3;
+                    while (nSaveAttempts < maxAttempts && (StringUtils.isEmpty(eTag) || !siteMapCacheFileExists)) {
+                        LOG.info("Failed to save to storage provider (filename={}, siteMapCacheFileExists={})", key, siteMapCacheFileExists);
+                        long timeout = nSaveAttempts * 5000L;
+                        LOG.info("Waiting {} seconds to try again", (timeout / 1000) );
+                        Thread.sleep(timeout);
+                        LOG.info("Retrying to save the file");
+                        eTag = objectStorageProvider.put(key, payload);
+                        siteMapCacheFileExists = checkIfFileExists(key);
+                        nSaveAttempts++;
+                    }
             }
+        } catch (UnsupportedEncodingException e) {
+            LOG.warn("Cannot read bytes", e);
+        } catch (InterruptedException e) {
+            LOG.warn("Saving to storage was interrupted", e);
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -199,7 +220,7 @@ public class MongoSitemapService implements SitemapService {
     }
 
     public void setObjectStorageProvider(ObjectStorageClient objectStorageProvider) {
-        LOG.info("Object storage provider is "+objectStorageProvider.getName()+", bucket "+objectStorageProvider.getBucketName());
+        LOG.info("Object storage provider is {}, bucket {} ", objectStorageProvider.getName(), objectStorageProvider.getBucketName());
         this.objectStorageProvider = objectStorageProvider;
     }
 
@@ -214,7 +235,7 @@ public class MongoSitemapService implements SitemapService {
 
         int i = 0;
         String inactiveFilename = activeSiteMapService.getInactiveFile();
-        LOG.info("Deleting all old files with the name " + inactiveFilename);
+        LOG.info("Deleting all old files with the name {}", inactiveFilename);
         for (StorageObject obj : list) {
             if (obj.getName().contains(inactiveFilename)) {
                 objectStorageProvider.delete(obj.getName());
@@ -222,10 +243,10 @@ public class MongoSitemapService implements SitemapService {
             }
             // report on progress
             if (i > 0 && i % 100 == 0) {
-                LOG.info("Removed "+i+" files");
+                LOG.info("Removed {} old files", i);
             }
         }
-        LOG.info("Removed all "+i+" old files");
+        LOG.info("Removed all {} old files", i);
     }
 
     /**
@@ -233,7 +254,7 @@ public class MongoSitemapService implements SitemapService {
      */
     @Override
     public void update() {
-        LOG.info("Status: " + status);
+        LOG.info("Status: {}", status);
         // TODO instead of locking based on the status variable, it would be much better to lock based on a file placed in the storage provider.
         // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
         // clean any remaining lock from to failed applications.
@@ -250,13 +271,14 @@ public class MongoSitemapService implements SitemapService {
                 // Then write records to the inactive file
                 long startTime = new Date().getTime();
                 generate();
-                LOG.info("Sitemap generation completed in " + (new Date().getTime() - startTime) / 1000 + " seconds");
+                LOG.info("Sitemap generation completed in {} seconds", (new Date().getTime() - startTime) / 1000);
 
-                String activeFile = activeSiteMapService.switchFile(); //Switch to updated cached files
-                LOG.info("Switched active sitemap to " + activeFile);
+                //Switch to updated cached file
+                String activeFile = activeSiteMapService.switchFile();
+                LOG.info("Switched active sitemap to {}", activeFile);
             } finally {
                 status = "done";
-                LOG.info("Status: " + status);
+                LOG.info("Status: {}", status);
             }
         }
 

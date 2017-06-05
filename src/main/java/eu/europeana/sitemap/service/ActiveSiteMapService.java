@@ -6,24 +6,27 @@ import org.apache.commons.io.IOUtils;
 import org.jclouds.io.Payload;
 import org.jclouds.io.payloads.StringPayload;
 import org.jclouds.openstack.swift.v1.domain.SwiftObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.util.Optional;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 /**
  * Created by jeroen on 21-9-16.
  */
 public class ActiveSiteMapService {
-    private static final Logger log = Logger.getLogger(MongoSitemapService.class.getName());
+
+    private static final Logger LOG = LoggerFactory.getLogger(ActiveSiteMapService.class);
 
     public static final String EUROPEANA_SITEMAP_HASHED_GREEN = "europeana-sitemap-hashed-green.xml";
     public static final String EUROPEANA_SITEMAP_HASHED_BLUE = "europeana-sitemap-hashed-blue.xml";
     public static final String EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE = "europeana-sitemap-active-xml-file.txt";
+
     @Resource
     private ObjectStorageClient objectStorageProvider;
 
@@ -33,32 +36,21 @@ public class ActiveSiteMapService {
         String activeSiteMapFile = EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE;
         Optional<StorageObject> withoutBody = objectStorageProvider.getWithoutBody(activeSiteMapFile);
         StorageObject storageObjectValue = null;
-        InputStream in=null;
+
         if (!withoutBody.isPresent()) {
             //In case that the active indication file does not exist, so we create one
             saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
             return EUROPEANA_SITEMAP_HASHED_GREEN;
         } else {
-            try {
-                StringWriter writer = new StringWriter();
-                Optional<StorageObject> storageObject = objectStorageProvider.get(activeSiteMapFile);
-                storageObjectValue = storageObject.get();
-                in = storageObjectValue.getPayload().openStream();
+            StringWriter writer = new StringWriter();
+            Optional<StorageObject> storageObject = objectStorageProvider.get(activeSiteMapFile);
+            storageObjectValue = storageObject.get();
+            try (InputStream in = storageObjectValue.getPayload().openStream()){
                 IOUtils.copy(in, writer);
                 result = writer.toString();
-                in.close();
                 storageObjectValue.getPayload().close();
-
             } catch (IOException e) {
-                log.log(Level.SEVERE, String.format("Error while processing the file: %s to determen the current active site map", activeSiteMapFile), e.getCause());
-
-            }finally {
-                if (in != null) {
-                    IOUtils.closeQuietly(in);
-                }
-                if (storageObjectValue != null) {
-                    IOUtils.closeQuietly(storageObjectValue.getPayload());
-                }
+                LOG.error("Error while processing the file {} to determine the current active site map", activeSiteMapFile, e);
             }
         }
         return result;
