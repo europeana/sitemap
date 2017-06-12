@@ -1,13 +1,34 @@
 package eu.europeana.sitemap.service;
 
 /**
+ * All supported sitemap methods
+ *
  * Created by ymamakis on 11/16/15.
  */
-
-/**
- * Makes the sitemap available for google
- * see also https://support.google.com/webmasters/answer/183668?hl=en
- */
 public interface SitemapService {
+
+    /**
+     * Start the sitemap update process. This will delete any old sitemap at the inactive blue/green instance first,
+     * then create a new sitemap and finally switching to the blue/green instances.
+     */
     void update();
+
+    /**
+     * Retrieve a list of all files that are stored at our object provider's bucket
+     * @return list of stored sitemap files
+     */
+    String getFiles();
+
+    /**
+     * Retrieve the contents of a particular file stored at our object provider's bucket
+     * @param fileName the name of the requested file
+     * @return contents of stored sitemap file in xml
+     */
+    String getFile(String fileName);
+
+    /**
+     * Retrieve the (currently active instance of the) sitemap index file
+     * @return active index file as a string
+     */
+    String getIndexFile();
 }

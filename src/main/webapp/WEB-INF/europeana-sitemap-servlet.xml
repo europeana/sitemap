@@ -14,9 +14,11 @@
         http://www.springframework.org/schema/mvc
         http://www.springframework.org/schema/mvc/spring-mvc.xsd
        ">
-    <util:properties id="sitemapProperties" location="classpath:sitemap.properties"/>
 
-    <bean class="eu.europeana.sitemap.mongo.MongoProvider" id="mongoProvider">
+    <util:properties id="sitemapProperties" ignore-resource-not-found="true"
+                     location="classpath:sitemap.properties, classpath:sitemap.user.properties"/>
+
+    <bean class="eu.europeana.sitemap.mongo.MongoProvider" id="mongoProvider" destroy-method="close" >
         <constructor-arg value="#{sitemapProperties['mongo.hosts']}"/>
         <constructor-arg value="#{sitemapProperties['mongo.port']}"/>
         <constructor-arg value="#{sitemapProperties['mongo.username']}"/>
@@ -24,14 +26,14 @@
         <constructor-arg value="#{sitemapProperties['mongo.database']}"/>
     </bean>
 
-    <bean class="eu.europeana.features.S3ObjectStorageClient" id="objectStorageProvider">
+    <bean class="eu.europeana.features.S3ObjectStorageClient" id="objectStorageProvider" destroy-method="close" >
         <constructor-arg value="#{sitemapProperties['s3.key']}"/>
         <constructor-arg value="#{sitemapProperties['s3.secret']}"/>
         <constructor-arg value="#{sitemapProperties['s3.region']}"/>
         <constructor-arg value="#{sitemapProperties['s3.bucket']}"/>
     </bean>
 
-    <bean id="sitemapService" class="eu.europeana.sitemap.service.MongoSitemapService">
+    <bean id="sitemapService" class="eu.europeana.sitemap.service.MongoSitemapService" >
         <property name="mongoProvider" ref="mongoProvider"/>
         <property name="objectStorageProvider" ref="objectStorageProvider"/>
     </bean>
