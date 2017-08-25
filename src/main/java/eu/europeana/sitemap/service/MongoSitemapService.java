@@ -108,6 +108,7 @@ public class MongoSitemapService implements SitemapService {
         DBCursor cur = col.find(query, fields).batchSize(NUMBER_OF_ELEMENTS);
         LOG.info("Query finished. Retrieving records...");
 
+        long from = 0;
         long nrRecords = 0;
         int nrSitemaps = 0;
 
@@ -136,22 +137,30 @@ public class MongoSitemapService implements SitemapService {
                     .append(URL_CLOSING).append(LN);
             nrRecords++;
 
-            // add sitemap closing tags
             if (nrRecords > 0 && (nrRecords % NUMBER_OF_ELEMENTS == 0 || !cur.hasNext())) {
-                String indexEntry = SLAVE_KEY + FROM + (nrRecords - NUMBER_OF_ELEMENTS) + TO + nrRecords;
+                String fromToText = FROM + from + TO + nrRecords;
+
+                // add fileName to index
+                String indexEntry = SLAVE_KEY + fromToText;
                 master.append(SITEMAP_OPENING).append(LN)
                         .append(LOC_OPENING).append(StringEscapeUtils.escapeXml(PORTAL_URL + "/" + indexEntry)).append(LOC_CLOSING).append(LN)
                         // TODO if we can compare a sitemap file with the previous version, we can check if it has changed and include a lastmodified?
                         //.append(generateLastModified(new Date()).toString())
                         .append(SITEMAP_CLOSING).append(LN);
+
+                // write sitemap file
                 slave.append(URLSET_HEADER_CLOSING);
-                String fileName = activeSiteMapService.getInactiveFile() + FROM + (nrRecords - NUMBER_OF_ELEMENTS) + TO + nrRecords;
+                String fileName = activeSiteMapService.getInactiveFile() + fromToText;
                 saveToStorage(fileName, slave.toString());
-                slave = initializeSlaveGeneration();
-                nrSitemaps++;
+
                 long now = new Date().getTime();
                 LOG.info("Created sitemap file {} in {} ms", fileName, (now-fileStartTime));
                 fileStartTime = now;
+
+                // prepare for next sitemap file
+                slave = initializeSlaveGeneration();
+                from = nrRecords;
+                nrSitemaps++;
             }
         }
         cur.close();
