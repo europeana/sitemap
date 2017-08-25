@@ -17,7 +17,6 @@
 
 package eu.europeana.sitemap.web;
 
-import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.SitemapService;
 import org.slf4j.Logger;
@@ -66,7 +65,7 @@ public class SitemapReadController {
             return service.getFileContent(INDEX_FILE);
         } catch (SiteMapNotFoundException e) {
             LOG.error("Sitemap index file not found", e);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, request.getRequestURI());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
     }
@@ -90,12 +89,12 @@ public class SitemapReadController {
         try {
             String fileName = getActiveDeployment() + "?from=" + from + "&to=" + to;
             if (LOG.isDebugEnabled()) {
-                LOG.debug("Retrieving sitemap file "+ fileName);
+                LOG.debug("Retrieving sitemap file {} ", fileName);
             }
             return service.getFileContent(fileName);
         } catch (SiteMapNotFoundException e) {
             LOG.error("Sitemap file not found", e);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND, request.getRequestURI());
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
             return null;
         }
     }

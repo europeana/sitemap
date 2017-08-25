@@ -118,7 +118,7 @@ public class MongoSitemapService implements SitemapService {
         master.append(SITEMAP_HEADER).append(LN);
 
         // create sitemap file header
-        long fileStartTime = new Date().getTime();
+        long fileStartTime = System.currentTimeMillis();
         StringBuilder slave = initializeSlaveGeneration();
 
         while (cur.hasNext()) {
@@ -153,7 +153,7 @@ public class MongoSitemapService implements SitemapService {
                 String fileName = activeSiteMapService.getInactiveFile() + fromToText;
                 saveToStorage(fileName, slave.toString());
 
-                long now = new Date().getTime();
+                long now = System.currentTimeMillis();
                 LOG.info("Created sitemap file {} in {} ms", fileName, (now-fileStartTime));
                 fileStartTime = now;
 
@@ -277,9 +277,9 @@ public class MongoSitemapService implements SitemapService {
                 delete();
 
                 // Then write records to the inactive file
-                long startTime = new Date().getTime();
+                long startTime = System.currentTimeMillis();
                 generate();
-                LOG.info("Sitemap generation completed in {} seconds", (new Date().getTime() - startTime) / 1000);
+                LOG.info("Sitemap generation completed in {} seconds", (System.currentTimeMillis() - startTime) / 1000);
 
                 //Switch to updated cached file
                 String activeFile = activeSiteMapService.switchFile();
