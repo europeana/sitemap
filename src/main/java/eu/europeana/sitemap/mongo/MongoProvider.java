@@ -49,11 +49,11 @@ public class MongoProvider {
             } else {
                 this.mongoClient = new MongoClient(mongoAddresses);
             }
-            LOG.info("Connected to Mongo at "+mongoAddresses);
+            LOG.info("Connected to Mongo at {} ", mongoAddresses);
 
             this.collection = this.mongoClient.getDB(database).getCollection("record");
         } catch (UnknownHostException e) {
-            LOG.error("Error connecting to Mongo server "+mongoAddresses, e);
+            LOG.error("Error connecting to Mongo server {} ", mongoAddresses, e);
         }
     }
 

@@ -7,9 +7,9 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.exceptions.SitemapNotReadyException;
+import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
+import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
 import eu.europeana.sitemap.mongo.MongoProvider;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.jclouds.io.payloads.ByteArrayPayload;
@@ -21,9 +21,8 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -95,8 +94,10 @@ public class MongoSitemapService implements SitemapService {
         DBObject query = new BasicDBObject();
         // 2017-05-30 as part of ticket #624 we are filtering records based on completeness value.
         // This is an experiment to see if high-quality records improve the number of indexed records
-        LOG.info("Filtering records based on Europeana Completeness score of at least {}", minRecordCompleteness);
-        query.put(COMPLETENESS, new BasicDBObject( "$gte", minRecordCompleteness));
+        if (minRecordCompleteness >= 0) {
+            LOG.info("Filtering records based on Europeana Completeness score of at least {}", minRecordCompleteness);
+            query.put(COMPLETENESS, new BasicDBObject("$gte", minRecordCompleteness));
+        }
 
         DBObject fields = new BasicDBObject();
         fields.put(ABOUT, 1);
@@ -177,7 +178,7 @@ public class MongoSitemapService implements SitemapService {
 
     private void saveToStorage(String key, String value) {
         try {
-            ByteArrayPayload payload = new ByteArrayPayload(value.getBytes("UTF-8"));
+            ByteArrayPayload payload = new ByteArrayPayload(value.getBytes(StandardCharsets.UTF_8));
             String eTag = objectStorageProvider.put(key, payload);
             //Verify Data
             int nSaveAttempts = 1;
@@ -195,16 +196,14 @@ public class MongoSitemapService implements SitemapService {
                         nSaveAttempts++;
                     }
             }
-        } catch (UnsupportedEncodingException e) {
-            LOG.warn("Cannot read bytes", e);
         } catch (InterruptedException e) {
             LOG.warn("Saving to storage was interrupted", e);
             Thread.currentThread().interrupt();
         }
     }
 
-    private boolean checkIfFileExists(String key) {
-        return objectStorageProvider.getWithoutBody(key).isPresent();
+    private boolean checkIfFileExists(String id) {
+        return objectStorageProvider.isAvailable(id);
     }
 
     public MongoProvider getMongoProvider() {
@@ -254,15 +253,15 @@ public class MongoSitemapService implements SitemapService {
      */
     @Override
     public void update() {
-        LOG.info("Status: {}", status);
         // TODO instead of locking based on the status variable, it would be much better to lock based on a file placed in the storage provider.
         // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
         // clean any remaining lock from to failed applications.
         if ("working".equalsIgnoreCase(status)) {
-            throw new SitemapNotReadyException();
+            LOG.warn("Status: {}", status);
+            throw new UpdateAlreadyInProgressException();
         } else {
             try {
-                status = "working";
+                status = "updating";
                 LOG.info("Starting update process...");
 
                 // First clear all old records from the inactive file
@@ -276,6 +275,9 @@ public class MongoSitemapService implements SitemapService {
                 //Switch to updated cached file
                 String activeFile = activeSiteMapService.switchFile();
                 LOG.info("Switched active sitemap to {}", activeFile);
+            } catch (Exception e) {
+                LOG.error("Error updating sitemap", e);
+                throw e;
             } finally {
                 status = "done";
                 LOG.info("Status: {}", status);
@@ -289,40 +291,36 @@ public class MongoSitemapService implements SitemapService {
      */
     @Override
     public String getFiles() {
-        StringBuilder result = new StringBuilder();
         List<StorageObject> files = objectStorageProvider.list();
+        Collections.sort(files, (StorageObject o1, StorageObject o2) -> o1.getLastModified().compareTo(o2.getLastModified()));
+        StringBuilder result = new StringBuilder();
         for (StorageObject file : files) {
+            result.append(file.getLastModified());
+            result.append("\t");
             result.append(file.getName());
-            result.append("</br>\n");
+            result.append("\n");
         }
         return result.toString();
     }
 
     /**
-     * @see SitemapService#getFile(String)
+     * @see SitemapService#getFileContent(String)
      */
     @Override
-    public String getFile(String fileName) {
-        Optional<StorageObject> indexFile = objectStorageProvider.get(fileName);
-        if (indexFile.isPresent()) {
-            try (StringWriter writer = new StringWriter(); InputStream in = indexFile.get().getPayload().openStream()) {
-                IOUtils.copy(in, writer);
-                return writer.toString();
-            } catch (IOException e) {
-                String msg = "Error reading file "+fileName;
-                LOG.error(msg, e);
-                return msg;
-            }
+    public String getFileContent(String fileName) throws SiteMapNotFoundException, IOException {
+        Optional<StorageObject> file = objectStorageProvider.get(fileName);
+        if (file.isPresent()) {
+            return new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
         }
-        return "File "+fileName+" not found";
+        throw new SiteMapNotFoundException("File " + fileName + " not found!");
     }
 
     /**
-     * @see SitemapService#getIndexFile()
+     * @see SitemapService#getIndexFileContent()
      */
     @Override
-    public String getIndexFile() {
-        return getFile(MASTER_KEY);
+    public String getIndexFileContent() throws SiteMapNotFoundException, IOException {
+        return getFileContent(MASTER_KEY);
     }
 
 }
