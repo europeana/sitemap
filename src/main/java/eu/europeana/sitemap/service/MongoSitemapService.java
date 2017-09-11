@@ -78,6 +78,8 @@ public class MongoSitemapService implements SitemapService {
     private ObjectStorageClient objectStorageProvider;
     @Resource
     private ActiveSiteMapService activeSiteMapService;
+    @Resource
+    private ResubmitService resubmitService;
 
     @Value("#{sitemapProperties['min.record.completeness']}")
     private int minRecordCompleteness;
@@ -284,6 +286,9 @@ public class MongoSitemapService implements SitemapService {
                 //Switch to updated cached file
                 String activeFile = activeSiteMapService.switchFile();
                 LOG.info("Switched active sitemap to {}", activeFile);
+
+                // Notify search engines
+                resubmitService.notifySearchEngines();
             } catch (Exception e) {
                 LOG.error("Error updating sitemap", e);
                 throw e;
