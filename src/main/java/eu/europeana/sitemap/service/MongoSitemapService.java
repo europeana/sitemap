@@ -7,6 +7,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
 import eu.europeana.sitemap.mongo.MongoProvider;
@@ -17,6 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.Resource;
@@ -30,6 +32,7 @@ import java.util.Optional;
 /**
  * Created by ymamakis on 11/16/15.
  */
+@Service
 public class MongoSitemapService implements SitemapService {
 
 
@@ -263,7 +266,7 @@ public class MongoSitemapService implements SitemapService {
      * @see SitemapService#update()
      */
     @Override
-    public void update() {
+    public void update() throws SiteMapException {
         // TODO instead of locking based on the status variable, it would be much better to lock based on a file placed in the storage provider.
         // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
         // clean any remaining lock from to failed applications.
@@ -278,6 +281,9 @@ public class MongoSitemapService implements SitemapService {
                 // First clear all old records from the inactive file
                 delete();
 
+                // Temporary save the contents of the index file
+                String oldIndex = getIndexFileContent();
+
                 // Then write records to the inactive file
                 long startTime = System.currentTimeMillis();
                 generate();
@@ -287,17 +293,22 @@ public class MongoSitemapService implements SitemapService {
                 String activeFile = activeSiteMapService.switchFile();
                 LOG.info("Switched active sitemap to {}", activeFile);
 
-                // Notify search engines
-                resubmitService.notifySearchEngines();
+                // Notify search engines, but only if index file has changed
+                String newIndex = getIndexFileContent();
+                if (newIndex.equalsIgnoreCase(oldIndex)) {
+                    LOG.info("Index has not changed");
+                } else {
+                    LOG.info("Index has changed");
+                    //resubmitService.notifySearchEngines();
+                }
             } catch (Exception e) {
                 LOG.error("Error updating sitemap", e);
-                throw e;
+                throw new SiteMapException("Error updating sitemap", e);
             } finally {
                 status = "done";
                 LOG.info("Status: {}", status);
             }
         }
-
     }
 
     /**

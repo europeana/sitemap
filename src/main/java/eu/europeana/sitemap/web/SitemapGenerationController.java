@@ -1,6 +1,7 @@
 package eu.europeana.sitemap.web;
 
 
+import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.SitemapService;
 import org.apache.commons.lang.StringUtils;
@@ -43,7 +44,7 @@ public class SitemapGenerationController {
      */
     @RequestMapping(value = "update", method = RequestMethod.GET, produces = MediaType.TEXT_XML_VALUE)
     public String update(@RequestParam(value = "wskey", required = true) String wskey,
-                         HttpServletResponse response) throws SiteMapNotFoundException, IOException {
+                         HttpServletResponse response) throws SiteMapException, IOException {
         try {
             if (verifyKey(wskey)) {
                 service.update();
@@ -51,7 +52,7 @@ public class SitemapGenerationController {
                 return service.getIndexFileContent();
             }
         } catch (SecurityException e) {
-            LOG.error("SecurityException", e);
+            LOG.error("SecurityException: "+e.getMessage());
             response.sendError(HttpServletResponse.SC_FORBIDDEN);
         }
 
@@ -64,7 +65,8 @@ public class SitemapGenerationController {
      */
     private boolean verifyKey(String wskey) {
         if (StringUtils.isEmpty(adminKey)) {
-            throw new SecurityException("No updates are allowed");
+            //TODO for now allow updates, enable when cron job is adjusted
+            //throw new SecurityException("No updates are allowed");
         } else if (!adminKey.equals(wskey)) {
             throw new SecurityException("Invalid key");
         }

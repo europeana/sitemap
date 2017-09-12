@@ -8,6 +8,7 @@ import org.jclouds.io.payloads.StringPayload;
 import org.jclouds.openstack.swift.v1.domain.SwiftObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -19,6 +20,7 @@ import java.util.Optional;
 /**
  * Created by jeroen on 21-9-16.
  */
+@Service
 public class ActiveSiteMapService {
 
     private static final Logger LOG = LoggerFactory.getLogger(ActiveSiteMapService.class);
