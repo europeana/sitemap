@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
@@ -39,15 +40,21 @@ public class ResubmitService {
      */
     public void notifySearchEngines() {
         if (StringUtils.isNotEmpty(indexUrl)) {
-            LOG.info("Notifying search engines that sitemap is updated...");
             try {
-                resubmitToService("Google", "http://google.com/ping", "sitemap");
-                resubmitToService("Bing", "http://www.bing.com/ping", "sitemap");
-            } catch (URISyntaxException | IOException e) {
-                LOG.error("Error pinging service", e);
+                // check if uri is valid
+                URI sitemapFile = new URIBuilder(indexUrl).build();
+                LOG.info("Notifying search engines that sitemap is updated...");
+                try {
+                    resubmitToService("Google", "http://google.com/ping", "sitemap", sitemapFile);
+                    resubmitToService("Bing", "http://www.bing.com/ping", "sitemap", sitemapFile);
+                } catch (URISyntaxException | IOException e) {
+                    LOG.error("Error pinging service", e);
+                }
+            } catch (URISyntaxException e) {
+                LOG.error("No valid sitemap index url specified", e);
             }
         } else {
-            LOG.info("No sitemap index-url specified, skipping search engine notification");
+            LOG.info("No sitemap index url specified, skipping search engine notification");
         }
     }
 
@@ -59,10 +66,10 @@ public class ResubmitService {
      * @throws URISyntaxException
      * @throws IOException
      */
-    private void resubmitToService(String serviceName, String serviceUrl, String serviceProperty) throws URISyntaxException, IOException {
+    private void resubmitToService(String serviceName, String serviceUrl, String serviceProperty, URI sitemapFile) throws URISyntaxException, IOException {
         LOG.info("Pinging {} with index = {}", serviceName, indexUrl);
         URIBuilder uriBuilder = new URIBuilder(serviceUrl);
-        uriBuilder.setParameter(serviceProperty, indexUrl);
+        uriBuilder.setParameter(serviceProperty, sitemapFile.toString());
         HttpGet getRequest = new HttpGet(uriBuilder.build());
         if (LOG.isDebugEnabled()) {
             LOG.debug("request = {} ", getRequest.getURI());
@@ -83,7 +90,7 @@ public class ResubmitService {
      */
     public static void main(String[] args) {
         ResubmitService ss = new ResubmitService();
-        ss.indexUrl = "http:///www.europeana.eu/portal/europeana-sitemap-index-hashed.xml";
+        ss.indexUrl = "http://www.europeana.eu/portal/europeana-sitemap-index-hashed.xml";
         ss.notifySearchEngines();
     }
 
