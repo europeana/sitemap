@@ -8,8 +8,8 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +28,7 @@ import java.net.URISyntaxException;
 @Service
 public class ResubmitService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ResubmitService.class);
+    private static final Logger LOG = LogManager.getLogger(ResubmitService.class);
 
     private static final HttpClient HTTP_CLIENT = HttpClientBuilder.create().build();
 
@@ -44,17 +44,21 @@ public class ResubmitService {
                 // check if uri is valid
                 URI sitemapFile = new URIBuilder(indexUrl).build();
                 LOG.info("Notifying search engines that sitemap is updated...");
-                try {
-                    resubmitToService("Google", "http://google.com/ping", "sitemap", sitemapFile);
-                    resubmitToService("Bing", "http://www.bing.com/ping", "sitemap", sitemapFile);
-                } catch (URISyntaxException | IOException e) {
-                    LOG.error("Error pinging service", e);
-                }
+                resubmitToServices(sitemapFile);
             } catch (URISyntaxException e) {
                 LOG.error("No valid sitemap index url specified", e);
             }
         } else {
             LOG.info("No sitemap index url specified, skipping search engine notification");
+        }
+    }
+
+    private void resubmitToServices(URI sitemapFile) {
+        try {
+            resubmitToService("Google", "http://google.com/ping", "sitemap", sitemapFile);
+            resubmitToService("Bing", "http://www.bing.com/ping", "sitemap", sitemapFile);
+        } catch (URISyntaxException | IOException e) {
+            LOG.error("Error pinging service", e);
         }
     }
 

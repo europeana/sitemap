@@ -1,8 +1,8 @@
 package eu.europeana.sitemap.web.context;
 
 import org.apache.commons.io.FileUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.boot.context.event.ApplicationEnvironmentPreparedEvent;
@@ -39,7 +39,7 @@ import java.util.Properties;
 public class VcapPropertyLoaderListener implements
         ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
 
-    private static final Logger LOG = LoggerFactory.getLogger(VcapPropertyLoaderListener.class);
+    private static final Logger LOG = LogManager.getLogger(VcapPropertyLoaderListener.class);
 
     private final static String SWIFT_AUTHENTICATION_URL="vcap.services.swift-sitemap.credentials.authentication_uri";
     private final static String SWIFT_AUTHENTICATION_AV_ZONE="vcap.services.swift-sitemap.credentials.availability_zone";

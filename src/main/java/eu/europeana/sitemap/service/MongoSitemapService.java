@@ -13,9 +13,9 @@ import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jclouds.io.payloads.ByteArrayPayload;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -36,7 +36,7 @@ import java.util.Optional;
 public class MongoSitemapService implements SitemapService {
 
 
-    private static final Logger LOG = LoggerFactory.getLogger(MongoSitemapService.class);
+    private static final Logger LOG = LogManager.getLogger(MongoSitemapService.class);
 
     /** XML definitions **/
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -299,7 +299,7 @@ public class MongoSitemapService implements SitemapService {
                     LOG.info("Index has not changed");
                 } else {
                     LOG.info("Index has changed");
-                    //resubmitService.notifySearchEngines();
+                    resubmitService.notifySearchEngines();
                 }
             } catch (Exception e) {
                 LOG.error("Error updating sitemap", e);
