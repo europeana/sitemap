@@ -44,6 +44,8 @@
 
     <bean id="resubmitService" class="eu.europeana.sitemap.service.ResubmitService"/>
 
+    <bean id="updateScheduler" class="eu.europeana.sitemap.service.UpdateScheduler"/>
+
     <context:component-scan base-package="eu.europeana.sitemap.web"/>
 
     <mvc:annotation-driven/>

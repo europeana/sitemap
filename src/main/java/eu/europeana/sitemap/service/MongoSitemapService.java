@@ -50,7 +50,7 @@ public class MongoSitemapService implements SitemapService {
     private static final String URL_CLOSING = "</url>";
     private static final String LOC_OPENING = "<loc>";
     private static final String LOC_CLOSING = "</loc>";
-    private static final String LN = "\n";
+    private static final char LN = '\n';
     private static final String PORTAL_URL = "http://www.europeana.eu/portal";
     private static final String RECORD_URL = PORTAL_URL+"/record";
     private static final String HTML = ".html";
@@ -93,7 +93,7 @@ public class MongoSitemapService implements SitemapService {
     /**
      * Generate a new sitemap
      */
-    public void generate() {
+    private void generate() {
         DBCollection col = mongoProvider.getCollection();
 
         DBObject query = new BasicDBObject();
@@ -240,7 +240,7 @@ public class MongoSitemapService implements SitemapService {
     /**
      * Delete the old sitemap at the currently inactive blue/green instance
      */
-    public void delete() {
+    private void delete() {
         List<StorageObject> list = objectStorageProvider.list();
         if(list.isEmpty()){
             LOG.info("No files to remove.");

@@ -18,6 +18,7 @@ import java.util.Optional;
 
 
 /**
+ * Check whether we use green or blue deployment
  * Created by jeroen on 21-9-16.
  */
 @Service
@@ -32,7 +33,10 @@ public class ActiveSiteMapService {
     @Resource
     private ObjectStorageClient objectStorageProvider;
 
-
+    /**
+     *
+     * @return either the green or blue version of a sitemap file name
+     */
     public String getActiveFile() {
         String result = "";
         String activeSiteMapFile = EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE;
@@ -40,7 +44,7 @@ public class ActiveSiteMapService {
         StorageObject storageObjectValue = null;
 
         if (!withoutBody.isPresent()) {
-            //In case that the active indication file does not exist, so we create one
+            // In case that the active indication file does not exist, so we create one
             saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
             return EUROPEANA_SITEMAP_HASHED_GREEN;
         } else {
