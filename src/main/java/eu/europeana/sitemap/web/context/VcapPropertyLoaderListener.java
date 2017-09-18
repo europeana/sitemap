@@ -41,11 +41,11 @@ public class VcapPropertyLoaderListener implements
   
     private static final Logger LOG = LogManager.getLogger(VcapPropertyLoaderListener.class);
 
-    private final static String SWIFT_AUTHENTICATION_URL="vcap.services.swift-sitemap.credentials.authentication_uri";
-    private final static String SWIFT_AUTHENTICATION_AV_ZONE="vcap.services.swift-sitemap.credentials.availability_zone";
-    private final static String SWIFT_AUTHENTICATION_TENANT_NAME="vcap.services.swift-sitemap.credentials.tenant_name";
-    private final static String SWIFT_AUTHENTICATION_USER_NAME="vcap.services.swift-sitemap.credentials.user_name";
-    private final static String SWIFT_AUTHENTICATION_PASSWORD="vcap.services.swift-sitemap.credentials.password";
+    private static final String SWIFT_AUTHENTICATION_URL="vcap.services.swift-sitemap.credentials.authentication_uri";
+    private static final String SWIFT_AUTHENTICATION_AV_ZONE="vcap.services.swift-sitemap.credentials.availability_zone";
+    private static final String SWIFT_AUTHENTICATION_TENANT_NAME="vcap.services.swift-sitemap.credentials.tenant_name";
+    private static final String SWIFT_AUTHENTICATION_USER_NAME="vcap.services.swift-sitemap.credentials.user_name";
+    private static final String SWIFT_AUTHENTICATION_PASSWORD="vcap.services.swift-sitemap.credentials.password";
     private static final String VCAP_APPLICATION = "VCAP_APPLICATION";
 
     private static final String VCAP_SERVICES = "VCAP_SERVICES";
@@ -160,8 +160,7 @@ public class VcapPropertyLoaderListener implements
             propertySources.addAfter(
                     CommandLinePropertySource.COMMAND_LINE_PROPERTY_SOURCE_NAME,
                     new PropertiesPropertySource("vcap", properties));
-        }
-        else {
+        } else {
             propertySources.addFirst(new PropertiesPropertySource("vcap", properties));
         }
         LOG.info("System environment:");
@@ -190,11 +189,9 @@ public class VcapPropertyLoaderListener implements
     private Properties getPropertiesFromApplication(Environment environment) {
         Properties properties = new Properties();
         try {
-            Map<String, Object> map = this.parser.parseMap(environment.getProperty(
-                    VCAP_APPLICATION, "{}"));
+            Map<String, Object> map = this.parser.parseMap(environment.getProperty(VCAP_APPLICATION, "{}"));
             extractPropertiesFromApplication(properties, map);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
            LOG.error("Error reading properties from application", e);
         }
         return properties;
@@ -203,25 +200,21 @@ public class VcapPropertyLoaderListener implements
     private Properties getPropertiesFromServices(Environment environment) {
         Properties properties = new Properties();
         try {
-            Map<String, Object> map = this.parser.parseMap(environment.getProperty(
-                    VCAP_SERVICES, "{}"));
+            Map<String, Object> map = this.parser.parseMap(environment.getProperty(VCAP_SERVICES, "{}"));
             extractPropertiesFromServices(properties, map);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             LOG.error("Error reading properties from services", e);
         }
         return properties;
     }
 
-    private void extractPropertiesFromApplication(Properties properties,
-                                                  Map<String, Object> map) {
+    private void extractPropertiesFromApplication(Properties properties, Map<String, Object> map) {
         if (map != null) {
             flatten(properties, map, "");
         }
     }
 
-    private void extractPropertiesFromServices(Properties properties,
-                                               Map<String, Object> map) {
+    private void extractPropertiesFromServices(Properties properties, Map<String, Object> map) {
         if (map != null) {
             for (Object services : map.values()) {
                 @SuppressWarnings("unchecked")
@@ -245,25 +238,21 @@ public class VcapPropertyLoaderListener implements
             if (StringUtils.hasText(path)) {
                 if (key.startsWith("[")) {
                     key = path + key;
-                }
-                else {
+                } else {
                     key = path + "." + key;
                 }
             }
             Object value = entry.getValue();
 
             if (value instanceof String) {
-
                 properties.put(key, value);
-            }
-            else if (value instanceof Map) {
+            } else if (value instanceof Map) {
                 // Need a compound key
                 @SuppressWarnings("unchecked")
                 Map<String, Object> map = (Map<String, Object>) value;
 
                 flatten(properties, map, key);
-            }
-            else if (value instanceof Collection) {
+            } else if (value instanceof Collection) {
                 // Need a compound key
                 @SuppressWarnings("unchecked")
                 Collection<Object> collection = (Collection<Object>) value;
@@ -275,8 +264,7 @@ public class VcapPropertyLoaderListener implements
                     flatten(properties,
                             Collections.singletonMap("[" + (count++) + "]", object), key);
                 }
-            }
-            else {
+            } else {
                 System.out.println("is else " +key+":" +value);
                 properties.put(key, value == null ? "" : value);
             }
