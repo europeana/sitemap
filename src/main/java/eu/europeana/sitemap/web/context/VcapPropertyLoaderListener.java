@@ -39,8 +39,8 @@ import org.springframework.web.context.support.StandardServletEnvironment;
 
 public class VcapPropertyLoaderListener implements
         ApplicationListener<ApplicationEnvironmentPreparedEvent>, Ordered {
-
-    private static final Logger LOG = LoggerFactory.getLogger(VcapPropertyLoaderListener.class);
+  
+    private static final Logger LOG = LogManager.getLogger(VcapPropertyLoaderListener.class);
 
     private final static String SWIFT_AUTHENTICATION_URL="vcap.services.swift-sitemap.credentials.authentication_uri";
     private final static String SWIFT_AUTHENTICATION_AV_ZONE="vcap.services.swift-sitemap.credentials.availability_zone";
@@ -286,3 +286,4 @@ public class VcapPropertyLoaderListener implements
 
 
 }
+

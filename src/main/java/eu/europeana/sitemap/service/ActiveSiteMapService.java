@@ -3,11 +3,12 @@ package eu.europeana.sitemap.service;
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.jclouds.io.Payload;
 import org.jclouds.io.payloads.StringPayload;
 import org.jclouds.openstack.swift.v1.domain.SwiftObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.io.IOException;
@@ -19,9 +20,10 @@ import java.util.Optional;
 /**
  * Created by jeroen on 21-9-16.
  */
+@Service
 public class ActiveSiteMapService {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ActiveSiteMapService.class);
+    private static final Logger LOG = LogManager.getLogger(ActiveSiteMapService.class);
 
     public static final String EUROPEANA_SITEMAP_HASHED_GREEN = "europeana-sitemap-hashed-green.xml";
     public static final String EUROPEANA_SITEMAP_HASHED_BLUE = "europeana-sitemap-hashed-blue.xml";

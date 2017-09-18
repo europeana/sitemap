@@ -1,5 +1,6 @@
 package eu.europeana.sitemap.service;
 
+import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 
 import java.io.IOException;
@@ -15,7 +16,7 @@ public interface SitemapService {
      * Start the sitemap update process. This will delete any old sitemap at the inactive blue/green instance first,
      * then create a new sitemap and finally switching to the blue/green instances.
      */
-    void update();
+    void update() throws SiteMapException;
 
     /**
      * Retrieve a list of all files that are stored at our object provider's bucket
