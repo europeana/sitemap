@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
+import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -43,7 +44,7 @@ public class UpdateScheduler {
             LOG.warn("No update cron settings specified!");
         } else {
             TimeZone timezone = TimeZone.getTimeZone("Europe/Amsterdam");
-            LOG.info("Cron update schedule is: {} {}", updateCronConfig, timezone);
+            LOG.info("Cron update schedule is: {} {}", updateCronConfig, timezone.getID());
             scheduler.schedule(new UpdateRunnable(), new CronTrigger(updateCronConfig, timezone));
         }
     }
