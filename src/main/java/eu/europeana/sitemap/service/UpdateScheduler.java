@@ -10,8 +10,8 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
-import java.util.Locale;
 import java.util.TimeZone;
 
 /**
@@ -30,7 +30,7 @@ public class UpdateScheduler {
     @Value("#{sitemapProperties['scheduler.cron.update']}")
     private String updateCronConfig;
 
-    private ThreadPoolTaskScheduler scheduler = new ThreadPoolTaskScheduler();
+    private ThreadPoolTaskScheduler scheduler;
 
     /**
      * Initialize scheduler according to cron settings in properties file. If no configuration is found
@@ -38,11 +38,12 @@ public class UpdateScheduler {
      */
     @PostConstruct
     public void init() {
-        scheduler.setPoolSize(1);
-        scheduler.initialize();
         if (updateCronConfig == null) {
             LOG.warn("No update cron settings specified!");
         } else {
+            scheduler = new ThreadPoolTaskScheduler();
+            scheduler.setPoolSize(1);
+            scheduler.initialize();
             TimeZone timezone = TimeZone.getTimeZone("Europe/Amsterdam");
             LOG.info("Cron update schedule is: {} {}", updateCronConfig, timezone.getID());
             scheduler.schedule(new UpdateRunnable(), new CronTrigger(updateCronConfig, timezone));
@@ -58,6 +59,17 @@ public class UpdateScheduler {
             } catch (SiteMapException e) {
                 LOG.error("Error running update process", e);
             }
+        }
+    }
+
+    /**
+     * Clean up when the application is shutting down
+     */
+    @PreDestroy
+    public void shutdown() {
+        if (scheduler != null) {
+            LOG.info("Shutting down scheduler...");
+            scheduler.shutdown();
         }
     }
 
