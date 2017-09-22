@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -51,8 +52,6 @@ public class MongoSitemapService implements SitemapService {
     private static final String LOC_OPENING = "<loc>";
     private static final String LOC_CLOSING = "</loc>";
     private static final char LN = '\n';
-    private static final String PORTAL_URL = "http://www.europeana.eu/portal";
-    private static final String RECORD_URL = PORTAL_URL+"/record";
     private static final String HTML = ".html";
     private static final String FROM = "?from=";
     private static final String TO = "&to=";
@@ -84,11 +83,32 @@ public class MongoSitemapService implements SitemapService {
     @Resource
     private ResubmitService resubmitService;
 
+    @Value("#{sitemapProperties['portal.base.url']}")
+    private String portalBaseUrl;
+
+    @Value("#{sitemapProperties['portal.record.urlpath']}")
+    private String portalRecordUrlPath;
+
     @Value("#{sitemapProperties['min.record.completeness']}")
     private int minRecordCompleteness;
 
     private String status = "initial";
 
+
+    @PostConstruct
+    private void init() throws SiteMapException {
+        // check configuration for required properties
+        if (StringUtils.isEmpty(portalBaseUrl)) {
+            throw new SiteMapException("Configuration error: portal.base.url is not set");
+        }
+        // to avoid problems with accidental trailing spaces
+        portalBaseUrl = portalBaseUrl.trim();
+
+        if (StringUtils.isEmpty(portalRecordUrlPath)) {
+            throw new SiteMapException("Configuration error: portal.record.urlpath is not set");
+        }
+        portalRecordUrlPath = portalRecordUrlPath.trim();
+    }
 
     /**
      * Generate a new sitemap
@@ -136,7 +156,7 @@ public class MongoSitemapService implements SitemapService {
             Date dateUpdated = (timestampUpdated == null ? null : (Date) timestampUpdated);
 
             slave.append(URL_OPENING).append(LN)
-                    .append(LOC_OPENING).append(RECORD_URL).append(about).append(HTML).append(LOC_CLOSING).append(LN)
+                    .append(LOC_OPENING).append(portalBaseUrl).append(portalRecordUrlPath).append(about).append(HTML).append(LOC_CLOSING).append(LN)
                     .append(PRIORITY_OPENING).append(completeness > 9 ? "1.0" : ("0." + completeness)).append(PRIORITY_CLOSING).append(LN)
                     .append(generateLastModified(dateUpdated).toString())
                     .append(URL_CLOSING).append(LN);
@@ -148,7 +168,7 @@ public class MongoSitemapService implements SitemapService {
                 // add fileName to index
                 String indexEntry = SLAVE_KEY + fromToText;
                 master.append(SITEMAP_OPENING).append(LN)
-                        .append(LOC_OPENING).append(StringEscapeUtils.escapeXml(PORTAL_URL + "/" + indexEntry)).append(LOC_CLOSING).append(LN)
+                        .append(LOC_OPENING).append(StringEscapeUtils.escapeXml(portalBaseUrl +"/" + indexEntry)).append(LOC_CLOSING).append(LN)
                         // TODO if we can compare a sitemap file with the previous version, we can check if it has changed and include a lastmodified?
                         //.append(generateLastModified(new Date()).toString())
                         .append(SITEMAP_CLOSING).append(LN);

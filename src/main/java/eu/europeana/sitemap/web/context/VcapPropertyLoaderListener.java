@@ -84,7 +84,7 @@ public class VcapPropertyLoaderListener implements
             // Using the built-in store() method escapes certain characters (e.g. '=' and ':'), which is
             // not what we want to do (it breaks reading the properties elsewhere)
             // While we're writing the properties manually, might as well sort the list alphabetically...
-            List<String> sortedKeys = new ArrayList<String>();
+            List<String> sortedKeys = new ArrayList<>();
             for (Object key : props.keySet()) {
                 sortedKeys.add(key.toString());
             }

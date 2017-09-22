@@ -32,7 +32,10 @@ public class ResubmitService {
 
     private static final HttpClient HTTP_CLIENT = HttpClientBuilder.create().build();
 
-    @Value("#{sitemapProperties['index.deploy.url']}")
+    @Value("#{sitemapProperties['portal.base.url']}")
+    private String portalBaseUrl;
+
+    @Value("#{sitemapProperties['portal.sitemapindex.urlpath']}")
     private String indexUrl;
 
     /**
@@ -42,7 +45,7 @@ public class ResubmitService {
         if (StringUtils.isNotEmpty(indexUrl)) {
             try {
                 // check if uri is valid
-                URI sitemapFile = new URIBuilder(indexUrl).build();
+                URI sitemapFile = new URIBuilder(portalBaseUrl + indexUrl).build();
                 LOG.info("Notifying search engines that sitemap is updated...");
                 resubmitToServices(sitemapFile);
             } catch (URISyntaxException e) {
@@ -71,7 +74,7 @@ public class ResubmitService {
      * @throws IOException
      */
     private void resubmitToService(String serviceName, String serviceUrl, String serviceProperty, URI sitemapFile) throws URISyntaxException, IOException {
-        LOG.info("Pinging {} with index = {}", serviceName, indexUrl);
+        LOG.info("Pinging {} with index = {}", serviceName, sitemapFile.toString());
         URIBuilder uriBuilder = new URIBuilder(serviceUrl);
         uriBuilder.setParameter(serviceProperty, sitemapFile.toString());
         HttpGet getRequest = new HttpGet(uriBuilder.build());
