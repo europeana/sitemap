@@ -9,7 +9,7 @@
     </parent>
     <groupId>eu.europeana</groupId>
     <artifactId>sitemap</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>Europeana Sitemap</name>
 
