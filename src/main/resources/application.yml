@@ -1,0 +1,3 @@
+server:
+  context-path: /sitemap/
+  port: 8081
