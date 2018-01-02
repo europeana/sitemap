@@ -45,11 +45,7 @@ public class ActiveSiteMapService {
         Optional<StorageObject> withoutBody = objectStorageProvider.getWithoutBody(activeSiteMapFile);
         StorageObject storageObjectValue = null;
 
-        if (!withoutBody.isPresent()) {
-            // In case that the active indication file does not exist, so we create one
-            saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
-            return EUROPEANA_SITEMAP_HASHED_GREEN;
-        } else {
+        if (withoutBody.isPresent()) {
             StringWriter writer = new StringWriter();
             Optional<StorageObject> storageObject = objectStorageProvider.get(activeSiteMapFile);
             storageObjectValue = storageObject.get();
@@ -60,13 +56,21 @@ public class ActiveSiteMapService {
             } catch (IOException e) {
                 LOG.error("Error while processing the file {} to determine the current active site map", activeSiteMapFile, e);
             }
+        } else {
+            // In case that the active indication file does not exist, so we create one
+            saveToStorageProvider(EUROPEANA_SITEMAP_HASHED_GREEN);
+            result = EUROPEANA_SITEMAP_HASHED_GREEN;
         }
         return result;
     }
 
+    /**
+     *
+     * @return the inactive sitemap file name (blue/green)
+     */
     public String getInactiveFile() {
         String result;
-        if (getActiveFile().equals(EUROPEANA_SITEMAP_HASHED_GREEN)) {
+        if (EUROPEANA_SITEMAP_HASHED_GREEN.equals(getActiveFile())) {
             result = EUROPEANA_SITEMAP_HASHED_BLUE;
         } else {
             result = EUROPEANA_SITEMAP_HASHED_GREEN;
@@ -77,15 +81,10 @@ public class ActiveSiteMapService {
 
     /**
      * Switch between blue/green sitemap files
-     * @return the now active sitemap file name
+     * @return the now active sitemap file name (blue/green)
      */
     public String switchFile() {
-        String result;
-        if (getActiveFile().equals(EUROPEANA_SITEMAP_HASHED_GREEN)) {
-            result = EUROPEANA_SITEMAP_HASHED_BLUE;
-        } else {
-            result = EUROPEANA_SITEMAP_HASHED_GREEN;
-        }
+        String result = getInactiveFile();
         saveToStorageProvider(result);
         return result;
     }
@@ -99,10 +98,6 @@ public class ActiveSiteMapService {
     private String saveToStorageProvider(String value) {
         Payload payload = new StringPayload(value);
         return objectStorageProvider.put(EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE, payload);
-    }
-
-    public ObjectStorageClient getObjectStorageProvider() {
-        return objectStorageProvider;
     }
 
 }

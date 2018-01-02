@@ -37,15 +37,6 @@ public class SitemapApplication extends SpringBootServletInitializer {
     @Value("${s3.bucket}")
     private String bucket;
 
-    /**
-     * Location where all sitemap files are stored (Amazon S3)
-     * @return
-     */
-    @Bean
-    public ObjectStorageClient objectStorageClient() {
-        return new S3ObjectStorageClient(key, secret, region, bucket);
-    }
-
     @Value("${mongo.hosts}")
     private String hosts;
     @Value("${mongo.port}")
@@ -64,6 +55,15 @@ public class SitemapApplication extends SpringBootServletInitializer {
     @Bean
     public MongoProvider mongoProvider() {
         return new MongoProvider(hosts, port, username, password, database);
+    }
+
+    /**
+     * Location where all sitemap files are stored (Amazon S3)
+     * @return
+     */
+    @Bean
+    public ObjectStorageClient objectStorageClient() {
+        return new S3ObjectStorageClient(key, secret, region, bucket);
     }
 
     /**
@@ -111,6 +111,10 @@ public class SitemapApplication extends SpringBootServletInitializer {
         return new GenerateSitemapServiceImpl(mongoProvider(), objectStorageClient(), activeSitemapService(), readSitemapService(), resubmitSitemapService());
     }
 
+    /**
+     * Application start method
+     * @param args
+     */
     @SuppressWarnings("squid:S2095") // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
     public static void main(String[] args) {
         SpringApplication.run(SitemapApplication.class, args);
