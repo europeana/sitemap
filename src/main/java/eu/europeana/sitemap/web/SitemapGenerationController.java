@@ -2,11 +2,10 @@ package eu.europeana.sitemap.web;
 
 
 import eu.europeana.sitemap.exceptions.SiteMapException;
-import eu.europeana.sitemap.service.SitemapService;
+import eu.europeana.sitemap.service.GenerateSitemapService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,9 +28,9 @@ public class SitemapGenerationController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapGenerationController.class);
 
-    private final SitemapService updateService;
+    private final GenerateSitemapService updateService;
 
-    public SitemapGenerationController(SitemapService updateService) {
+    public SitemapGenerationController(GenerateSitemapService updateService) {
         this.updateService = updateService;
     }
 
@@ -50,8 +49,8 @@ public class SitemapGenerationController {
         try {
             if (verifyKey(wskey)) {
                 updateService.update();
-                // we try to return the index file, but since updating takes a long time the browser may already have timed-out
-                return updateService.getIndexFileContent();
+                // we try to return a result, but since updating takes a long time the browser may already have timed-out
+                return "Updating finished";
             }
         } catch (SecurityException e) {
             LOG.error("SecurityException: "+e.getMessage());
@@ -67,8 +66,7 @@ public class SitemapGenerationController {
      */
     private boolean verifyKey(String wskey) {
         if (StringUtils.isEmpty(adminKey)) {
-            //TODO for now allow updates, enable when cron job is adjusted
-            //throw new SecurityException("No updates are allowed");
+            throw new SecurityException("No updates are allowed");
         } else if (!adminKey.equals(wskey)) {
             throw new SecurityException("Invalid key");
         }

@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import java.util.TimeZone;
 
 /**
@@ -24,14 +23,14 @@ public class UpdateScheduler {
 
     private static final Logger LOG = LogManager.getLogger(UpdateScheduler.class);
 
-    private final MongoSitemapService mongoSitemapService;
+    private final GenerateSitemapService mongoSitemapService;
 
     @Value("${scheduler.cron.update}")
     private String updateCronConfig;
 
     private ThreadPoolTaskScheduler scheduler;
 
-    public UpdateScheduler(MongoSitemapService mongoSitemapService) {
+    public UpdateScheduler(GenerateSitemapService mongoSitemapService) {
         this.mongoSitemapService = mongoSitemapService;
     }
 

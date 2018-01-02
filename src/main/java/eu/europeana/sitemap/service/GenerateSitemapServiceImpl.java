@@ -7,8 +7,8 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.sitemap.Naming;
 import eu.europeana.sitemap.exceptions.SiteMapException;
-import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -16,27 +16,25 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jclouds.io.payloads.ByteArrayPayload;
-
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by ymamakis on 11/16/15.
  */
 @Service
-public class MongoSitemapService implements SitemapService {
+@Primary
+public class GenerateSitemapServiceImpl implements GenerateSitemapService {
 
 
-    private static final Logger LOG = LogManager.getLogger(MongoSitemapService.class);
+    private static final Logger LOG = LogManager.getLogger(GenerateSitemapServiceImpl.class);
 
     /** XML definitions **/
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -62,8 +60,6 @@ public class MongoSitemapService implements SitemapService {
     private static final String PRIORITY_CLOSING = "</priority>";
     private static final String LASTMOD_OPENING = "<lastmod>";
     private static final String LASTMOD_CLOSING = "</lastmod>";
-    private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
-    private static final String SLAVE_KEY = "europeana-sitemap-hashed.xml";
 
     /** Used mongo fields **/
     private static final String ABOUT = "about";
@@ -76,6 +72,7 @@ public class MongoSitemapService implements SitemapService {
     private final MongoProvider mongoProvider;
     private final ObjectStorageClient objectStorageProvider;
     private final ActiveSiteMapService activeSiteMapService;
+    private final ReadSitemapService readSitemapService;
     private final ResubmitService resubmitService;
 
     @Value("${portal.base.url}")
@@ -87,10 +84,13 @@ public class MongoSitemapService implements SitemapService {
 
     private String status = "initial";
 
-    public MongoSitemapService(MongoProvider mongoProvider, ObjectStorageClient objectStorageProvider, ActiveSiteMapService activeSiteMapService, ResubmitService resubmitService) {
+    public GenerateSitemapServiceImpl(MongoProvider mongoProvider, ObjectStorageClient objectStorageProvider,
+                                      ActiveSiteMapService activeSiteMapService, ReadSitemapService readSitemapService,
+                                      ResubmitService resubmitService) {
         this.mongoProvider = mongoProvider;
         this.objectStorageProvider = objectStorageProvider;
         this.activeSiteMapService = activeSiteMapService;
+        this.readSitemapService = readSitemapService;
         this.resubmitService = resubmitService;
     }
 
@@ -165,7 +165,7 @@ public class MongoSitemapService implements SitemapService {
                 String fromToText = FROM + from + TO + nrRecords;
 
                 // add fileName to index
-                String indexEntry = SLAVE_KEY + fromToText;
+                String indexEntry = Naming.SITEMAP_FILE + fromToText;
                 master.append(SITEMAP_OPENING).append(LN)
                         .append(LOC_OPENING).append(StringEscapeUtils.escapeXml(portalBaseUrl +"/" + indexEntry)).append(LOC_CLOSING).append(LN)
                         // TODO if we can compare a sitemap file with the previous version, we can check if it has changed and include a lastmodified?
@@ -189,7 +189,7 @@ public class MongoSitemapService implements SitemapService {
         }
         cur.close();
         master.append(SITEMAP_HEADER_CLOSING);
-        saveToStorage(MASTER_KEY, master.toString());
+        saveToStorage(Naming.SITEMAP_INDEX_FILE, master.toString());
         LOG.info("Records processed {}, written {} sitemap files and 1 sitemap index file", nrRecords, nrSitemaps);
     }
 
@@ -273,7 +273,7 @@ public class MongoSitemapService implements SitemapService {
     }
 
     /**
-     * @see SitemapService#update()
+     * @see GenerateSitemapService#update()
      */
     @Override
     public void update() throws SiteMapException {
@@ -292,7 +292,7 @@ public class MongoSitemapService implements SitemapService {
                 delete();
 
                 // Temporary save the contents of the index file
-                String oldIndex = getIndexFileContent();
+                String oldIndex = readSitemapService.getIndexFileContent();
 
                 // Then write records to the inactive file
                 long startTime = System.currentTimeMillis();
@@ -304,7 +304,7 @@ public class MongoSitemapService implements SitemapService {
                 LOG.info("Switched active sitemap to {}", activeFile);
 
                 // Notify search engines, but only if index file has changed
-                String newIndex = getIndexFileContent();
+                String newIndex = readSitemapService.getIndexFileContent();
                 if (newIndex.equalsIgnoreCase(oldIndex)) {
                     LOG.info("Index has not changed");
                 } else {
@@ -319,43 +319,6 @@ public class MongoSitemapService implements SitemapService {
                 LOG.info("Status: {}", status);
             }
         }
-    }
-
-    /**
-     * @see SitemapService#getFiles()
-     */
-    @Override
-    public String getFiles() {
-        List<StorageObject> files = objectStorageProvider.list();
-        Collections.sort(files, (StorageObject o1, StorageObject o2) -> o1.getLastModified().compareTo(o2.getLastModified()));
-        StringBuilder result = new StringBuilder();
-        for (StorageObject file : files) {
-            result.append(file.getLastModified());
-            result.append("\t");
-            result.append(file.getName());
-            result.append("\n");
-        }
-        return result.toString();
-    }
-
-    /**
-     * @see SitemapService#getFileContent(String)
-     */
-    @Override
-    public String getFileContent(String fileName) throws SiteMapNotFoundException, IOException {
-        Optional<StorageObject> file = objectStorageProvider.get(fileName);
-        if (file.isPresent()) {
-            return new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
-        }
-        throw new SiteMapNotFoundException("File " + fileName + " not found!");
-    }
-
-    /**
-     * @see SitemapService#getIndexFileContent()
-     */
-    @Override
-    public String getIndexFileContent() throws SiteMapNotFoundException, IOException {
-        return getFileContent(MASTER_KEY);
     }
 
 }

@@ -18,7 +18,7 @@
 package eu.europeana.sitemap.web;
 
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
-import eu.europeana.sitemap.service.SitemapService;
+import eu.europeana.sitemap.service.ReadSitemapService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
@@ -47,9 +47,9 @@ public class SitemapReadController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapReadController.class);
 
-    private final SitemapService service;
+    private final ReadSitemapService service;
 
-    public SitemapReadController(SitemapService service) {
+    public SitemapReadController(ReadSitemapService service) {
         this.service = service;
     }
 

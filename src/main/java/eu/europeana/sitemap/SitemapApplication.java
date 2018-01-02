@@ -4,7 +4,8 @@ import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveSiteMapService;
-import eu.europeana.sitemap.service.MongoSitemapService;
+import eu.europeana.sitemap.service.GenerateSitemapServiceImpl;
+import eu.europeana.sitemap.service.ReadSitemapServiceImpl;
 import eu.europeana.sitemap.service.ResubmitService;
 import eu.europeana.sitemap.service.UpdateScheduler;
 import org.springframework.beans.factory.annotation.Value;
@@ -17,7 +18,7 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
 
 /**
- * Main application and configurration
+ * Main application and configuration
  * @author Patrick Ehlert on 14-11-17.
  */
 @SpringBootApplication
@@ -71,7 +72,7 @@ public class SitemapApplication {
      */
     @Bean
     public UpdateScheduler updateScheduler() {
-        return new UpdateScheduler(mongoSitemapService());
+        return new UpdateScheduler(generateSitemapService());
     }
 
     /**
@@ -93,12 +94,21 @@ public class SitemapApplication {
     }
 
     /**
-     * Main application service that reads from mongo, updates files and allows access to s3
+     * Main application service1 for reading files from s3
      * @return
      */
     @Bean
-    public MongoSitemapService mongoSitemapService() {
-        return new MongoSitemapService(mongoProvider(), objectStorageClient(), activeSitemapService(), resubmitSitemapService());
+    public ReadSitemapServiceImpl readSitemapService() {
+        return new ReadSitemapServiceImpl(objectStorageClient());
+    }
+
+    /**
+     * Main application service2 that generates a new sitemap
+     * @return
+     */
+    @Bean
+    public GenerateSitemapServiceImpl generateSitemapService() {
+        return new GenerateSitemapServiceImpl(mongoProvider(), objectStorageClient(), activeSitemapService(), readSitemapService(), resubmitSitemapService());
     }
 
     @SuppressWarnings("squid:S2095") // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
