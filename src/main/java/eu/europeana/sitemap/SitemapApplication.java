@@ -13,6 +13,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
@@ -23,10 +24,9 @@ import org.springframework.context.annotation.PropertySource;
  */
 @SpringBootApplication
 @EnableAutoConfiguration(exclude={MongoAutoConfiguration.class})
-@ComponentScan
 @PropertySource("classpath:sitemap.properties")
 @PropertySource("classpath:sitemap.user.properties")
-public class SitemapApplication {
+public class SitemapApplication extends SpringBootServletInitializer {
 
     @Value("${s3.key}")
     private String key;
