@@ -25,7 +25,7 @@ import org.springframework.context.annotation.PropertySource;
 @SpringBootApplication
 @EnableAutoConfiguration(exclude={MongoAutoConfiguration.class})
 @PropertySource("classpath:sitemap.properties")
-@PropertySource("classpath:sitemap.user.properties")
+@PropertySource(value = "classpath:sitemap.user.properties", ignoreResourceNotFound = true)
 public class SitemapApplication extends SpringBootServletInitializer {
 
     @Value("${s3.key}")
