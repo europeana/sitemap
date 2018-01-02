@@ -2,16 +2,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <parent>
-        <groupId>eu.europeana</groupId>
-        <artifactId>europeana-parent-pom</artifactId>
-        <version>1.7</version>
-    </parent>
     <groupId>eu.europeana</groupId>
     <artifactId>sitemap</artifactId>
-    <version>1.1-SNAPSHOT</version>
+    <version>1.2-SNAPSHOT</version>
     <packaging>war</packaging>
     <name>Europeana Sitemap</name>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>1.5.8.RELEASE</version>
+    </parent>
 
     <scm>
         <connection>scm:git:git@github.com:europeana/europeana-sitemap.git</connection>
@@ -21,82 +22,60 @@
     </scm>
 
     <properties>
-        <spring.version>4.1.3.RELEASE</spring.version>
-        <log4j.version>2.9.0</log4j.version>
+        <spring-boot.version>1.5.8.RELEASE</spring-boot.version>
+        <spring.version>4.3.12.RELEASE</spring.version>
+        <mongo.driver.version>3.5.0</mongo.driver.version>
+        <object-storage.version>1.6-SNAPSHOT</object-storage.version>
     </properties>
 
 
     <dependencies>
+
         <dependency>
             <groupId>eu.europeana</groupId>
             <artifactId>object-storage</artifactId>
-            <version>1.5</version>
+            <version>${object-storage.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot</artifactId>
-            <version>1.2.0.RELEASE</version>
+            <artifactId>spring-boot-starter</artifactId>
             <exclusions>
+                <!-- use log4j2 instead -->
                 <exclusion>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-logging</artifactId>
                 </exclusion>
-                <exclusion>
-                    <artifactId>google-collections</artifactId>
-                    <groupId>com.google.collections</groupId>
-                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-core</artifactId>
-            <version>${spring.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-beans</artifactId>
-            <version>${spring.version}</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
+        <!-- enable the starter-tomcat dependency to deploy to Docker/Tomcat
         <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-context</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-webmvc</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework</groupId>
-            <artifactId>spring-web</artifactId>
-            <version>${spring.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-tomcat</artifactId>
+            <scope>provided</scope>
+        </dependency> -->
 
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>2.13.0</version>
+            <version>${mongo.driver.version}</version>
         </dependency>
 
-        <dependency>
-            <groupId>javax.servlet</groupId>
-            <artifactId>servlet-api</artifactId>
-            <version>2.5</version>
-            <scope>provided</scope>
-        </dependency>
+        <!-- IOUtils, FileUtils -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>2.4</version>
         </dependency>
+        <!-- StringUtils -->
         <dependency>
             <groupId>commons-lang</groupId>
             <artifactId>commons-lang</artifactId>

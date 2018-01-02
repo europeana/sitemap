@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -48,8 +47,11 @@ public class SitemapReadController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapReadController.class);
 
-    @Resource
-    private SitemapService service;
+    private final SitemapService service;
+
+    public SitemapReadController(SitemapService service) {
+        this.service = service;
+    }
 
     /**
      * Return the sitemap index file
@@ -114,7 +116,7 @@ public class SitemapReadController {
      * @param response
      * @return
      */
-    @RequestMapping(value = "files", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+    @RequestMapping(value = {"list", "files"}, method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
     public String files(HttpServletResponse response) {
         return service.getFiles();
     }

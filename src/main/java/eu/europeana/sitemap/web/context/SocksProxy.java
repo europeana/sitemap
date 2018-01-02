@@ -21,6 +21,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Adds socks proxy to the system environment
@@ -68,7 +69,7 @@ public class SocksProxy extends Authenticator{
      * @return authentication details encoded in base64
      */
     public String getEncodedAuth(){
-        return java.util.Base64.getEncoder().encodeToString((auth.user + ":" + auth.password).getBytes());
+        return java.util.Base64.getEncoder().encodeToString((auth.user + ":" + auth.password).getBytes(StandardCharsets.UTF_8));
     }
 
     /**

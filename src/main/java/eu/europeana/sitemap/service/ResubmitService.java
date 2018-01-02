@@ -32,10 +32,10 @@ public class ResubmitService {
 
     private static final HttpClient HTTP_CLIENT = HttpClientBuilder.create().build();
 
-    @Value("#{sitemapProperties['portal.base.url']}")
+    @Value("${portal.base.url}")
     private String portalBaseUrl;
 
-    @Value("#{sitemapProperties['portal.sitemapindex.urlpath']}")
+    @Value("${portal.sitemapindex.urlpath}")
     private String indexUrl;
 
     /**

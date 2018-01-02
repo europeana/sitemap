@@ -24,13 +24,16 @@ public class UpdateScheduler {
 
     private static final Logger LOG = LogManager.getLogger(UpdateScheduler.class);
 
-    @Resource
-    private MongoSitemapService mongoSitemapService;
+    private final MongoSitemapService mongoSitemapService;
 
-    @Value("#{sitemapProperties['scheduler.cron.update']}")
+    @Value("${scheduler.cron.update}")
     private String updateCronConfig;
 
     private ThreadPoolTaskScheduler scheduler;
+
+    public UpdateScheduler(MongoSitemapService mongoSitemapService) {
+        this.mongoSitemapService = mongoSitemapService;
+    }
 
     /**
      * Initialize scheduler according to cron settings in properties file. If no configuration is found

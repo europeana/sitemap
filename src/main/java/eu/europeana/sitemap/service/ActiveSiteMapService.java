@@ -10,7 +10,6 @@ import org.jclouds.io.payloads.StringPayload;
 import org.jclouds.openstack.swift.v1.domain.SwiftObject;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringWriter;
@@ -30,8 +29,11 @@ public class ActiveSiteMapService {
     public static final String EUROPEANA_SITEMAP_HASHED_BLUE = "europeana-sitemap-hashed-blue.xml";
     public static final String EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE = "europeana-sitemap-active-xml-file.txt";
 
-    @Resource
-    private ObjectStorageClient objectStorageProvider;
+    private final ObjectStorageClient objectStorageProvider;
+    
+    public ActiveSiteMapService(ObjectStorageClient objectStorageClient) {
+        this.objectStorageProvider = objectStorageClient;
+    }
 
     /**
      *
@@ -99,12 +101,8 @@ public class ActiveSiteMapService {
         return objectStorageProvider.put(EUROPEANA_ACTIVE_SITEMAP_SWITCH_FILE, payload);
     }
 
-
     public ObjectStorageClient getObjectStorageProvider() {
         return objectStorageProvider;
     }
 
-    public void setObjectStorageProvider(ObjectStorageClient objectStorageProvider) {
-        this.objectStorageProvider = objectStorageProvider;
-    }
 }

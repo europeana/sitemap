@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
@@ -74,26 +73,26 @@ public class MongoSitemapService implements SitemapService {
 
     public static final int NUMBER_OF_ELEMENTS = 45_000;
 
-    @Resource
-    private MongoProvider mongoProvider;
-    @Resource
-    private ObjectStorageClient objectStorageProvider;
-    @Resource
-    private ActiveSiteMapService activeSiteMapService;
-    @Resource
-    private ResubmitService resubmitService;
+    private final MongoProvider mongoProvider;
+    private final ObjectStorageClient objectStorageProvider;
+    private final ActiveSiteMapService activeSiteMapService;
+    private final ResubmitService resubmitService;
 
-    @Value("#{sitemapProperties['portal.base.url']}")
+    @Value("${portal.base.url}")
     private String portalBaseUrl;
-
-    @Value("#{sitemapProperties['portal.record.urlpath']}")
+    @Value("${portal.record.urlpath}")
     private String portalRecordUrlPath;
-
-    @Value("#{sitemapProperties['min.record.completeness']}")
+    @Value("${min.record.completeness}")
     private int minRecordCompleteness;
 
     private String status = "initial";
 
+    public MongoSitemapService(MongoProvider mongoProvider, ObjectStorageClient objectStorageProvider, ActiveSiteMapService activeSiteMapService, ResubmitService resubmitService) {
+        this.mongoProvider = mongoProvider;
+        this.objectStorageProvider = objectStorageProvider;
+        this.activeSiteMapService = activeSiteMapService;
+        this.resubmitService = resubmitService;
+    }
 
     @PostConstruct
     private void init() throws SiteMapException {
@@ -113,7 +112,7 @@ public class MongoSitemapService implements SitemapService {
     /**
      * Generate a new sitemap
      */
-    private void generate() {
+    public void generate() {
         DBCollection col = mongoProvider.getCollection();
 
         DBObject query = new BasicDBObject();
@@ -244,17 +243,8 @@ public class MongoSitemapService implements SitemapService {
         return mongoProvider;
     }
 
-    public void setMongoProvider(MongoProvider mongoProvider) {
-        this.mongoProvider = mongoProvider;
-    }
-
     public ObjectStorageClient getObjectStorageProvider() {
         return objectStorageProvider;
-    }
-
-    public void setObjectStorageProvider(ObjectStorageClient objectStorageProvider) {
-        LOG.info("Object storage provider is {}, bucket {} ", objectStorageProvider.getName(), objectStorageProvider.getBucketName());
-        this.objectStorageProvider = objectStorageProvider;
     }
 
     /**

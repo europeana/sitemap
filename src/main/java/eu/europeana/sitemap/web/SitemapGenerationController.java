@@ -6,6 +6,7 @@ import eu.europeana.sitemap.service.SitemapService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -13,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
@@ -29,10 +29,13 @@ public class SitemapGenerationController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapGenerationController.class);
 
-    @Resource
-    private SitemapService service;
+    private final SitemapService updateService;
 
-    @Value("#{sitemapProperties['admin.apikey']}")
+    public SitemapGenerationController(SitemapService updateService) {
+        this.updateService = updateService;
+    }
+
+    @Value("${admin.apikey}")
     private String adminKey;
 
     /**
@@ -46,9 +49,9 @@ public class SitemapGenerationController {
                          HttpServletResponse response) throws SiteMapException, IOException {
         try {
             if (verifyKey(wskey)) {
-                service.update();
+                updateService.update();
                 // we try to return the index file, but since updating takes a long time the browser may already have timed-out
-                return service.getIndexFileContent();
+                return updateService.getIndexFileContent();
             }
         } catch (SecurityException e) {
             LOG.error("SecurityException: "+e.getMessage());

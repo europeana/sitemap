@@ -7,8 +7,8 @@ import com.mongodb.ServerAddress;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.stereotype.Component;
 
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +17,7 @@ import java.util.List;
  *
  * Created by ymamakis on 11/16/15.
  */
+@Component
 public class MongoProvider {
 
     private static final Logger LOG = LogManager.getLogger(MongoProvider.class);
@@ -33,28 +34,23 @@ public class MongoProvider {
      * @param database
      */
     public MongoProvider(String mongoHosts, String port, String username, String password, String database) {
-
         String[] addresses = mongoHosts.split(",");
         List<ServerAddress> mongoAddresses = new ArrayList<>();
-        try {
-            for (String address : addresses) {
-                ServerAddress mongoAddress = new ServerAddress(address, Integer.parseInt(port));
-                mongoAddresses.add(mongoAddress);
-            }
-            if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
-                MongoCredential credential = MongoCredential.createCredential(username, database, password.toCharArray());
-                List<MongoCredential> credentials = new ArrayList<>();
-                credentials.add(credential);
-                this.mongoClient = new MongoClient(mongoAddresses, credentials);
-            } else {
-                this.mongoClient = new MongoClient(mongoAddresses);
-            }
-            LOG.info("Connected to Mongo at {} ", mongoAddresses);
-
-            this.collection = this.mongoClient.getDB(database).getCollection("record");
-        } catch (UnknownHostException e) {
-            LOG.error("Error connecting to Mongo server {} ", mongoAddresses, e);
+        for (String address : addresses) {
+            ServerAddress mongoAddress = new ServerAddress(address, Integer.parseInt(port));
+            mongoAddresses.add(mongoAddress);
         }
+        if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
+            MongoCredential credential = MongoCredential.createCredential(username, database, password.toCharArray());
+            List<MongoCredential> credentials = new ArrayList<>();
+            credentials.add(credential);
+            this.mongoClient = new MongoClient(mongoAddresses, credentials);
+        } else {
+            this.mongoClient = new MongoClient(mongoAddresses);
+        }
+        LOG.info("Connected to Mongo at {} ", mongoAddresses);
+
+        this.collection = this.mongoClient.getDB(database).getCollection("record");
     }
 
     /**

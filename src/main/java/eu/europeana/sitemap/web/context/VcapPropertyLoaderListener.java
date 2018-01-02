@@ -245,7 +245,7 @@ public class VcapPropertyLoaderListener implements
             Object value = entry.getValue();
 
             if (value instanceof String) {
-                properties.put(key, value);
+                properties.setProperty(key, value.toString());
             } else if (value instanceof Map) {
                 // Need a compound key
                 @SuppressWarnings("unchecked")
