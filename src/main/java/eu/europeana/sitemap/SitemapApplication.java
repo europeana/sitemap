@@ -8,6 +8,8 @@ import eu.europeana.sitemap.service.GenerateSitemapServiceImpl;
 import eu.europeana.sitemap.service.ReadSitemapServiceImpl;
 import eu.europeana.sitemap.service.ResubmitService;
 import eu.europeana.sitemap.service.UpdateScheduler;
+import eu.europeana.sitemap.web.context.SocksProxyConfigInjector;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -15,8 +17,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.PropertySource;
+
+import javax.servlet.ServletContext;
+import javax.servlet.ServletException;
+import java.io.IOException;
 
 /**
  * Main application and configuration
@@ -112,11 +117,44 @@ public class SitemapApplication extends SpringBootServletInitializer {
     }
 
     /**
-     * Application start method
+     * This method is called when starting as a Spring-Boot application (e.g. from your IDE)
      * @param args
      */
     @SuppressWarnings("squid:S2095") // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
-    public static void main(String[] args) {
-        SpringApplication.run(SitemapApplication.class, args);
+    public static void main(String[] args)  {
+        try {
+            injectSocksProxySettings();
+            SpringApplication.run(SitemapApplication.class, args);
+        } catch (IOException e) {
+            LogManager.getLogger(SitemapApplication.class).fatal("Error reading properties", e);
+            System.exit(-1);
+        }
     }
+
+    /**
+     * This method is called when starting a 'traditional' war deployment (e.g. in Docker of Cloud Foundry)
+     * @param servletContext
+     * @throws ServletException
+     */
+    @Override
+    public void onStartup(ServletContext servletContext) throws ServletException {
+        try {
+            injectSocksProxySettings();
+            super.onStartup(servletContext);
+        } catch (IOException e) {
+            throw new ServletException("Error reading properties", e);
+        }
+    }
+
+    private static void injectSocksProxySettings() throws IOException {
+        SocksProxyConfigInjector socksConfig = new SocksProxyConfigInjector("sitemap.properties");
+        try {
+            socksConfig.addProperties("sitemap.user.properties");
+        } catch (IOException e) {
+            // user.properties may not be available so only show warning
+            LogManager.getLogger(SitemapApplication.class).warn("Cannot read sitemap.user.properties file");
+        }
+        socksConfig.inject();
+    }
+    
 }

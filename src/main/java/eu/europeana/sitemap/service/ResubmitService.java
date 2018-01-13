@@ -37,7 +37,7 @@ public class ResubmitService {
 
     /* optional value, so we set a default value null */
     @Value("${portal.sitemapindex.urlpath:null}")
-    private String indexUrl = null;
+    private String indexUrl;
 
     /**
      * Notify Google and Bing that our sitemap has changed
