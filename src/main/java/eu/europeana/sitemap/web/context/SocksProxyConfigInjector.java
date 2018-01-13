@@ -6,6 +6,8 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.Authenticator;
+import java.net.PasswordAuthentication;
 import java.util.Properties;
 
 /**
@@ -29,6 +31,7 @@ public class SocksProxyConfigInjector {
 
     /**
      * Load socks configuration from a file with the provided file name (file should be on the classpath)
+     *
      * @param propertiesFileName
      * @throws IOException thrown if the provided file is not found or cannot be read
      */
@@ -38,6 +41,7 @@ public class SocksProxyConfigInjector {
 
     /**
      * Load socks configuration from a Properties object
+     *
      * @param properties
      */
     public SocksProxyConfigInjector(Properties properties) {
@@ -46,12 +50,13 @@ public class SocksProxyConfigInjector {
 
     /**
      * Add additional properties from a file with the provided file name (file should be on the classpath)
+     *
      * @param propertiesFileName
      * @return true if the properties were read from file, otherwise false
      */
     public final void addProperties(String propertiesFileName) throws IOException {
         try (InputStream in = Thread.currentThread().getContextClassLoader().getResourceAsStream(propertiesFileName)) {
-            if (in == null){
+            if (in == null) {
                 throw new IOException("Properties file " + propertiesFileName + " doesn't exist!");
             } else {
                 props.load(in);
@@ -61,6 +66,7 @@ public class SocksProxyConfigInjector {
 
     /**
      * Add additional properties from a Properties object
+     *
      * @param properties
      */
     public final void addProperties(Properties properties) {
@@ -69,6 +75,7 @@ public class SocksProxyConfigInjector {
 
     /**
      * Check if the provided configuration contains a socks proxy definition (that is enabled)
+     *
      * @return true if there is at least a socks host defined and the socks enabled setting is true
      */
     public boolean isValidConfiguration() {
@@ -95,11 +102,30 @@ public class SocksProxyConfigInjector {
         if (isValidConfiguration()) {
             System.setProperty("socksProxyHost", props.getProperty(SOCKS_HOST));
             System.setProperty("socksProxyPort", props.getProperty(SOCKS_PORT));
+
             String user = props.getProperty(SOCKS_USER);
             if (StringUtils.isNotEmpty(user)) {
+                String pass = props.getProperty(SOCKS_PASS);
                 System.setProperty("java.net.socks.username", user);
-                System.setProperty("java.net.socks.password", props.getProperty(SOCKS_PASS));
+                System.setProperty("java.net.socks.password", pass);
+                Authenticator.setDefault(new SockProxyAuthenticator(user, pass));
             }
+        }
+    }
+
+    private static class SockProxyAuthenticator extends Authenticator {
+
+        private String user;
+        private char[] password;
+
+        public SockProxyAuthenticator(String user, String password) {
+            this.user = user;
+            this.password = password.toCharArray();
+        }
+
+        @Override
+        protected PasswordAuthentication getPasswordAuthentication() {
+            return new PasswordAuthentication(user, password);
         }
     }
 
