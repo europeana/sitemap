@@ -43,20 +43,14 @@ public class SitemapGenerationController {
      * @param response
      * @return The index file in plain text
      */
-    @RequestMapping(value = "update", method = RequestMethod.GET, produces = MediaType.TEXT_XML_VALUE)
+    @RequestMapping(value = "update", method = RequestMethod.GET)
     public String update(@RequestParam(value = "wskey", required = true) String wskey,
-                         HttpServletResponse response) throws SiteMapException, IOException {
-        try {
-            if (verifyKey(wskey)) {
-                updateService.update();
-                // we try to return a result, but since updating takes a long time the browser may already have timed-out
-                return "Updating finished";
-            }
-        } catch (SecurityException e) {
-            LOG.error("SecurityException: "+e.getMessage());
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                         HttpServletResponse response) throws SiteMapException {
+        if (verifyKey(wskey)) {
+            response.setStatus(HttpServletResponse.SC_ACCEPTED);
+            updateService.update();
+            return "Update finished";
         }
-
         return null;
     }
 

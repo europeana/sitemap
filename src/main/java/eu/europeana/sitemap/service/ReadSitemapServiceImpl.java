@@ -9,7 +9,6 @@ import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -23,8 +22,6 @@ import java.util.Optional;
 @Service
 @Primary
 public class ReadSitemapServiceImpl implements ReadSitemapService {
-
-
 
 
     private final ObjectStorageClient objectStorageProvider;
@@ -54,7 +51,7 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
      * @see ReadSitemapService#getFileContent(String)
      */
     @Override
-    public String getFileContent(String fileName) throws SiteMapNotFoundException, IOException {
+    public String getFileContent(String fileName) throws SiteMapNotFoundException {
         Optional<StorageObject> file = objectStorageProvider.get(fileName);
         if (file.isPresent()) {
             return new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
@@ -66,7 +63,7 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
      * @see ReadSitemapService#getIndexFileContent()
      */
     @Override
-    public String getIndexFileContent() throws SiteMapNotFoundException, IOException {
+    public String getIndexFileContent() throws SiteMapNotFoundException {
         return getFileContent(Naming.SITEMAP_INDEX_FILE);
     }
 

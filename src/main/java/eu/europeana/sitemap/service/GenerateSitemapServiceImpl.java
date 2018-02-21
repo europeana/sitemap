@@ -8,6 +8,7 @@ import com.mongodb.DBObject;
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.Naming;
+import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
 import eu.europeana.sitemap.mongo.MongoProvider;
@@ -66,6 +67,8 @@ public class GenerateSitemapServiceImpl implements GenerateSitemapService {
     private static final String LASTUPDATED = "timestampUpdated";
     private static final String COMPLETENESS = "europeanaCompleteness";
 
+    private static final String UPDATE_IN_PROGRESS = "In progress";
+    private static final String UPDATE_FINISHED = "Finished";
 
     public static final int NUMBER_OF_ELEMENTS = 45_000;
 
@@ -83,6 +86,7 @@ public class GenerateSitemapServiceImpl implements GenerateSitemapService {
     private int minRecordCompleteness;
 
     private String status = "initial";
+    private Date updateStartTime;
 
     public GenerateSitemapServiceImpl(MongoProvider mongoProvider, ObjectStorageClient objectStorageProvider,
                                       ActiveSiteMapService activeSiteMapService, ReadSitemapService readSitemapService,
@@ -95,16 +99,16 @@ public class GenerateSitemapServiceImpl implements GenerateSitemapService {
     }
 
     @PostConstruct
-    private void init() throws SiteMapException {
+    private void init() throws SiteMapConfigException {
         // check configuration for required properties
         if (StringUtils.isEmpty(portalBaseUrl)) {
-            throw new SiteMapException("Configuration error: portal.base.url is not set");
+            throw new SiteMapConfigException("Portal.base.url is not set");
         }
         // to avoid problems with accidental trailing spaces
         portalBaseUrl = portalBaseUrl.trim();
 
         if (StringUtils.isEmpty(portalRecordUrlPath)) {
-            throw new SiteMapException("Configuration error: portal.record.urlpath is not set");
+            throw new SiteMapConfigException("Portal.record.urlpath is not set");
         }
         portalRecordUrlPath = portalRecordUrlPath.trim();
     }
@@ -273,52 +277,76 @@ public class GenerateSitemapServiceImpl implements GenerateSitemapService {
     }
 
     /**
+     * checks if we can start the update, or if an update is already in progress
+     * @throws UpdateAlreadyInProgressException
+     */
+    private void setUpdateInProgress() throws UpdateAlreadyInProgressException {
+        // TODO instead of locking based on the status variable, it would be much better to lock based on a file placed in the storage provider.
+        // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
+        // clean any remaining lock from failed applications.
+        synchronized(this) {
+            if (UPDATE_IN_PROGRESS.equalsIgnoreCase(status)) {
+                String msg = "There is already an update in progress (started at " + updateStartTime + ")";
+                LOG.warn(msg);
+                throw new UpdateAlreadyInProgressException(msg);
+            } else {
+                status = UPDATE_IN_PROGRESS;
+                updateStartTime = new Date();
+                LOG.info("Starting update process...");
+            }
+        }
+    }
+
+    private void setUpdateDone() {
+        synchronized(this) {
+            updateStartTime = null;
+            status = UPDATE_FINISHED;
+            LOG.info("Status: {}", status);
+        }
+    }
+
+    /**
      * @see GenerateSitemapService#update()
      */
     @Override
     public void update() throws SiteMapException {
-        // TODO instead of locking based on the status variable, it would be much better to lock based on a file placed in the storage provider.
-        // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
-        // clean any remaining lock from to failed applications.
-        if ("working".equalsIgnoreCase(status)) {
-            LOG.warn("Status: {}", status);
-            throw new UpdateAlreadyInProgressException();
-        } else {
-            try {
-                status = "updating";
-                LOG.info("Starting update process...");
+        setUpdateInProgress();
+        try {
+            // First clear all old records from the inactive file
+            delete();
 
-                // First clear all old records from the inactive file
-                delete();
+            // Temporary save the contents of the index file
+            String oldIndex = readSitemapService.getIndexFileContent();
 
-                // Temporary save the contents of the index file
-                String oldIndex = readSitemapService.getIndexFileContent();
+            // Then write records to the inactive file
+            long startTime = System.currentTimeMillis();
+            generate();
+            LOG.info("Sitemap generation completed in {} seconds", (System.currentTimeMillis() - startTime) / 1000);
 
-                // Then write records to the inactive file
-                long startTime = System.currentTimeMillis();
-                generate();
-                LOG.info("Sitemap generation completed in {} seconds", (System.currentTimeMillis() - startTime) / 1000);
+            //Switch to updated cached file
+            String activeFile = activeSiteMapService.switchFile();
+            LOG.info("Switched active sitemap to {}", activeFile);
 
-                //Switch to updated cached file
-                String activeFile = activeSiteMapService.switchFile();
-                LOG.info("Switched active sitemap to {}", activeFile);
-
-                // Notify search engines, but only if index file has changed
-                String newIndex = readSitemapService.getIndexFileContent();
-                if (newIndex.equalsIgnoreCase(oldIndex)) {
-                    LOG.info("Index has not changed");
-                } else {
-                    LOG.info("Index has changed");
-                    resubmitService.notifySearchEngines();
-                }
-            } catch (Exception e) {
-                LOG.error("Error updating sitemap", e);
-                throw new SiteMapException("Error updating sitemap", e);
-            } finally {
-                status = "done";
-                LOG.info("Status: {}", status);
+            // Notify search engines, but only if index file has changed
+            String newIndex = readSitemapService.getIndexFileContent();
+            if (newIndex.equalsIgnoreCase(oldIndex)) {
+                LOG.info("Index has not changed");
+            } else {
+                LOG.info("Index has changed");
+                resubmitService.notifySearchEngines();
             }
+        } catch (Exception e) {
+            LOG.error("Error updating sitemap {}", e.getMessage(), e);
+         //   sendUpdateFailedEmail(e);
+            throw new SiteMapException("Error updating sitemap", e);
+        } finally {
+            setUpdateDone();
         }
     }
+
+    //private void sendUpdateFailedEmail(Exception e) {
+//        SimpleMailMessage mailMessage = new SimpleMailMessage();
+//        mailMessage.setTo();
+   // }
 
 }

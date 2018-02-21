@@ -35,7 +35,7 @@ public class MongoProvider {
      */
     public MongoProvider(String mongoHosts, String port, String username, String password, String database) {
         String[] addresses = mongoHosts.split(",");
-        List<ServerAddress> mongoAddresses = new ArrayList<>();
+        List<ServerAddress> mongoAddresses = new ArrayList<>(addresses.length);
         for (String address : addresses) {
             ServerAddress mongoAddress = new ServerAddress(address, Integer.parseInt(port));
             mongoAddresses.add(mongoAddress);

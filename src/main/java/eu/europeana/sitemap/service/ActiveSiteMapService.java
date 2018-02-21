@@ -37,7 +37,8 @@ public class ActiveSiteMapService {
 
     /**
      *
-     * @return either the green or blue version of a sitemap file name
+     * @return either the green or blue version of a sitemap file name. If there was an error or no active file was present
+     * we return green
      */
     public String getActiveFile() {
         String result = "";
@@ -48,13 +49,17 @@ public class ActiveSiteMapService {
         if (withoutBody.isPresent()) {
             StringWriter writer = new StringWriter();
             Optional<StorageObject> storageObject = objectStorageProvider.get(activeSiteMapFile);
-            storageObjectValue = storageObject.get();
-            try (InputStream in = storageObjectValue.getPayload().openStream()){
-                IOUtils.copy(in, writer);
-                result = writer.toString();
-                storageObjectValue.getPayload().close();
-            } catch (IOException e) {
-                LOG.error("Error while processing the file {} to determine the current active site map", activeSiteMapFile, e);
+            if (storageObject.isPresent()) {
+                storageObjectValue = storageObject.get();
+                try (InputStream in = storageObjectValue.getPayload().openStream()) {
+                    IOUtils.copy(in, writer);
+                    result = writer.toString();
+                    storageObjectValue.getPayload().close();
+                } catch (IOException e) {
+                    LOG.error("Error while processing the file {} to determine the current active site map", activeSiteMapFile, e);
+                }
+            } else {
+                LOG.error("Active file not present!");
             }
         } else {
             // In case that the active indication file does not exist, so we create one

@@ -59,7 +59,7 @@ public class UpdateScheduler {
             try {
                 mongoSitemapService.update();
             } catch (SiteMapException e) {
-                LOG.error("Error running update process", e);
+                LOG.error("Error running automatic update process: {}", e.getMessage(), e);
             }
         }
     }

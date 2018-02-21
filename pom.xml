@@ -2,17 +2,17 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>eu.europeana</groupId>
-    <artifactId>sitemap</artifactId>
-    <version>1.2-SNAPSHOT</version>
-    <packaging>war</packaging>
-    <name>Europeana Sitemap</name>
-
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
         <version>1.5.8.RELEASE</version>
     </parent>
+
+    <groupId>eu.europeana</groupId>
+    <artifactId>sitemap</artifactId>
+    <version>1.2-SNAPSHOT</version>
+    <packaging>war</packaging>
+    <name>Europeana Sitemap</name>
 
     <scm>
         <connection>scm:git:git@github.com:europeana/europeana-sitemap.git</connection>
@@ -56,12 +56,10 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
-        <!-- enable the starter-tomcat dependency to deploy to Docker/Tomcat
         <dependency>
             <groupId>org.springframework.boot</groupId>
-            <artifactId>spring-boot-starter-tomcat</artifactId>
-            <scope>provided</scope>
-        </dependency> -->
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.mongodb</groupId>

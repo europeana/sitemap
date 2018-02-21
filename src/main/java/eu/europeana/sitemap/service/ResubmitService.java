@@ -35,8 +35,7 @@ public class ResubmitService {
     @Value("${portal.base.url}")
     private String portalBaseUrl;
 
-    /* optional value, so we set a default value null */
-    @Value("${portal.sitemapindex.urlpath:null}")
+    @Value("${portal.sitemapindex.urlpath}")
     private String indexUrl;
 
     /**
