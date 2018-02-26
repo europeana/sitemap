@@ -35,7 +35,7 @@ public class ResubmitService {
     @Value("${portal.base.url}")
     private String portalBaseUrl;
 
-    @Value("${portal.sitemapindex.urlpath}")
+    @Value("${portal.sitemapindex.urlpath:}") // optional
     private String indexUrl;
 
     /**
@@ -97,7 +97,7 @@ public class ResubmitService {
      */
     public static void main(String[] args) {
         ResubmitService ss = new ResubmitService();
-        ss.indexUrl = "http://www.europeana.eu/portal/europeana-sitemap-index-hashed.xml";
+        ss.indexUrl = "https://www.europeana.eu/portal/europeana-sitemap-index-hashed.xml";
         ss.notifySearchEngines();
     }
 
