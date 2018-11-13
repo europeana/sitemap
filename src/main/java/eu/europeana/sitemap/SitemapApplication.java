@@ -3,8 +3,8 @@ package eu.europeana.sitemap;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.mongo.MongoProvider;
-import eu.europeana.sitemap.service.ActiveSiteMapService;
-import eu.europeana.sitemap.service.GenerateSitemapServiceImpl;
+import eu.europeana.sitemap.service.SitemapUpdateEntityService;
+import eu.europeana.sitemap.service.SitemapUpdateRecordService;
 import eu.europeana.sitemap.service.ReadSitemapServiceImpl;
 import eu.europeana.sitemap.service.ResubmitService;
 import eu.europeana.sitemap.service.UpdateScheduler;
@@ -41,6 +41,8 @@ public class SitemapApplication extends SpringBootServletInitializer {
     private String region;
     @Value("${s3.bucket}")
     private String bucket;
+    @Value("${s3.endpoint}")
+    private String endpoint;
 
     @Value("${mongo.hosts}")
     private String hosts;
@@ -54,7 +56,7 @@ public class SitemapApplication extends SpringBootServletInitializer {
     private String database;
 
     /**
-     * Mongo database from which we retrieve all records
+     * Mongo database from which we retrieve all record information
      * @return
      */
     @Bean
@@ -68,7 +70,38 @@ public class SitemapApplication extends SpringBootServletInitializer {
      */
     @Bean
     public ObjectStorageClient objectStorageClient() {
-        return new S3ObjectStorageClient(key, secret, region, bucket);
+        if (endpoint == null) {
+            return new S3ObjectStorageClient(key, secret, region, bucket);
+        }
+        // for IBM Cloud S3 storage we need to provide an endpoint
+        return new S3ObjectStorageClient(key, secret, region, bucket, endpoint);
+    }
+
+    /**
+     * Service for reading files from s3
+     * @return
+     */
+    @Bean
+    public ReadSitemapServiceImpl readSitemapService() {
+        return new ReadSitemapServiceImpl(objectStorageClient());
+    }
+
+    /**
+     * Main application service1 that generates a new sitemap for records
+     * @return
+     */
+    @Bean
+    public SitemapUpdateRecordService recordSitemapService() {
+        return new SitemapUpdateRecordService(mongoProvider(), objectStorageClient(), readSitemapService(), resubmitSitemapService());
+    }
+
+    /**
+     * Main application service2 that generates a new sitemap for entities
+     * @return
+     */
+    @Bean
+    public SitemapUpdateEntityService entitySitemapService() {
+        return new SitemapUpdateEntityService(objectStorageClient(), readSitemapService(), resubmitSitemapService());
     }
 
     /**
@@ -77,7 +110,7 @@ public class SitemapApplication extends SpringBootServletInitializer {
      */
     @Bean
     public UpdateScheduler updateScheduler() {
-        return new UpdateScheduler(generateSitemapService());
+        return new UpdateScheduler(recordSitemapService(), entitySitemapService());
     }
 
     /**
@@ -87,33 +120,6 @@ public class SitemapApplication extends SpringBootServletInitializer {
     @Bean
     public ResubmitService resubmitSitemapService() {
         return new ResubmitService();
-    }
-
-    /**
-     * Determines which version of the sitemap files is active (green/blue deployment)
-     * @return
-     */
-    @Bean
-    public ActiveSiteMapService activeSitemapService() {
-        return new ActiveSiteMapService(objectStorageClient());
-    }
-
-    /**
-     * Main application service1 for reading files from s3
-     * @return
-     */
-    @Bean
-    public ReadSitemapServiceImpl readSitemapService() {
-        return new ReadSitemapServiceImpl(objectStorageClient());
-    }
-
-    /**
-     * Main application service2 that generates a new sitemap
-     * @return
-     */
-    @Bean
-    public GenerateSitemapServiceImpl generateSitemapService() {
-        return new GenerateSitemapServiceImpl(mongoProvider(), objectStorageClient(), activeSitemapService(), readSitemapService(), resubmitSitemapService());
     }
 
     /**
@@ -138,6 +144,7 @@ public class SitemapApplication extends SpringBootServletInitializer {
      */
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
+        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_IP  = {}", System.getenv("CF_INSTANCE_IP"));
         try {
             injectSocksProxySettings();
             super.onStartup(servletContext);

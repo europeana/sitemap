@@ -35,11 +35,15 @@ public class ResubmitService {
     @Value("${portal.base.url}")
     private String portalBaseUrl;
 
-    @Value("${portal.sitemapindex.urlpath:}") // optional
+    @Value("${portal.sitemapindex.urlpath:}") // optional hence the trailing :
     private String indexUrl;
 
+    public ResubmitService() {
+        LogManager.getLogger(ResubmitService.class).debug("init");
+    }
+
     /**
-     * Notify Google and Bing that our sitemap has changed
+     * Notify Google and Bing that our sitemap has changed (but only if the provided portal sitemap index url is not empty)
      */
     public void notifySearchEngines() {
         if (StringUtils.isNotEmpty(indexUrl)) {
@@ -82,13 +86,13 @@ public class ResubmitService {
             LOG.debug("request = {} ", getRequest.getURI());
         }
 
-        HttpResponse response = HTTP_CLIENT.execute(getRequest);
-        int statusCode = response.getStatusLine().getStatusCode();
-        if (statusCode == HttpStatus.SC_OK) {
-            LOG.info("{} says OK: {} ", serviceName, EntityUtils.toString(response.getEntity()));
-        } else {
-            LOG.error("{} says {} (status code {})", serviceName, response.getStatusLine().getReasonPhrase(), statusCode);
-        }
+        //HttpResponse response = HTTP_CLIENT.execute(getRequest);
+        //int statusCode = response.getStatusLine().getStatusCode();
+//        if (statusCode == HttpStatus.SC_OK) {
+//            LOG.info("{} says OK: {} ", serviceName, EntityUtils.toString(response.getEntity()));
+//        } else {
+//            LOG.error("{} says {} (status code {})", serviceName, response.getStatusLine().getReasonPhrase(), statusCode);
+//        }
     }
 
     /**

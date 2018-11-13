@@ -23,15 +23,21 @@ public class UpdateScheduler {
 
     private static final Logger LOG = LogManager.getLogger(UpdateScheduler.class);
 
-    private final GenerateSitemapService mongoSitemapService;
+    private final SitemapUpdateAbstractService recordSitemapService;
+    private final SitemapUpdateAbstractService entitySitemapService;
 
-    @Value("${scheduler.cron.update}")
-    private String updateCronConfig;
+    @Value("${record.cron.update}")
+    private String updateRecordConfig;
+
+    @Value("${entity.cron.update}")
+    private String updateEntityConfig;
 
     private ThreadPoolTaskScheduler scheduler;
 
-    public UpdateScheduler(GenerateSitemapService mongoSitemapService) {
-        this.mongoSitemapService = mongoSitemapService;
+    public UpdateScheduler(SitemapUpdateRecordService recordSitemapService,
+                           SitemapUpdateEntityService entitySitemapService) {
+        this.recordSitemapService = recordSitemapService;
+        this.entitySitemapService = entitySitemapService;
     }
 
     /**
@@ -40,26 +46,49 @@ public class UpdateScheduler {
      */
     @PostConstruct
     public void init() {
-        if (updateCronConfig == null) {
-            LOG.warn("No update cron settings specified!");
-        } else {
+        if (updateRecordConfig == null) {
+            LOG.warn("No cron settings specified for updating records!");
+        }
+        if (updateEntityConfig == null) {
+            LOG.warn("No cron settings specified for updating entities!");
+        }
+
+        if (updateRecordConfig != null || updateEntityConfig != null) {
             scheduler = new ThreadPoolTaskScheduler();
             scheduler.setPoolSize(1);
             scheduler.initialize();
             TimeZone timezone = TimeZone.getTimeZone("Europe/Amsterdam");
-            LOG.info("Cron update schedule is: {} {}", updateCronConfig, timezone.getID());
-            scheduler.schedule(new UpdateRunnable(), new CronTrigger(updateCronConfig, timezone));
+            if (updateRecordConfig == null) {
+                LOG.info("Record cron update schedule is: {} {}", updateRecordConfig, timezone.getID());
+                scheduler.schedule(new UpdateRecordRunnable(), new CronTrigger(updateRecordConfig, timezone));
+            }
+            if (updateEntityConfig == null) {
+                LOG.info("Entity cron update schedule is: {} {}", updateEntityConfig, timezone.getID());
+                scheduler.schedule(new UpdateEntityRunnable(), new CronTrigger(updateEntityConfig, timezone));
+            }
         }
     }
 
-    private class UpdateRunnable implements Runnable {
+    private class UpdateRecordRunnable implements Runnable {
         @Override
         public void run() {
-            LOG.info("Update scheduler: starting update...");
+            LOG.info("Update record sitemap scheduler: starting update...");
             try {
-                mongoSitemapService.update();
+                recordSitemapService.update();
             } catch (SiteMapException e) {
-                LOG.error("Error running automatic update process: {}", e.getMessage(), e);
+                LOG.error("Error running automatic update process for record sitemap: {}", e.getMessage(), e);
+            }
+        }
+    }
+
+    private class UpdateEntityRunnable implements Runnable {
+        @Override
+        public void run() {
+            LOG.info("Update entity sitemap scheduler: starting update...");
+            try {
+                entitySitemapService.update();
+            } catch (SiteMapException e) {
+                LOG.error("Error running automatic update process for entity sitemap: {}", e.getMessage(), e);
             }
         }
     }

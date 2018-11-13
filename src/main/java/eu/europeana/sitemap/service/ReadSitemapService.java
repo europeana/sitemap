@@ -23,10 +23,4 @@ public interface ReadSitemapService {
      */
     String getFileContent(String fileName) throws SiteMapNotFoundException;
 
-    /**
-     * Retrieve the (currently active instance of the) sitemap index file
-     * @return active index file as a string
-     * @throws SiteMapNotFoundException thrown when requested file is not available
-     */
-    String getIndexFileContent() throws SiteMapNotFoundException;
 }

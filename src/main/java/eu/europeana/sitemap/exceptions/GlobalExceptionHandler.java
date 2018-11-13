@@ -23,7 +23,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(SiteMapException.class)
     public void handleSiteMapException(SiteMapException e) throws SiteMapException {
         if (e.doLog()) {
-            LOG.error(e.getMessage(), e);
+            LOG.error("SitemapException: {}", e.getMessage(), e);
         }
         throw e;
     }
