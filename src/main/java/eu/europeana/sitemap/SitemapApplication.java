@@ -46,6 +46,8 @@ public class SitemapApplication extends SpringBootServletInitializer {
     private String hosts;
     @Value("${mongo.port}")
     private String port;
+    @Value("${mongo.authDatabase}")
+    private String authDatabase;
     @Value("${mongo.username}")
     private String username;
     @Value("${mongo.password}")
@@ -59,7 +61,7 @@ public class SitemapApplication extends SpringBootServletInitializer {
      */
     @Bean
     public MongoProvider mongoProvider() {
-        return new MongoProvider(hosts, port, username, password, database);
+        return new MongoProvider(hosts, port, authDatabase, username, password, database);
     }
 
     /**

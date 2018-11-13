@@ -33,7 +33,7 @@ public class MongoProvider {
      * @param password
      * @param database
      */
-    public MongoProvider(String mongoHosts, String port, String username, String password, String database) {
+    public MongoProvider(String mongoHosts, String port, String authDatabase, String username, String password, String database) {
         String[] addresses = mongoHosts.split(",");
         List<ServerAddress> mongoAddresses = new ArrayList<>(addresses.length);
         for (String address : addresses) {
@@ -41,7 +41,7 @@ public class MongoProvider {
             mongoAddresses.add(mongoAddress);
         }
         if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
-            MongoCredential credential = MongoCredential.createCredential(username, database, password.toCharArray());
+            MongoCredential credential = MongoCredential.createCredential(username, authDatabase, password.toCharArray());
             List<MongoCredential> credentials = new ArrayList<>();
             credentials.add(credential);
             this.mongoClient = new MongoClient(mongoAddresses, credentials);
