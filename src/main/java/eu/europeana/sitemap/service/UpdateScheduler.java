@@ -11,7 +11,6 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
-import javax.annotation.Resource;
 import java.util.TimeZone;
 
 /**
@@ -24,13 +23,16 @@ public class UpdateScheduler {
 
     private static final Logger LOG = LogManager.getLogger(UpdateScheduler.class);
 
-    @Resource
-    private MongoSitemapService mongoSitemapService;
+    private final GenerateSitemapService mongoSitemapService;
 
-    @Value("#{sitemapProperties['scheduler.cron.update']}")
+    @Value("${scheduler.cron.update}")
     private String updateCronConfig;
 
     private ThreadPoolTaskScheduler scheduler;
+
+    public UpdateScheduler(GenerateSitemapService mongoSitemapService) {
+        this.mongoSitemapService = mongoSitemapService;
+    }
 
     /**
      * Initialize scheduler according to cron settings in properties file. If no configuration is found
@@ -57,7 +59,7 @@ public class UpdateScheduler {
             try {
                 mongoSitemapService.update();
             } catch (SiteMapException e) {
-                LOG.error("Error running update process", e);
+                LOG.error("Error running automatic update process: {}", e.getMessage(), e);
             }
         }
     }

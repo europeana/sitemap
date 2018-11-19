@@ -18,7 +18,7 @@
 package eu.europeana.sitemap.web;
 
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
-import eu.europeana.sitemap.service.SitemapService;
+import eu.europeana.sitemap.service.ReadSitemapService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.http.MediaType;
@@ -27,7 +27,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
@@ -48,26 +47,21 @@ public class SitemapReadController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapReadController.class);
 
-    @Resource
-    private SitemapService service;
+    private final ReadSitemapService service;
+
+    public SitemapReadController(ReadSitemapService service) {
+        this.service = service;
+    }
 
     /**
      * Return the sitemap index file
      *
-     * @param request {@link HttpServletRequest}
-     * @param response {@link HttpServletResponse}
-     * @throws IOException For any file-related exceptions
+     * @throws SiteMapNotFoundException if the index file wasn't found
      * @return contents of sitemap index file
      */
     @RequestMapping(value = {"index", "europeana-sitemap-index-hashed.xml"}, method = RequestMethod.GET)
-    public String handleSitemapIndex(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        try {
-            return service.getFileContent(INDEX_FILE);
-        } catch (SiteMapNotFoundException e) {
-            LOG.error("Sitemap index file not found", e);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return null;
-        }
+    public String handleSitemapIndex() throws SiteMapNotFoundException {
+        return service.getFileContent(INDEX_FILE);
     }
 
     /**
@@ -76,36 +70,26 @@ public class SitemapReadController {
      *
      * @param from     start index
      * @param to       end index
-     * @param request {@link HttpServletRequest}
-     * @param response The {@link HttpServletResponse}
-     * @throws IOException
+     * @throws SiteMapNotFoundException if the sitemap file wasn't found
      * @return contents of sitemap file
      */
     @RequestMapping(value = "europeana-sitemap-hashed.xml", method = RequestMethod.GET)
     public String handleSitemapFile(@RequestParam(value = "from", required = true) String from,
-                                    @RequestParam(value = "to", required = true) String to,
-                                    HttpServletRequest request,
-                                    HttpServletResponse response) throws IOException {
-        try {
-            String fileName = getActiveDeployment() + "?from=" + from + "&to=" + to;
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Retrieving sitemap file {} ", fileName);
-            }
-            return service.getFileContent(fileName);
-        } catch (SiteMapNotFoundException e) {
-            LOG.error("Sitemap file not found", e);
-            response.sendError(HttpServletResponse.SC_NOT_FOUND);
-            return null;
+                                    @RequestParam(value = "to", required = true) String to) throws SiteMapNotFoundException {
+        String fileName = getActiveDeployment() + "?from=" + from + "&to=" + to;
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("Retrieving sitemap file {} ", fileName);
         }
+        return service.getFileContent(fileName);
     }
 
     /**
      * The active sitemap file stores either the value 'blue' or 'green' so we know which deployment of the files we
      * need to retrieve
      * @return
-     * @throws SiteMapNotFoundException
+     * @throws SiteMapNotFoundException if the active deployment file was not found
      */
-    private String getActiveDeployment() throws SiteMapNotFoundException, IOException {
+    private String getActiveDeployment() throws SiteMapNotFoundException {
         return service.getFileContent(ACTIVE_SITEMAP_FILE);
     }
 
@@ -114,7 +98,7 @@ public class SitemapReadController {
      * @param response
      * @return
      */
-    @RequestMapping(value = "files", method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
+    @RequestMapping(value = {"list", "files"}, method = RequestMethod.GET, produces = MediaType.TEXT_PLAIN_VALUE)
     public String files(HttpServletResponse response) {
         return service.getFiles();
     }
@@ -127,7 +111,7 @@ public class SitemapReadController {
      */
     @RequestMapping(value = "file", method = RequestMethod.GET, produces = {MediaType.TEXT_PLAIN_VALUE, MediaType.TEXT_XML_VALUE})
     public String file(@RequestParam(value = "name", required = true, defaultValue = "") String fileName,
-                       HttpServletResponse response) throws SiteMapNotFoundException, IOException {
+                       HttpServletResponse response) throws SiteMapNotFoundException {
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("Please provide a file name");
         }

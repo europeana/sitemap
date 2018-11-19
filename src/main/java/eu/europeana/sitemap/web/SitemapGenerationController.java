@@ -2,7 +2,7 @@ package eu.europeana.sitemap.web;
 
 
 import eu.europeana.sitemap.exceptions.SiteMapException;
-import eu.europeana.sitemap.service.SitemapService;
+import eu.europeana.sitemap.service.GenerateSitemapService;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.Resource;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
@@ -29,10 +28,13 @@ public class SitemapGenerationController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapGenerationController.class);
 
-    @Resource
-    private SitemapService service;
+    private final GenerateSitemapService updateService;
 
-    @Value("#{sitemapProperties['admin.apikey']}")
+    public SitemapGenerationController(GenerateSitemapService updateService) {
+        this.updateService = updateService;
+    }
+
+    @Value("${admin.apikey}")
     private String adminKey;
 
     /**
@@ -41,20 +43,14 @@ public class SitemapGenerationController {
      * @param response
      * @return The index file in plain text
      */
-    @RequestMapping(value = "update", method = RequestMethod.GET, produces = MediaType.TEXT_XML_VALUE)
+    @RequestMapping(value = "update", method = RequestMethod.GET)
     public String update(@RequestParam(value = "wskey", required = true) String wskey,
-                         HttpServletResponse response) throws SiteMapException, IOException {
-        try {
-            if (verifyKey(wskey)) {
-                service.update();
-                // we try to return the index file, but since updating takes a long time the browser may already have timed-out
-                return service.getIndexFileContent();
-            }
-        } catch (SecurityException e) {
-            LOG.error("SecurityException: "+e.getMessage());
-            response.sendError(HttpServletResponse.SC_FORBIDDEN);
+                         HttpServletResponse response) throws SiteMapException {
+        if (verifyKey(wskey)) {
+            response.setStatus(HttpServletResponse.SC_ACCEPTED);
+            updateService.update();
+            return "Update finished";
         }
-
         return null;
     }
 
@@ -64,8 +60,7 @@ public class SitemapGenerationController {
      */
     private boolean verifyKey(String wskey) {
         if (StringUtils.isEmpty(adminKey)) {
-            //TODO for now allow updates, enable when cron job is adjusted
-            //throw new SecurityException("No updates are allowed");
+            throw new SecurityException("No updates are allowed");
         } else if (!adminKey.equals(wskey)) {
             throw new SecurityException("Invalid key");
         }

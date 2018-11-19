@@ -22,4 +22,11 @@ public class SiteMapException extends Exception {
     public SiteMapException(String s, Throwable t) {
         super(s, t);
     }
+
+    /**
+     * @return boolean indicating whether this type of exception should be logged or not
+     */
+    public boolean doLog() {
+        return true; // default we log all exceptions
+    }
 }

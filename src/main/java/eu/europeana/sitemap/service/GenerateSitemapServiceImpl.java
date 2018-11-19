@@ -7,8 +7,9 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.sitemap.Naming;
+import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.exceptions.SiteMapException;
-import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -16,28 +17,25 @@ import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jclouds.io.payloads.ByteArrayPayload;
-
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
-import javax.annotation.Resource;
-import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by ymamakis on 11/16/15.
  */
 @Service
-public class MongoSitemapService implements SitemapService {
+@Primary
+public class GenerateSitemapServiceImpl implements GenerateSitemapService {
 
 
-    private static final Logger LOG = LogManager.getLogger(MongoSitemapService.class);
+    private static final Logger LOG = LogManager.getLogger(GenerateSitemapServiceImpl.class);
 
     /** XML definitions **/
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
@@ -63,49 +61,54 @@ public class MongoSitemapService implements SitemapService {
     private static final String PRIORITY_CLOSING = "</priority>";
     private static final String LASTMOD_OPENING = "<lastmod>";
     private static final String LASTMOD_CLOSING = "</lastmod>";
-    private static final String MASTER_KEY = "europeana-sitemap-index-hashed.xml";
-    private static final String SLAVE_KEY = "europeana-sitemap-hashed.xml";
 
     /** Used mongo fields **/
     private static final String ABOUT = "about";
     private static final String LASTUPDATED = "timestampUpdated";
     private static final String COMPLETENESS = "europeanaCompleteness";
 
+    private static final String UPDATE_IN_PROGRESS = "In progress";
+    private static final String UPDATE_FINISHED = "Finished";
 
     public static final int NUMBER_OF_ELEMENTS = 45_000;
 
-    @Resource
-    private MongoProvider mongoProvider;
-    @Resource
-    private ObjectStorageClient objectStorageProvider;
-    @Resource
-    private ActiveSiteMapService activeSiteMapService;
-    @Resource
-    private ResubmitService resubmitService;
+    private final MongoProvider mongoProvider;
+    private final ObjectStorageClient objectStorageProvider;
+    private final ActiveSiteMapService activeSiteMapService;
+    private final ReadSitemapService readSitemapService;
+    private final ResubmitService resubmitService;
 
-    @Value("#{sitemapProperties['portal.base.url']}")
+    @Value("${portal.base.url}")
     private String portalBaseUrl;
-
-    @Value("#{sitemapProperties['portal.record.urlpath']}")
+    @Value("${portal.record.urlpath}")
     private String portalRecordUrlPath;
-
-    @Value("#{sitemapProperties['min.record.completeness']}")
+    @Value("${min.record.completeness}")
     private int minRecordCompleteness;
 
     private String status = "initial";
+    private Date updateStartTime;
 
+    public GenerateSitemapServiceImpl(MongoProvider mongoProvider, ObjectStorageClient objectStorageProvider,
+                                      ActiveSiteMapService activeSiteMapService, ReadSitemapService readSitemapService,
+                                      ResubmitService resubmitService) {
+        this.mongoProvider = mongoProvider;
+        this.objectStorageProvider = objectStorageProvider;
+        this.activeSiteMapService = activeSiteMapService;
+        this.readSitemapService = readSitemapService;
+        this.resubmitService = resubmitService;
+    }
 
     @PostConstruct
-    private void init() throws SiteMapException {
+    private void init() throws SiteMapConfigException {
         // check configuration for required properties
         if (StringUtils.isEmpty(portalBaseUrl)) {
-            throw new SiteMapException("Configuration error: portal.base.url is not set");
+            throw new SiteMapConfigException("Portal.base.url is not set");
         }
         // to avoid problems with accidental trailing spaces
         portalBaseUrl = portalBaseUrl.trim();
 
         if (StringUtils.isEmpty(portalRecordUrlPath)) {
-            throw new SiteMapException("Configuration error: portal.record.urlpath is not set");
+            throw new SiteMapConfigException("Portal.record.urlpath is not set");
         }
         portalRecordUrlPath = portalRecordUrlPath.trim();
     }
@@ -113,7 +116,7 @@ public class MongoSitemapService implements SitemapService {
     /**
      * Generate a new sitemap
      */
-    private void generate() {
+    public void generate() {
         DBCollection col = mongoProvider.getCollection();
 
         DBObject query = new BasicDBObject();
@@ -166,7 +169,7 @@ public class MongoSitemapService implements SitemapService {
                 String fromToText = FROM + from + TO + nrRecords;
 
                 // add fileName to index
-                String indexEntry = SLAVE_KEY + fromToText;
+                String indexEntry = Naming.SITEMAP_FILE + fromToText;
                 master.append(SITEMAP_OPENING).append(LN)
                         .append(LOC_OPENING).append(StringEscapeUtils.escapeXml(portalBaseUrl +"/" + indexEntry)).append(LOC_CLOSING).append(LN)
                         // TODO if we can compare a sitemap file with the previous version, we can check if it has changed and include a lastmodified?
@@ -190,7 +193,7 @@ public class MongoSitemapService implements SitemapService {
         }
         cur.close();
         master.append(SITEMAP_HEADER_CLOSING);
-        saveToStorage(MASTER_KEY, master.toString());
+        saveToStorage(Naming.SITEMAP_INDEX_FILE, master.toString());
         LOG.info("Records processed {}, written {} sitemap files and 1 sitemap index file", nrRecords, nrSitemaps);
     }
 
@@ -244,17 +247,8 @@ public class MongoSitemapService implements SitemapService {
         return mongoProvider;
     }
 
-    public void setMongoProvider(MongoProvider mongoProvider) {
-        this.mongoProvider = mongoProvider;
-    }
-
     public ObjectStorageClient getObjectStorageProvider() {
         return objectStorageProvider;
-    }
-
-    public void setObjectStorageProvider(ObjectStorageClient objectStorageProvider) {
-        LOG.info("Object storage provider is {}, bucket {} ", objectStorageProvider.getName(), objectStorageProvider.getBucketName());
-        this.objectStorageProvider = objectStorageProvider;
     }
 
     /**
@@ -283,89 +277,76 @@ public class MongoSitemapService implements SitemapService {
     }
 
     /**
-     * @see SitemapService#update()
+     * checks if we can start the update, or if an update is already in progress
+     * @throws UpdateAlreadyInProgressException
      */
-    @Override
-    public void update() throws SiteMapException {
+    private void setUpdateInProgress() throws UpdateAlreadyInProgressException {
         // TODO instead of locking based on the status variable, it would be much better to lock based on a file placed in the storage provider.
         // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
-        // clean any remaining lock from to failed applications.
-        if ("working".equalsIgnoreCase(status)) {
-            LOG.warn("Status: {}", status);
-            throw new UpdateAlreadyInProgressException();
-        } else {
-            try {
-                status = "updating";
+        // clean any remaining lock from failed applications.
+        synchronized(this) {
+            if (UPDATE_IN_PROGRESS.equalsIgnoreCase(status)) {
+                String msg = "There is already an update in progress (started at " + updateStartTime + ")";
+                LOG.warn(msg);
+                throw new UpdateAlreadyInProgressException(msg);
+            } else {
+                status = UPDATE_IN_PROGRESS;
+                updateStartTime = new Date();
                 LOG.info("Starting update process...");
-
-                // First clear all old records from the inactive file
-                delete();
-
-                // Temporary save the contents of the index file
-                String oldIndex = getIndexFileContent();
-
-                // Then write records to the inactive file
-                long startTime = System.currentTimeMillis();
-                generate();
-                LOG.info("Sitemap generation completed in {} seconds", (System.currentTimeMillis() - startTime) / 1000);
-
-                //Switch to updated cached file
-                String activeFile = activeSiteMapService.switchFile();
-                LOG.info("Switched active sitemap to {}", activeFile);
-
-                // Notify search engines, but only if index file has changed
-                String newIndex = getIndexFileContent();
-                if (newIndex.equalsIgnoreCase(oldIndex)) {
-                    LOG.info("Index has not changed");
-                } else {
-                    LOG.info("Index has changed");
-                    resubmitService.notifySearchEngines();
-                }
-            } catch (Exception e) {
-                LOG.error("Error updating sitemap", e);
-                throw new SiteMapException("Error updating sitemap", e);
-            } finally {
-                status = "done";
-                LOG.info("Status: {}", status);
             }
         }
     }
 
-    /**
-     * @see SitemapService#getFiles()
-     */
-    @Override
-    public String getFiles() {
-        List<StorageObject> files = objectStorageProvider.list();
-        Collections.sort(files, (StorageObject o1, StorageObject o2) -> o1.getLastModified().compareTo(o2.getLastModified()));
-        StringBuilder result = new StringBuilder();
-        for (StorageObject file : files) {
-            result.append(file.getLastModified());
-            result.append("\t");
-            result.append(file.getName());
-            result.append("\n");
+    private void setUpdateDone() {
+        synchronized(this) {
+            updateStartTime = null;
+            status = UPDATE_FINISHED;
+            LOG.info("Status: {}", status);
         }
-        return result.toString();
     }
 
     /**
-     * @see SitemapService#getFileContent(String)
+     * @see GenerateSitemapService#update()
      */
     @Override
-    public String getFileContent(String fileName) throws SiteMapNotFoundException, IOException {
-        Optional<StorageObject> file = objectStorageProvider.get(fileName);
-        if (file.isPresent()) {
-            return new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
+    public void update() throws SiteMapException {
+        setUpdateInProgress();
+        try {
+            // First clear all old records from the inactive file
+            delete();
+
+            // Temporary save the contents of the index file
+            String oldIndex = readSitemapService.getIndexFileContent();
+
+            // Then write records to the inactive file
+            long startTime = System.currentTimeMillis();
+            generate();
+            LOG.info("Sitemap generation completed in {} seconds", (System.currentTimeMillis() - startTime) / 1000);
+
+            //Switch to updated cached file
+            String activeFile = activeSiteMapService.switchFile();
+            LOG.info("Switched active sitemap to {}", activeFile);
+
+            // Notify search engines, but only if index file has changed
+            String newIndex = readSitemapService.getIndexFileContent();
+            if (newIndex.equalsIgnoreCase(oldIndex)) {
+                LOG.info("Index has not changed");
+            } else {
+                LOG.info("Index has changed");
+                resubmitService.notifySearchEngines();
+            }
+        } catch (Exception e) {
+            LOG.error("Error updating sitemap {}", e.getMessage(), e);
+         //   sendUpdateFailedEmail(e);
+            throw new SiteMapException("Error updating sitemap", e);
+        } finally {
+            setUpdateDone();
         }
-        throw new SiteMapNotFoundException("File " + fileName + " not found!");
     }
 
-    /**
-     * @see SitemapService#getIndexFileContent()
-     */
-    @Override
-    public String getIndexFileContent() throws SiteMapNotFoundException, IOException {
-        return getFileContent(MASTER_KEY);
-    }
+    //private void sendUpdateFailedEmail(Exception e) {
+//        SimpleMailMessage mailMessage = new SimpleMailMessage();
+//        mailMessage.setTo();
+   // }
 
 }
