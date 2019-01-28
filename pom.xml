@@ -32,7 +32,7 @@
         <spring-boot.version>1.5.9.RELEASE</spring-boot.version>
         <spring-cloud.version>1.4.3.RELEASE</spring-cloud.version>
         <mongo.driver.version>3.6.4</mongo.driver.version>
-        <object-storage.version>1.6-SNAPSHOT</object-storage.version>
+        <object-storage.version>1.6</object-storage.version>
     </properties>
 
     <dependencyManagement>
