@@ -12,7 +12,7 @@ public class SiteMapConfigException extends SiteMapException {
 
     /**
      * Error that is thrown if there is a problem with the application configuration
-     * @param msg
+     * @param msg error message
      */
     public SiteMapConfigException(String msg) {
         super(msg);
@@ -20,8 +20,8 @@ public class SiteMapConfigException extends SiteMapException {
 
     /**
      * Error that is thrown if there is a problem with the application configuration
-     * @param msg
-     * @param t
+     * @param msg error message
+     * @param t throwable that caused the exception
      */
     public SiteMapConfigException(String msg, Throwable t) {
         super(msg, t);

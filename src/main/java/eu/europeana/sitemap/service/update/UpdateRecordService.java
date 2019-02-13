@@ -1,4 +1,4 @@
-package eu.europeana.sitemap.service;
+package eu.europeana.sitemap.service.update;
 
 
 import com.mongodb.BasicDBObject;
@@ -6,13 +6,17 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.FileNames;
 import eu.europeana.sitemap.exceptions.SiteMapConfigException;
+import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.mongo.MongoProvider;
+import eu.europeana.sitemap.service.ActiveDeploymentService;
+import eu.europeana.sitemap.service.ReadSitemapService;
+import eu.europeana.sitemap.service.ResubmitService;
+import eu.europeana.sitemap.SitemapType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -20,75 +24,63 @@ import javax.annotation.PostConstruct;
 import java.util.Date;
 
 /**
+ * Service for updating the record sitemap. The primarily responsibility of this class is gathering record information
+ * and adding each record to the sitemap. The rest of the update process is handled by the underlying abstract service.
+ *
  * Created by ymamakis on 11/16/15.
- * Major refactoring by Patrick Ehlert on May 31, 2018
+ * Major refactoring by Patrick Ehlert on February 2019
  */
-//@Service
-public class SitemapUpdateRecordService extends SitemapUpdateAbstractService {
+@Service
+public class UpdateRecordService extends UpdateAbstractService {
 
+    private static final Logger LOG = LogManager.getLogger(UpdateRecordService.class);
 
-    private static final Logger LOG = LogManager.getLogger(SitemapUpdateRecordService.class);
-
-    private static final String FILE_NAME_BASE = FileNames.SITEMAP_RECORD_FILENAME_BASE;
     /** Used mongo fields **/
     private static final String ABOUT = "about";
     private static final String LASTUPDATED = "timestampUpdated";
     private static final String COMPLETENESS = "europeanaCompleteness";
-
-    private static final String UPDATE_IN_PROGRESS = "In progress";
-    private static final String UPDATE_FINISHED = "Finished";
-
-    public static final int NUMBER_OF_ELEMENTS = 45_000;
+    private static final int ITEMS_PER_SITEMAP_FILE = 45_000;
 
     private final MongoProvider mongoProvider;
-    private final ObjectStorageClient objectStorageProvider;
-    private final ReadSitemapService readSitemapService;
-    private final ResubmitService resubmitService;
 
     @Value("${portal.base.url}")
     private String portalBaseUrl;
     @Value("${record.portal.urlpath}")
-    private String portalRecordUrlPath;
-    @Value("${record.min.completeness}")
+    private String portalPath;
+    @Value("${record.min.completeness:0}")
     private int minRecordCompleteness;
 
-    public SitemapUpdateRecordService(MongoProvider mongoProvider, ObjectStorageClient objectStorageProvider,
-                                      ReadSitemapService readSitemapService, ResubmitService resubmitService) {
-        super(SitemapType.RECORD, readSitemapService, resubmitService);
-        LOG.info("init");
+    @Autowired
+    public UpdateRecordService(MongoProvider mongoProvider, ObjectStorageClient objectStorage,
+                               ActiveDeploymentService deploymentService, ReadSitemapService readSitemapService,
+                               ResubmitService resubmitService) {
+        super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, ITEMS_PER_SITEMAP_FILE);
+        LOG.info("Init");
         this.mongoProvider = mongoProvider;
-        this.objectStorageProvider = objectStorageProvider;
-        this.readSitemapService = readSitemapService;
-        this.resubmitService = resubmitService;
     }
 
     @PostConstruct
-    private void init() throws SiteMapConfigException {
-        // check configuration for required properties
+    private void checkConfiguration() throws SiteMapConfigException {
         if (StringUtils.isEmpty(portalBaseUrl)) {
             throw new SiteMapConfigException("Property portal.base.url is not set");
         }
         // trim to avoid problems with accidental trailing spaces
         portalBaseUrl = portalBaseUrl.trim();
 
-        if (StringUtils.isEmpty(portalRecordUrlPath)) {
+        if (StringUtils.isEmpty(portalPath)) {
             throw new SiteMapConfigException("Property record.portal.urlpath is not set");
         }
-        portalRecordUrlPath = portalRecordUrlPath.trim();
+        portalPath = portalPath.trim();
     }
 
 
     /**
-     * Delete the old sitemap files, generate new ones and switch blue/green deployment
+     * Generate record data (and save it with sitemapGenerator.addItem() method)
+     * Never call this manually! It is automatically called by the UpdateAbstractService
      */
-    public void generate() {
+    @Override
+    protected void generate(SitemapGenerator sitemapGenerator) {
         DBCursor cur = getRecordData();
-
-        ActiveSitemapService activeSitemapService = new ActiveSitemapService(objectStorageProvider, FILE_NAME_BASE);
-        SitemapGenerator generator = new SitemapGenerator(objectStorageProvider, activeSitemapService.getInactiveFile(),
-                portalBaseUrl, FILE_NAME_BASE, NUMBER_OF_ELEMENTS);
-        activeSitemapService.deleteInactiveFiles();
-
         while (cur.hasNext()) {
             // gather the required data
             DBObject record = cur.next();
@@ -100,12 +92,14 @@ public class SitemapUpdateRecordService extends SitemapUpdateAbstractService {
 
             // TODO check how to generate full record url
             LOG.debug("Adding record {}, completeness = {}, updated = {}", about, completeness, dateUpdated);
-            generator.addItem(about, String.valueOf(completeness), dateUpdated);
+            sitemapGenerator.addItem(about, String.valueOf(completeness), dateUpdated);
         }
         cur.close();
+    }
 
-        generator.finish();
-        activeSitemapService.switchFile();
+    @Override
+    public String getWebsiteBaseUrl() {
+        return portalBaseUrl + portalPath;
     }
 
     private DBCursor getRecordData() {
@@ -125,14 +119,9 @@ public class SitemapUpdateRecordService extends SitemapUpdateAbstractService {
         fields.put(LASTUPDATED, 1);
 
         LOG.info("Starting record query...");
-        DBCursor cursor = col.find(query, fields).batchSize(NUMBER_OF_ELEMENTS);
+        DBCursor cursor = col.find(query, fields).batchSize(ITEMS_PER_SITEMAP_FILE);
         LOG.info("Query finished. Retrieving records...");
         return cursor;
     }
-
-    //private void sendUpdateFailedEmail(Exception e) {
-//        SimpleMailMessage mailMessage = new SimpleMailMessage();
-//        mailMessage.setTo();
-   // }
 
 }

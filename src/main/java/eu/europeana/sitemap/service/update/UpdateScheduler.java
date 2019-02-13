@@ -1,8 +1,9 @@
-package eu.europeana.sitemap.service;
+package eu.europeana.sitemap.service.update;
 
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
@@ -18,13 +19,16 @@ import java.util.TimeZone;
  * @author Patrick Ehlert on 18-9-17.
  */
 @Component
-@EnableScheduling
+// TODO temporarily disable
+//@EnableScheduling
 public class UpdateScheduler {
+
+    // TODO makes this more generic so it can easily support more sitemap types
 
     private static final Logger LOG = LogManager.getLogger(UpdateScheduler.class);
 
-    private final SitemapUpdateAbstractService recordSitemapService;
-    private final SitemapUpdateAbstractService entitySitemapService;
+    private final UpdateAbstractService recordSitemapService;
+    private final UpdateAbstractService entitySitemapService;
 
     @Value("${record.cron.update}")
     private String updateRecordConfig;
@@ -34,8 +38,9 @@ public class UpdateScheduler {
 
     private ThreadPoolTaskScheduler scheduler;
 
-    public UpdateScheduler(SitemapUpdateRecordService recordSitemapService,
-                           SitemapUpdateEntityService entitySitemapService) {
+    @Autowired
+    public UpdateScheduler(UpdateRecordService recordSitemapService,
+                           UpdateEntityService entitySitemapService) {
         this.recordSitemapService = recordSitemapService;
         this.entitySitemapService = entitySitemapService;
     }

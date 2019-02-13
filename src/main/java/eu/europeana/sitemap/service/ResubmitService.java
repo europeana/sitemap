@@ -1,13 +1,11 @@
 package eu.europeana.sitemap.service;
 
+import eu.europeana.sitemap.SitemapType;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +26,8 @@ import java.net.URISyntaxException;
 @Service
 public class ResubmitService {
 
+    // TODO make this more generic so it can easily support more sitemap types
+
     private static final Logger LOG = LogManager.getLogger(ResubmitService.class);
 
     private static final HttpClient HTTP_CLIENT = HttpClientBuilder.create().build();
@@ -45,7 +45,7 @@ public class ResubmitService {
     /**
      * Notify Google and Bing that our sitemap has changed (but only if the provided portal sitemap index url is not empty)
      */
-    public void notifySearchEngines() {
+    public void notifySearchEngines(SitemapType sitemapType) {
         if (StringUtils.isNotEmpty(indexUrl)) {
             try {
                 // check if uri is valid
@@ -102,7 +102,7 @@ public class ResubmitService {
     public static void main(String[] args) {
         ResubmitService ss = new ResubmitService();
         ss.indexUrl = "https://www.europeana.eu/portal/europeana-sitemap-index-hashed.xml";
-        ss.notifySearchEngines();
+        ss.notifySearchEngines(SitemapType.RECORD);
     }
 
 }

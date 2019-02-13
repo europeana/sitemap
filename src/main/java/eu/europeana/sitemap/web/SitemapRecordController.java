@@ -17,17 +17,16 @@
 
 package eu.europeana.sitemap.web;
 
-import eu.europeana.sitemap.FileNames;
+import eu.europeana.sitemap.Constants;
+import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
-import eu.europeana.sitemap.service.SitemapUpdateEntityService;
-import eu.europeana.sitemap.service.SitemapUpdateRecordService;
-import eu.europeana.sitemap.service.SitemapUpdateService;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import eu.europeana.sitemap.service.ActiveDeploymentService;
+import eu.europeana.sitemap.service.update.UpdateRecordService;
+import eu.europeana.sitemap.service.update.UpdateService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -43,76 +42,52 @@ import javax.servlet.http.HttpServletResponse;
  */
 @RestController
 @RequestMapping("/record")
-public class SitemapRecordController {
+public class SitemapRecordController extends SitemapAbstractController {
 
-    private static final Logger LOG = LogManager.getLogger(SitemapRecordController.class);
-
-    private SitemapFileController readController;
-    private SitemapUpdateService updateService;
+    private UpdateService updateService;
 
     @Value("${admin.apikey}")
     private String adminKey;
 
-    public SitemapRecordController(SitemapFileController readController, SitemapUpdateRecordService updateService) {
-        this.readController = readController;
+    public SitemapRecordController(ActiveDeploymentService activeDeployment, SitemapFileController readController,
+                                   UpdateRecordService updateService) {
+        super(SitemapType.RECORD, activeDeployment, readController);
         this.updateService = updateService;
     }
 
     /**
-     * Return the record sitemap index file
-     *
-     * @throws SiteMapNotFoundException if the index file wasn't found
-     * @return contents of record sitemap index file
+     * @see SitemapAbstractController#getSitemapIndex()
      */
-    @RequestMapping(value = {"index"}, method = RequestMethod.GET)
-    public String handleRecordSitemapIndex() throws SiteMapNotFoundException {
-        return readController.file(FileNames.SITEMAP_RECORD_INDEX_FILE);
+    @GetMapping(value = {"index",
+            Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION})
+    public String getRecordSitemapIndex() throws SiteMapNotFoundException {
+        return super.getSitemapIndex();
     }
 
     /**
-     * Return a record sitemap file. Note that the to and from are fixed values, a list of all files with to/from values
-     * can be found in the sitemap index file
-     *
-     * @param from     start index
-     * @param to       end index
-     * @throws SiteMapNotFoundException if the sitemap file wasn't found
-     * @return contents of sitemap file
+     * @see SitemapAbstractController#getSitemapFile(String, String)
      */
-    @RequestMapping(value = FileNames.SITEMAP_RECORD_FILENAME_BASE, method = RequestMethod.GET)
-    public String handleRecordSitemapFile(@RequestParam(value = "from", required = true) String from,
-                                    @RequestParam(value = "to", required = true) String to) throws SiteMapNotFoundException {
-        String fileName = FileNames.SITEMAP_ENTITY_FILENAME_BASE + getActiveDeployment() + "?from=" + from + "&to=" + to;
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("Retrieving record sitemap file {} ", fileName);
-        }
-        return readController.file(fileName);
+    @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.XML_EXTENSION)
+    public String getRecordSitemapFile(@RequestParam(value = "from") String from,
+                                       @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
+        return super.getSitemapFile(from, to);
     }
 
     /**
-     * Start the sitemap update process
+     * Start the sitemap update process for records
      * @param wskey apikey that verify access to the update procedure
-     * @param response
+     * @param response automatically added to method to set response status
      * @return The index file in plain text
      */
-    @RequestMapping(value = "update", method = RequestMethod.GET)
-    public String update(@RequestParam(value = "wskey", required = true) String wskey,
+    @GetMapping(value = "update")
+    public String update(@RequestParam(value = "wskey") String wskey,
                          HttpServletResponse response) throws SiteMapException {
         if (AdminUtils.verifyKey(adminKey, wskey)) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             updateService.update();
-            return "Record sitemap update finished";
+            return getRecordSitemapIndex();
         }
         return null;
-    }
-
-    /**
-     * The active record sitemap file stores either the value 'blue' or 'green' so we know which deployment of the files we
-     * need to retrieve
-     * @return
-     * @throws SiteMapNotFoundException if the active deployment file was not found
-     */
-    private String getActiveDeployment() throws SiteMapNotFoundException {
-        return readController.file(FileNames.SITEMAP_RECORD_ACTIVE_FILE);
     }
 
 }

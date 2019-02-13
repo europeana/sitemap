@@ -1,7 +1,10 @@
-package eu.europeana.sitemap.service;
+package eu.europeana.sitemap.service.update;
 
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.FileNames;
+import eu.europeana.sitemap.PortalUrl;
+import eu.europeana.sitemap.StorageFileName;
+import eu.europeana.sitemap.service.Deployment;
+import eu.europeana.sitemap.SitemapType;
 import org.apache.commons.lang.time.DateFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -12,17 +15,21 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
- * Generates sitemap files and a sitemap index files. All generated sitemap file names start with the provided fileNameBase
- * followed by a 'from' and 'to' parameter attached to the name (the use of these parameters allows for easy
- * processing of requested file names in a controller).
+ * Basic implementation of generating sitemap files and sitemap index file. Note that this class doesn't involve itself
+ * in switching the active deployment, only in writing data to sitemap files.
+ * To start
+ * All generated sitemap file names start with the provided fileNameBase followed by a 'from' and 'to' parameter attached
+ * to the name (the use of these parameters allows for easy processing of requested file names in a controller).
  *
- * When all items are added using the addItem() method you need to call finish() which will (over)write the index file
- * and switch the active blue/green deployment
+ * When all items are added using the addItem() method you need to call finish() which will wrap up the generation process
  *
  * @author Patrick Ehlert
  * Created on 04-06-2018
  */
 public class SitemapGenerator {
+
+    // TODO either update class javadoc, or include filenameBase in construtor?\
+
 
     private static final Logger LOG = LogManager.getLogger(SitemapGenerator.class);
 
@@ -54,14 +61,15 @@ public class SitemapGenerator {
 
     private static final char LN = '\n';
 
-    private static final String FROM = "?from=";
-    private static final String TO = "&to=";
+    private static final String FROM_PARAM = "?from=";
+    private static final String TO_PARAM = "&to=";
 
-    private final ObjectStorageClient objectStorageProvider;
-    private final BlueGreenDeployment blueGreen;
-    private final String websiteBaseUrl;
-    private final String fileNameBase;
-    private final int itemsPerSitemap;
+    private final ObjectStorageClient objectStorage;
+    private final SitemapType type;
+
+    private Deployment deployment;
+    private String websiteBaseUrl;
+    private int itemsPerSitemap;
 
     private boolean generationStarted = false;
     private boolean generationFinished = false;
@@ -76,27 +84,30 @@ public class SitemapGenerator {
     private long from = 0;
 
     /**
-     * Start a new sitemap generation
-     * @param objectStorageProvider
-     * @param websiteBaseUrl base url of where the generated sitemap files can be retrieved
-     * @param fileNameBase base name of the generated sitemap files
-     * @param itemsPerSitemap, maximum number of items per sitemap file
+     * Setup a new sitemap generator
+     * @param type sitemap type (record or entity)
+     * @param objectStorage interface to S3 file storage
      */
-    public SitemapGenerator(ObjectStorageClient objectStorageProvider, BlueGreenDeployment blueGreen,
-                            String websiteBaseUrl, String fileNameBase, int itemsPerSitemap) {
-        this.objectStorageProvider = objectStorageProvider;
-        this.blueGreen = blueGreen;
-        this.websiteBaseUrl = websiteBaseUrl;
-        this.fileNameBase = fileNameBase;
-        this.itemsPerSitemap = itemsPerSitemap;
+    public SitemapGenerator(SitemapType type, ObjectStorageClient objectStorage) {
+        this.objectStorage = objectStorage;
+        this.type = type;
     }
 
     /**
-     * Starts the sitemap generation process. This action will delete all files in the objectStorage that contain are
-     * not part of the provided deployment (so blue files will be deleted for a green deployment and vice versa)
+     * Prepares the sitemap generation process.
+     * @param desiredDeployment whether the saved files should be blue or green
+     * @param websiteBaseUrl base url where sitemap files can be retrieved by search engines
+     * @param itemsPerSitemap number of items per sitemap file
      */
-    private void init() {
-        LOG.debug("Starting sitemap generation");
+    public void init(Deployment desiredDeployment, String websiteBaseUrl, int itemsPerSitemap) {
+        if (generationStarted) {
+            throw new IllegalStateException("Cannot start " + type + "sitemap generation. It's already started.");
+        }
+        LOG.debug("Starting " + type + " sitemap generation");
+
+        this.deployment = desiredDeployment;
+        this.websiteBaseUrl = websiteBaseUrl;
+        this.itemsPerSitemap = itemsPerSitemap;
         generationStarted = true;
         nrRecords = 0;
         nrSitemaps = 0;
@@ -105,19 +116,18 @@ public class SitemapGenerator {
     }
 
 
-
     /**
-     * Add an item to a sitemap file.
-     * @param url
-     * @param priority
-     * @param dateLastModified
+     * Add an item/webpage to a sitemap file. Note that the first added item will count as the start of the generation process
+     * @param url url of webpage that should be saved
+     * @param priority priority of the webpage
+     * @param dateLastModified last-modified date of the webpage
      */
     public void addItem(String url, String priority, Date dateLastModified) {
         if (generationFinished) {
-            throw new IllegalStateException("Cannot add more items. Sitemap generation is already finished.");
+            throw new IllegalStateException("Cannot add item; " + type + " sitemap generation is already finished.");
         }
         if (!generationStarted) {
-            init();
+            throw new IllegalStateException("Cannot add item; " + type + " sitemap generation is not started yet.");
         }
         appendItem(url, priority, dateLastModified);
 
@@ -128,21 +138,21 @@ public class SitemapGenerator {
     }
 
     /**
-     * Write the current sitemap that's in progress as well as wrap up the index file. Then it will switch the
-     * blue/green deployment
+     * Write the current sitemap that's in progress as well as wrap up the index file. Note that this doesn't switch
+     * from blue to green (or vice versa) deployment yet
      */
     public void finish() {
         if (!generationStarted) {
-            throw new IllegalStateException("Cannot complete sitemap generation. It hasn't started yet.");
+            throw new IllegalStateException("Cannot complete " + type + " sitemap generation. It hasn't started yet.");
         }
         if (generationFinished) {
-            throw new IllegalStateException("Cannot complete sitemap generation. It was already finished.");
+            throw new IllegalStateException("Cannot complete " + type + " sitemap generation. It was already finished.");
         }
         finishSitemapFile();
         finishSitemapIndex();
-        LOG.info("Records processed {}, written {} sitemap files and 1 sitemap index file", nrRecords, nrSitemaps);
 
-        generationStarted = false;
+        LOG.info("Items processed {}, written {} sitemap files and 1 sitemap index file", nrRecords, nrSitemaps);
+
         generationFinished = true;
     }
 
@@ -154,11 +164,11 @@ public class SitemapGenerator {
     private void finishSitemapIndex() {
         this.sitemapIndex.append(SITEMAP_HEADER_CLOSING);
 
-        String fileName = FileNames.getSitemapIndexFileName(fileNameBase);
+        String fileName = StorageFileName.getSitemapIndexFileName(type, deployment);
         String fileContents = this.sitemapIndex.toString();
         LOG.debug("Generated contents for sitemap index\n{}", fileContents);
         if (saveToStorage(fileName, fileContents)) {
-            LOG.info("Created sitemap index file");
+            LOG.info("Created sitemap file "+fileName);
         }
     }
 
@@ -181,8 +191,8 @@ public class SitemapGenerator {
         }
 
         // add fileName to index (filename is location where file is retrievable for search engines)
-        String fromToText = FROM + from + TO + nrRecords;
-        String sitemapFileName = FileNames.getSitemapFileNameInIndex(websiteBaseUrl, fileNameBase, fromToText);
+        String fromToText = FROM_PARAM + from + TO_PARAM + nrRecords;
+        String sitemapFileName = PortalUrl.getSitemapUrl(websiteBaseUrl, type, fromToText, true);
         LOG.debug("Add sitemap file {} to index", sitemapFileName);
         sitemapIndex.append(SITEMAP_OPENING).append(LN)
                 .append(LOC_OPENING)
@@ -196,7 +206,7 @@ public class SitemapGenerator {
 
         // write sitemap file, note that the actual filename in storage also contains blue-green information
         sitemap.append(URLSET_HEADER_CLOSING);
-        String fileName = FileNames.getSitemapFileNameStorage(fileNameBase, blueGreen, fromToText);
+        String fileName = StorageFileName.getSitemapFileName(type, deployment, fromToText);
         String fileContents = sitemap.toString();
         LOG.debug("Generated contents for file {}\n{}", fileName, fileContents);
         nrSitemaps++;
@@ -238,7 +248,7 @@ public class SitemapGenerator {
         boolean result = false;
         try (ByteArrayPayload payload = new ByteArrayPayload(value.getBytes(StandardCharsets.UTF_8))) {
             LOG.debug("Saving file with key {} and payload {}", key, payload);
-            String eTag = objectStorageProvider.put(key, payload);
+            String eTag = objectStorage.put(key, payload);
 
             // verify is save was successful
             int nrSaveAttempts = 1;
@@ -249,10 +259,10 @@ public class SitemapGenerator {
                 long timeout = nrSaveAttempts * 5000L;
                 LOG.warn("Failed to save file {} to storage provider (etag = {}, siteMapCacheFileExists={}). "
                         +"Waiting {} seconds before trying again...", key, eTag, result, (timeout / 1000));
-                Thread.currentThread().sleep(timeout);
+                Thread.sleep(timeout);
 
                 LOG.info("Retry saving the file...");
-                eTag = objectStorageProvider.put(key, payload);
+                eTag = objectStorage.put(key, payload);
                 result = checkIfFileExists(key);
                 nrSaveAttempts++;
             }
@@ -267,7 +277,7 @@ public class SitemapGenerator {
     }
 
     private boolean checkIfFileExists(String id) {
-        return objectStorageProvider.isAvailable(id);
+        return objectStorage.isAvailable(id);
     }
 
 }

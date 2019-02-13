@@ -32,7 +32,7 @@ public class SocksProxyConfigInjector {
     /**
      * Load socks configuration from a file with the provided file name (file should be on the classpath)
      *
-     * @param propertiesFileName
+     * @param propertiesFileName name of properties file
      * @throws IOException thrown if the provided file is not found or cannot be read
      */
     public SocksProxyConfigInjector(String propertiesFileName) throws IOException {
@@ -42,7 +42,7 @@ public class SocksProxyConfigInjector {
     /**
      * Load socks configuration from a Properties object
      *
-     * @param properties
+     * @param properties application properties
      */
     public SocksProxyConfigInjector(Properties properties) {
         addProperties(properties);
@@ -51,7 +51,7 @@ public class SocksProxyConfigInjector {
     /**
      * Add additional properties from a file with the provided file name (file should be on the classpath)
      *
-     * @param propertiesFileName
+     * @param propertiesFileName name of properties file
      * @return true if the properties were read from file, otherwise false
      */
     public final void addProperties(String propertiesFileName) throws IOException {
@@ -67,7 +67,7 @@ public class SocksProxyConfigInjector {
     /**
      * Add additional properties from a Properties object
      *
-     * @param properties
+     * @param properties extra application properties
      */
     public final void addProperties(Properties properties) {
         props.putAll(properties);

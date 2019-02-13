@@ -10,6 +10,10 @@ import org.apache.commons.lang.StringUtils;
  */
 public class AdminUtils {
 
+    private AdminUtils() {
+        // empty constructor to prevent initialization
+    }
+
     /**
      * Checks if the provided adminKey is not empty and if the provided wskey matches the provided adminKey. If not
      * a SecurityException is thrown.
