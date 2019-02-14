@@ -106,9 +106,8 @@ public class ActiveDeploymentService {
             long i = 0;
             LOG.info("Deleting all old files with the name {} ...", fileNameToDelete);
             for (StorageObject obj : listFiles) {
-                LOG.info("Checking file {}", obj.getName());
                 if (obj.getName().startsWith(fileNameToDelete)) {
-                    LOG.info("Deleting file {}", obj.getName());
+                    LOG.debug("Deleting file {}", obj.getName());
                     objectStorageProvider.delete(obj.getName());
                     i++;
                 }

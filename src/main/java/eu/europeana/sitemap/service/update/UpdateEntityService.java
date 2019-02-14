@@ -62,6 +62,8 @@ public class UpdateEntityService extends UpdateAbstractService {
     protected URL entityApi;
     @Value("${entity.api.wskey}")
     protected String entityApiKey;
+    @Value("${entity.cron.update}")
+    private String updateInterval;
 
     private CloseableHttpClient httpClient = HttpClients.createDefault();
 
@@ -127,6 +129,13 @@ public class UpdateEntityService extends UpdateAbstractService {
         return portalBaseUrl + portalPath;
     }
 
+    /**
+     * @see UpdateService#getUpdateInterval()
+     */
+    @Override
+    public String getUpdateInterval() {
+        return updateInterval;
+    }
 
     /**
      * Send query to Entity API and retrieve data

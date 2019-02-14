@@ -7,7 +7,6 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SiteMapConfigException;
-import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapService;
@@ -49,13 +48,14 @@ public class UpdateRecordService extends UpdateAbstractService {
     private String portalPath;
     @Value("${record.min.completeness:0}")
     private int minRecordCompleteness;
+    @Value("${record.cron.update}")
+    private String updateInterval;
 
     @Autowired
     public UpdateRecordService(MongoProvider mongoProvider, ObjectStorageClient objectStorage,
                                ActiveDeploymentService deploymentService, ReadSitemapService readSitemapService,
                                ResubmitService resubmitService) {
         super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, ITEMS_PER_SITEMAP_FILE);
-        LOG.info("Init");
         this.mongoProvider = mongoProvider;
     }
 
@@ -100,6 +100,14 @@ public class UpdateRecordService extends UpdateAbstractService {
     @Override
     public String getWebsiteBaseUrl() {
         return portalBaseUrl + portalPath;
+    }
+
+    /**
+     * @see UpdateService#getUpdateInterval()
+     */
+    @Override
+    public String getUpdateInterval() {
+        return updateInterval;
     }
 
     private DBCursor getRecordData() {

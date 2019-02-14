@@ -46,7 +46,6 @@ public abstract class UpdateAbstractService implements UpdateService {
 
     public UpdateAbstractService(SitemapType type, ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
                                  ReadSitemapService readSitemapService, ResubmitService resubmitService, int itemsPerSitemap) {
-        LOG.info("Init");
         this.sitemapType = type;
         this.objectStorage = objectStorage;
         this.deploymentService = deploymentService;
@@ -106,6 +105,14 @@ public abstract class UpdateAbstractService implements UpdateService {
      * @return the baseUrl where sitemap files can be retrieved by search engines (for saving this info in sitemap index)
      */
     protected abstract String getWebsiteBaseUrl();
+
+    /**
+     * @see UpdateService#getSitemapType()
+     */
+    @Override
+    public SitemapType getSitemapType() {
+        return this.sitemapType;
+    }
 
     /**
      * checks if we can start the update, or if an update is already in progress

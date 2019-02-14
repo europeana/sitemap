@@ -24,6 +24,9 @@ public enum SitemapType {
         return this.name;
     }
 
+    /**
+     * @return the base name of files generated for this sitemap type
+     */
     public String getFileNameBase() {
         return this.fileNameBase;
     }

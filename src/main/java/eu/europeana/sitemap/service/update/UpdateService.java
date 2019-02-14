@@ -1,5 +1,6 @@
 package eu.europeana.sitemap.service.update;
 
+import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 
 /**
@@ -14,4 +15,14 @@ public interface UpdateService {
      * @throws SiteMapException when there is an error during the update process
      */
     public void update() throws SiteMapException;
+
+    /**
+     * @return the type of the sitemap that should be updated
+     */
+    public SitemapType getSitemapType();
+
+    /**
+     * @return cron style interval for when automatic updates should be done, can be left empty
+     */
+    public String getUpdateInterval();
 }

@@ -74,6 +74,9 @@ public class SitemapApplication extends SpringBootServletInitializer {
      */
     @SuppressWarnings("squid:S2095") // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
     public static void main(String[] args)  {
+        LogManager.getLogger(SitemapApplication.class).info("MAIN START");
+        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_INDEX  = {}", System.getenv("CF_INSTANCE_INDEX"));
+        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_IP  = {}", System.getenv("CF_INSTANCE_IP"));
         try {
             injectSocksProxySettings();
             SpringApplication.run(SitemapApplication.class, args);
@@ -90,6 +93,7 @@ public class SitemapApplication extends SpringBootServletInitializer {
      */
     @Override
     public void onStartup(ServletContext servletContext) throws ServletException {
+        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_INDEX  = {}", System.getenv("CF_INSTANCE_INDEX"));
         LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_IP  = {}", System.getenv("CF_INSTANCE_IP"));
         try {
             injectSocksProxySettings();
