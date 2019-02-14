@@ -35,10 +35,8 @@ import javax.servlet.http.HttpServletResponse;
 /**
  * Handles requests for record sitemap files from external parties
  * The controller checks which deployment is currently active (blue or green) and retrieves the correct file.
- * Note that there is only a blue/green version for sitemap files, but not for the sitemap index file.
  *
- * @author luthien, created on 07/12/2015.
- * @author Patrick Ehlert, major refactoring on 21/08/2017 and 30/05/2018
+ * @author Patrick Ehlert (major refactoring on 11-02-2019)
  */
 @RestController
 @RequestMapping("/record")
