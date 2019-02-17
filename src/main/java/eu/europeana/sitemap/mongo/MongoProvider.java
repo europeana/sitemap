@@ -4,9 +4,7 @@ import com.mongodb.*;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.stereotype.Component;
 
-import javax.annotation.PreDestroy;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,7 +13,6 @@ import java.util.List;
  *
  * Created by ymamakis on 11/16/15.
  */
-@Component
 public class MongoProvider {
 
     private static final Logger LOG = LogManager.getLogger(MongoProvider.class);
@@ -23,6 +20,8 @@ public class MongoProvider {
     private MongoClient mongoClient;
     private String database;
     private DBCollection collection;
+
+    // TODO replace deprecated getDb() record retrieval with more up-to-date method
 
     /**
      * Create a new MongoClient based on a connectionUrl, e.g.
@@ -80,7 +79,6 @@ public class MongoProvider {
     /**
      * Close the connection to mongo
      */
-    @PreDestroy
     public void close() {
         if (mongoClient != null) {
             LOG.info("Shutting down connections to Mongo...");

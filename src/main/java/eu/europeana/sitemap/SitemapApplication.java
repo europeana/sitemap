@@ -39,22 +39,6 @@ public class SitemapApplication extends SpringBootServletInitializer {
     @Value("${s3.endpoint}")
     private String endpoint;
 
-
-    @Value("${mongodb.connectionUrl}")
-    private String mongoConnectionUrl;
-    @Value("${mongodb.record.dbname}")
-    private String mongoDatabase;
-
-    /**
-     * Mongo database from which we retrieve all record information
-     * @return mongo provider bean
-     */
-    @Lazy
-    @Bean
-    public MongoProvider mongoProvider() {
-        return new MongoProvider(mongoConnectionUrl, mongoDatabase);
-    }
-
     /**
      * Location where all sitemap files are stored (Amazon S3)
      * @return object storage client
@@ -83,23 +67,6 @@ public class SitemapApplication extends SpringBootServletInitializer {
         } catch (IOException e) {
             LogManager.getLogger(SitemapApplication.class).fatal("Error reading properties", e);
             System.exit(-1);
-        }
-    }
-
-    /**
-     * This method is called when starting a 'traditional' war deployment (e.g. in Docker of Cloud Foundry)
-     * @param servletContext main application servlet context
-     * @throws ServletException
-     */
-    @Override
-    public void onStartup(ServletContext servletContext) throws ServletException {
-        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_INDEX  = {}", System.getenv("CF_INSTANCE_INDEX"));
-        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_IP  = {}", System.getenv("CF_INSTANCE_IP"));
-        try {
-            injectSocksProxySettings();
-            super.onStartup(servletContext);
-        } catch (IOException e) {
-            throw new ServletException("Error reading properties", e);
         }
     }
 

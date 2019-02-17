@@ -75,7 +75,6 @@ public class UpdateScheduler {
             // When deployed to Cloud Foundry there can be multiple instances, so we check the instance number and only
             // allow instance 0 to do updates!
             String instanceNr = System.getenv("CF_INSTANCE_INDEX");
-            LOG.info("Instance is {}", instanceNr);
             if ("0".equals(instanceNr)) {
                 LOG.info("Starting automatic updating for {} sitemap...", updateService.getSitemapType());
                 try {

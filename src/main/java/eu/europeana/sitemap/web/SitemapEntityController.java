@@ -79,15 +79,12 @@ public class SitemapEntityController extends SitemapAbstractController {
      * @return The entity index file in plain text
      */
     @GetMapping(value = "update")
-    public String update(@RequestParam(value = "wskey") String wskey,
+    public void update(@RequestParam(value = "wskey") String wskey,
                          HttpServletResponse response) throws SiteMapException {
         if (AdminUtils.verifyKey(adminKey, wskey)) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             updateService.update();
-            return getEntitySitemapIndex();
         }
-        return null;
     }
-
 
 }

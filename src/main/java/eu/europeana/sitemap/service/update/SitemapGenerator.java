@@ -17,7 +17,7 @@ import java.util.Date;
 /**
  * Basic implementation of generating sitemap files and sitemap index file. Note that this class doesn't involve itself
  * in switching the active deployment, only in writing data to sitemap files.
- * To start
+ *
  * All generated sitemap file names start with the provided fileNameBase followed by a 'from' and 'to' parameter attached
  * to the name (the use of these parameters allows for easy processing of requested file names in a controller).
  *
@@ -27,9 +27,6 @@ import java.util.Date;
  * Created on 04-06-2018
  */
 public class SitemapGenerator {
-
-    // TODO either update class javadoc, or include filenameBase in construtor?\
-
 
     private static final Logger LOG = LogManager.getLogger(SitemapGenerator.class);
 
@@ -103,7 +100,7 @@ public class SitemapGenerator {
         if (generationStarted) {
             throw new IllegalStateException("Cannot start " + type + "sitemap generation. It's already started.");
         }
-        LOG.debug("Starting " + type + " sitemap generation");
+        LOG.info("Starting {} sitemap generation. Location of sitemap files {}", type, websiteBaseUrl);
 
         this.deployment = desiredDeployment;
         this.websiteBaseUrl = websiteBaseUrl;

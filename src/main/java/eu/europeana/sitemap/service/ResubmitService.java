@@ -1,14 +1,17 @@
 package eu.europeana.sitemap.service;
 
+import eu.europeana.sitemap.PortalUrl;
 import eu.europeana.sitemap.SitemapType;
-import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -17,7 +20,7 @@ import java.net.URISyntaxException;
 
 /**
  * Service that resubmits our sitemap to search engines (when an update of the sitemap finishes).
- * Hopefully this prevents search engines from trying to access sitemap pages that do not exist anymore.
+ * Hopefully this prevents/reduces search engines from trying to access sitemap pages that do not exist anymore.
  *
  * See also https://support.google.com/webmasters/answer/183669?hl=en and
  * https://www.bing.com/webmaster/help/how-to-submit-sitemaps-82a15bd4
@@ -26,37 +29,28 @@ import java.net.URISyntaxException;
 @Service
 public class ResubmitService {
 
-    // TODO make this more generic so it can easily support more sitemap types
-
     private static final Logger LOG = LogManager.getLogger(ResubmitService.class);
 
     private static final HttpClient HTTP_CLIENT = HttpClientBuilder.create().build();
 
-    @Value("${portal.base.url}")
-    private String portalBaseUrl;
+    private PortalUrl portalUrl;
 
-    @Value("${portal.sitemapindex.urlpath:}") // optional hence the trailing :
-    private String indexUrl;
-
-    public ResubmitService() {
-        LogManager.getLogger(ResubmitService.class).debug("init");
+    @Autowired
+    public ResubmitService(PortalUrl portalUrl) {
+        this.portalUrl = portalUrl;
     }
 
     /**
      * Notify Google and Bing that our sitemap has changed (but only if the provided portal sitemap index url is not empty)
      */
     public void notifySearchEngines(SitemapType sitemapType) {
-        if (StringUtils.isNotEmpty(indexUrl)) {
-            try {
-                // check if uri is valid
-                URI sitemapFile = new URIBuilder(portalBaseUrl + indexUrl).build();
-                LOG.info("Notifying search engines that sitemap is updated...");
-                resubmitToServices(sitemapFile);
-            } catch (URISyntaxException e) {
-                LOG.error("No valid sitemap index url specified", e);
-            }
-        } else {
-            LOG.info("No sitemap index url specified, skipping search engine notification");
+        try {
+            // check if uri is valid
+            URI sitemapFile = new URIBuilder(portalUrl.getSitemapIndexUrl(sitemapType)).build();
+            LOG.info("Notifying search engines that {} sitemap is updated...", sitemapType);
+            resubmitToServices(sitemapFile);
+        } catch (URISyntaxException e) {
+            LOG.error("No valid {} sitemap index url", sitemapType, e);
         }
     }
 
@@ -71,11 +65,11 @@ public class ResubmitService {
 
     /**
      * Both Google and Bing only require a get-request as notification.
-     * @param serviceName
-     * @param serviceUrl
-     * @param serviceProperty
-     * @throws URISyntaxException
-     * @throws IOException
+     * @param serviceName name of search engine
+     * @param serviceUrl url where to submit updates index (which search engine)
+     * @param serviceProperty property that is updated (normally always 'sitemap')
+     * @throws URISyntaxException when the provided serviceUrl is not valid
+     * @throws IOException when there is a problem sending the ping request
      */
     private void resubmitToService(String serviceName, String serviceUrl, String serviceProperty, URI sitemapFile) throws URISyntaxException, IOException {
         LOG.info("Pinging {} with index = {}", serviceName, sitemapFile.toString());
@@ -86,23 +80,14 @@ public class ResubmitService {
             LOG.debug("request = {} ", getRequest.getURI());
         }
 
-        //HttpResponse response = HTTP_CLIENT.execute(getRequest);
-        //int statusCode = response.getStatusLine().getStatusCode();
-//        if (statusCode == HttpStatus.SC_OK) {
-//            LOG.info("{} says OK: {} ", serviceName, EntityUtils.toString(response.getEntity()));
-//        } else {
-//            LOG.error("{} says {} (status code {})", serviceName, response.getStatusLine().getReasonPhrase(), statusCode);
-//        }
+        HttpResponse response = HTTP_CLIENT.execute(getRequest);
+        int statusCode = response.getStatusLine().getStatusCode();
+        if (statusCode == HttpStatus.SC_OK) {
+            LOG.info("{} says OK: {} ", serviceName, EntityUtils.toString(response.getEntity()));
+        } else {
+            LOG.error("{} says {} (status code {})", serviceName, response.getStatusLine().getReasonPhrase(), statusCode);
+        }
     }
 
-    /**
-     * To manually notify search engines we can run this as a standalone java program
-     * @param args
-     */
-    public static void main(String[] args) {
-        ResubmitService ss = new ResubmitService();
-        ss.indexUrl = "https://www.europeana.eu/portal/europeana-sitemap-index-hashed.xml";
-        ss.notifySearchEngines(SitemapType.RECORD);
-    }
 
 }

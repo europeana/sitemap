@@ -6,12 +6,13 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.sitemap.PortalUrl;
+import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapService;
 import eu.europeana.sitemap.service.ResubmitService;
-import eu.europeana.sitemap.SitemapType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.util.Date;
 
 /**
@@ -40,23 +42,29 @@ public class UpdateRecordService extends UpdateAbstractService {
     private static final String COMPLETENESS = "europeanaCompleteness";
     private static final int ITEMS_PER_SITEMAP_FILE = 45_000;
 
-    private final MongoProvider mongoProvider;
-
     @Value("${portal.base.url}")
     private String portalBaseUrl;
-    @Value("${record.portal.urlpath}")
-    private String portalPath;
-    @Value("${record.min.completeness:0}")
-    private int minRecordCompleteness;
     @Value("${record.cron.update}")
     private String updateInterval;
+    @Value("${record.resubmit}")
+    private boolean resubmit;
+    @Value("${record.min.completeness:0}")
+    private int minRecordCompleteness;
+
+
+    @Value("${mongodb.connectionUrl}")
+    private String mongoConnectionUrl;
+    @Value("${mongodb.record.dbname}")
+    private String mongoDatabase;
+
+    private PortalUrl portalUrl;
+    private MongoProvider mongoProvider;
 
     @Autowired
-    public UpdateRecordService(MongoProvider mongoProvider, ObjectStorageClient objectStorage,
-                               ActiveDeploymentService deploymentService, ReadSitemapService readSitemapService,
-                               ResubmitService resubmitService) {
+    public UpdateRecordService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
+                               ReadSitemapService readSitemapService, ResubmitService resubmitService, PortalUrl portalUrl) {
         super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, ITEMS_PER_SITEMAP_FILE);
-        this.mongoProvider = mongoProvider;
+        this.portalUrl = portalUrl;
     }
 
     @PostConstruct
@@ -67,10 +75,7 @@ public class UpdateRecordService extends UpdateAbstractService {
         // trim to avoid problems with accidental trailing spaces
         portalBaseUrl = portalBaseUrl.trim();
 
-        if (StringUtils.isEmpty(portalPath)) {
-            throw new SiteMapConfigException("Property record.portal.urlpath is not set");
-        }
-        portalPath = portalPath.trim();
+        mongoProvider = new MongoProvider(mongoConnectionUrl, mongoDatabase);
     }
 
 
@@ -90,16 +95,18 @@ public class UpdateRecordService extends UpdateAbstractService {
             // very old records do not have a timestampUpdated or timestampCreated field
             Date dateUpdated = (timestampUpdated == null ? null : (Date) timestampUpdated);
 
-            // TODO check how to generate full record url
-            LOG.debug("Adding record {}, completeness = {}, updated = {}", about, completeness, dateUpdated);
-            sitemapGenerator.addItem(about, String.valueOf(completeness), dateUpdated);
+            String url = portalUrl.getRecordUrl(about);
+            String completenessStr = (completeness > 9 ? "1.0" : ("0." + completeness));
+            LOG.trace("Adding record {}, completeness = {}, updated = {}", url, completeness, dateUpdated);
+            sitemapGenerator.addItem(url, completenessStr, dateUpdated);
         }
         cur.close();
     }
 
+
     @Override
     public String getWebsiteBaseUrl() {
-        return portalBaseUrl + portalPath;
+        return portalBaseUrl;
     }
 
     /**
@@ -108,6 +115,14 @@ public class UpdateRecordService extends UpdateAbstractService {
     @Override
     public String getUpdateInterval() {
         return updateInterval;
+    }
+
+    /**
+     * @see UpdateService#doResubmit()
+     */
+    @Override
+    public boolean doResubmit() {
+        return resubmit;
     }
 
     private DBCursor getRecordData() {
@@ -130,6 +145,13 @@ public class UpdateRecordService extends UpdateAbstractService {
         DBCursor cursor = col.find(query, fields).batchSize(ITEMS_PER_SITEMAP_FILE);
         LOG.info("Query finished. Retrieving records...");
         return cursor;
+    }
+
+    @PreDestroy
+    public void stopMongoConnections() {
+        if (mongoProvider != null) {
+            mongoProvider.close();
+        }
     }
 
 }

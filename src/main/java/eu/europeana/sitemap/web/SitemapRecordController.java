@@ -82,8 +82,9 @@ public class SitemapRecordController extends SitemapAbstractController {
                          HttpServletResponse response) throws SiteMapException {
         if (AdminUtils.verifyKey(adminKey, wskey)) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
+            // TODO make asynchronous!? Or just let it run!?
             updateService.update();
-            return getRecordSitemapIndex();
+            return "Record sitemap update is started";
         }
         return null;
     }

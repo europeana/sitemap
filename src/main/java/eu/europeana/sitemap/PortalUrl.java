@@ -26,8 +26,10 @@ public class PortalUrl {
     @Value("${portal.base.url}")
     private String portalBaseUrl;
 
-    @Value("${record.portal.urlpath}")
-    private String recordPath;
+    @Value("${record.portal.path}")
+    private String recordPortalPath;
+    @Value("${entity.portal.path}")
+    private String entityPortalPath;
 
     /**
      * Return the public url of a sitemap index file
@@ -74,7 +76,7 @@ public class PortalUrl {
      * @return portal record page url
      */
     public String getRecordUrl(String europeanaId) {
-        return portalBaseUrl + recordPath + europeanaId + Constants.HTML_EXTENSION;
+        return portalBaseUrl + recordPortalPath + europeanaId + Constants.HTML_EXTENSION;
     }
 
     /**
@@ -85,7 +87,7 @@ public class PortalUrl {
      * @return canonical portal entity page url
      */
     public String getEntityUrl(String type, String id) {
-        return portalBaseUrl + "/explore/" + convertEntityTypeToPortalPath(type) +
+        return portalBaseUrl + entityPortalPath + Constants.PATH_SEPARATOR + convertEntityTypeToPortalPath(type) +
                 Constants.PATH_SEPARATOR + id;
     }
 
@@ -98,7 +100,8 @@ public class PortalUrl {
      * @return a language-specific portal entity page url
      */
     public String getEntityUrl(String language, String type, String id, String prefLabel) {
-        return portalBaseUrl + Constants.PATH_SEPARATOR + language + "/explore/" + convertEntityTypeToPortalPath(type) +
+        return portalBaseUrl + Constants.PATH_SEPARATOR + language + entityPortalPath +
+                Constants.PATH_SEPARATOR + convertEntityTypeToPortalPath(type) +
                 Constants.PATH_SEPARATOR + convertEntityIdPrefLabelToPortalFile(id, prefLabel);
     }
 

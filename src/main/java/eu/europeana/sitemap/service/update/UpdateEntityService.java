@@ -5,6 +5,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.exceptions.EntityQueryException;
 import eu.europeana.sitemap.exceptions.InvalidApiKeyException;
 import eu.europeana.sitemap.exceptions.SiteMapConfigException;
@@ -12,7 +13,6 @@ import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapService;
 import eu.europeana.sitemap.service.ResubmitService;
-import eu.europeana.sitemap.SitemapType;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -53,17 +53,16 @@ public class UpdateEntityService extends UpdateAbstractService {
 
     @Value("${portal.base.url}")
     private String portalBaseUrl;
-
-    @Value("${entity.portal.urlpath}")
-    private String portalPath;
+    @Value("${entity.cron.update}")
+    private String updateInterval;
+    @Value("${entity.resubmit}")
+    private boolean resubmit;
 
     @Value("${entity.api.url}")
     private String entityApiUrl;
     protected URL entityApi;
     @Value("${entity.api.wskey}")
     protected String entityApiKey;
-    @Value("${entity.cron.update}")
-    private String updateInterval;
 
     private CloseableHttpClient httpClient = HttpClients.createDefault();
 
@@ -78,9 +77,6 @@ public class UpdateEntityService extends UpdateAbstractService {
         // check configuration for required properties
         if (StringUtils.isEmpty(portalBaseUrl)) {
             throw new SiteMapConfigException("Portal.base.url is not set");
-        }
-        if (StringUtils.isEmpty(portalPath)) {
-            throw new SiteMapConfigException("Property entity.portal.urlpath is not set");
         }
         if (StringUtils.isEmpty(entityApiUrl)) {
             throw new SiteMapConfigException("Property entity.api.url is not set");
@@ -126,7 +122,7 @@ public class UpdateEntityService extends UpdateAbstractService {
 
     @Override
     public String getWebsiteBaseUrl() {
-        return portalBaseUrl + portalPath;
+        return portalBaseUrl;
     }
 
     /**
@@ -135,6 +131,14 @@ public class UpdateEntityService extends UpdateAbstractService {
     @Override
     public String getUpdateInterval() {
         return updateInterval;
+    }
+
+    /**
+     * @see UpdateService#doResubmit()
+     */
+    @Override
+    public boolean doResubmit() {
+        return resubmit;
     }
 
     /**

@@ -38,7 +38,7 @@ public class PortalUrlTests {
     }
 
     @Test
-    public void testGetRecordUlr() {
+    public void testGetRecordUrl() {
         String europeanaId = "/92092/BibliographicResource_1000086018920";
         assertEquals(PORTAL_BASE_URL + "/record/92092/BibliographicResource_1000086018920.html",
                 fnp.getRecordUrl(europeanaId));

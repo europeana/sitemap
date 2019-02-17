@@ -112,8 +112,8 @@ public class SitemapUpdateEntityServiceTest {
         // check index file
         String generatedIndex = new String(mockStorage.getContent("sitemap-entity-blue-index.xml"));
         assertNotNull(generatedIndex);
-        String expectedSitemapFile = "sitemap-entity.xml?from=1&amp;to=20";
-        String expected = "<loc>" +PORTAL_BASE_URL + "/entity/" + expectedSitemapFile + "</loc>";
+        String expectedSitemapFile = "/sitemap-entity.xml?from=1&amp;to=20";
+        String expected = "<loc>" +PORTAL_BASE_URL + expectedSitemapFile + "</loc>";
         assertTrue("String \"" + expected +"\" not found in index file:\n"+ generatedIndex,
                 XmlUtils.harmonizeXml(generatedIndex).contains(expected));
 

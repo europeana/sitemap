@@ -84,7 +84,7 @@ public abstract class UpdateAbstractService implements UpdateService {
             LOG.info("New deployment is now {}", newDeploy);
 
             // 6. Notify search engines (only if index changed)
-            this.notifySearchEngines();
+            this.notifySearchEngines(sitemapType);
 
         } catch (Exception e) {
             LOG.error("Error updating sitemap {}", e.getMessage(), e);
@@ -119,9 +119,9 @@ public abstract class UpdateAbstractService implements UpdateService {
      * @throws UpdateAlreadyInProgressException when there is already an update in progress
      */
     private void setUpdateInProgress() throws UpdateAlreadyInProgressException {
-        // TODO instead of locking based on the updateStatus variable, it would be much better to lock based on a file placed in the storage provider.
-        // This way we prevent multiple instances simultaneously updating records. We do however need a good mechanism to
-        // clean any remaining lock from failed applications.
+        // Extra security measure to prevent multiple updates being started (e.g. manual update while automatic one is
+        // running).
+        // TODO synchronization will fail when there are 2 instances running and a manual request comes in at other instance
         synchronized(this) {
             if (UPDATE_IN_PROGRESS.equalsIgnoreCase(updateStatus)) {
                 String msg = "There is already an update in progress (started at " + updateStartTime + ")";
@@ -142,20 +142,24 @@ public abstract class UpdateAbstractService implements UpdateService {
         }
     }
 
-    private void notifySearchEngines() {
-        String indexBlue = null;
-        String indexGreen = null;
-        String blueFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.BLUE);
-        String greenFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.GREEN);
-        try {
-            indexBlue = readSitemapService.getFileContent(blueFileName);
-            indexGreen = readSitemapService.getFileContent(greenFileName);
-        } catch (SiteMapNotFoundException e) {
-            // Note that the first time we run the application there is no green index, so it will always give a warning then
-            LOG.warn("Could not read file {}", greenFileName);
-        }
-        if (indexBlue != null && !indexBlue.equalsIgnoreCase(indexGreen)) {
-            resubmitService.notifySearchEngines(sitemapType);
+    private void notifySearchEngines(SitemapType sitemapType) {
+        if (this.doResubmit()) {
+            String indexBlue = null;
+            String indexGreen = null;
+            String blueFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.BLUE);
+            String greenFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.GREEN);
+            try {
+                indexBlue = readSitemapService.getFileContent(blueFileName);
+                indexGreen = readSitemapService.getFileContent(greenFileName);
+            } catch (SiteMapNotFoundException e) {
+                // Note that the first time we run the application there is no green index, so it will always give a warning then
+                LOG.warn("Could not read file {}", greenFileName);
+            }
+            if (indexBlue != null && !indexBlue.equalsIgnoreCase(indexGreen)) {
+                resubmitService.notifySearchEngines(sitemapType);
+            }
+        } else {
+            LOG.info("Skipping search engine notification because it's disabled in the configuration");
         }
     }
 
