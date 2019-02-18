@@ -76,15 +76,17 @@ public class SitemapEntityController extends SitemapAbstractController {
      * Start the sitemap update process for entities
      * @param wskey apikey that verify access to the update procedure
      * @param response automatically added to method to set response status
-     * @return The entity index file in plain text
+     * @return finished message
      */
     @GetMapping(value = "update")
-    public void update(@RequestParam(value = "wskey") String wskey,
+    public String update(@RequestParam(value = "wskey") String wskey,
                          HttpServletResponse response) throws SiteMapException {
         if (AdminUtils.verifyKey(adminKey, wskey)) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             updateService.update();
+            return "Entity sitemap update process is done";
         }
+        return null;
     }
 
 }

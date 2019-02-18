@@ -75,16 +75,16 @@ public class SitemapRecordController extends SitemapAbstractController {
      * Start the sitemap update process for records
      * @param wskey apikey that verify access to the update procedure
      * @param response automatically added to method to set response status
-     * @return The index file in plain text
+     * @return finished message
      */
     @GetMapping(value = "update")
     public String update(@RequestParam(value = "wskey") String wskey,
                          HttpServletResponse response) throws SiteMapException {
         if (AdminUtils.verifyKey(adminKey, wskey)) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
-            // TODO make asynchronous!? Or just let it run!?
+            // TODO make asynchronous!?
             updateService.update();
-            return "Record sitemap update is started";
+            return "Record sitemap update process is done";
         }
         return null;
     }
