@@ -2,7 +2,6 @@ package eu.europeana.sitemap;
 
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.features.S3ObjectStorageClient;
-import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.web.context.SocksProxyConfigInjector;
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
@@ -12,11 +11,8 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.PropertySource;
 
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 import java.io.IOException;
 
 /**
@@ -24,6 +20,7 @@ import java.io.IOException;
  * @author Patrick Ehlert on 14-11-17.
  */
 @SpringBootApplication(exclude={MongoAutoConfiguration.class})
+@PropertySource("classpath:build.properties")
 @PropertySource("classpath:sitemap.properties")
 @PropertySource(value = "classpath:sitemap.user.properties", ignoreResourceNotFound = true)
 public class SitemapApplication extends SpringBootServletInitializer {
@@ -59,8 +56,9 @@ public class SitemapApplication extends SpringBootServletInitializer {
     @SuppressWarnings("squid:S2095") // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
     public static void main(String[] args)  {
         LogManager.getLogger(SitemapApplication.class).info("MAIN START");
-        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_INDEX  = {}", System.getenv("CF_INSTANCE_INDEX"));
-        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_IP  = {}", System.getenv("CF_INSTANCE_IP"));
+        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_INDEX  = {}, CF_INSTANCE_GUID = {}, CF_INSTANCE_IP  = {}",
+                System.getenv("CF_INSTANCE_INDEX"), System.getenv("CF_INSTANCE_GUID"), System.getenv("CF_INSTANCE_IP"));
+
         try {
             injectSocksProxySettings();
             SpringApplication.run(SitemapApplication.class, args);
