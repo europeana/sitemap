@@ -8,6 +8,7 @@ import com.mongodb.DBObject;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.PortalUrl;
 import eu.europeana.sitemap.SitemapType;
+import eu.europeana.sitemap.exceptions.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
@@ -62,8 +63,9 @@ public class UpdateRecordService extends UpdateAbstractService {
 
     @Autowired
     public UpdateRecordService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
-                               ReadSitemapService readSitemapService, ResubmitService resubmitService, PortalUrl portalUrl) {
-        super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, ITEMS_PER_SITEMAP_FILE);
+                               ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
+                               PortalUrl portalUrl) {
+        super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, ITEMS_PER_SITEMAP_FILE);
         this.portalUrl = portalUrl;
     }
 

@@ -5,6 +5,7 @@ import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.MockActiveDeployment;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.XmlUtils;
+import eu.europeana.sitemap.exceptions.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapServiceImpl;
@@ -59,8 +60,11 @@ public class SitemapUpdateEntityServiceTest {
     private ReadSitemapServiceImpl mockReadSitemap;
     @MockBean
     private ResubmitService mockSubmit;
+    @MockBean
+    private MailService mockMail;
     @Autowired
     private UpdateEntityService entityService;
+
 
     @Before
     public void init() throws IOException {

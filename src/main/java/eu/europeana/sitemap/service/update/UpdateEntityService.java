@@ -6,10 +6,7 @@ import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
 import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
-import eu.europeana.sitemap.exceptions.EntityQueryException;
-import eu.europeana.sitemap.exceptions.InvalidApiKeyException;
-import eu.europeana.sitemap.exceptions.SiteMapConfigException;
-import eu.europeana.sitemap.exceptions.SiteMapException;
+import eu.europeana.sitemap.exceptions.*;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapService;
 import eu.europeana.sitemap.service.ResubmitService;
@@ -68,8 +65,8 @@ public class UpdateEntityService extends UpdateAbstractService {
 
     @Autowired
     public UpdateEntityService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
-                               ReadSitemapService readSitemapService, ResubmitService resubmitService) {
-        super(SitemapType.ENTITY, objectStorage, deploymentService, readSitemapService, resubmitService, ITEMS_PER_SITEMAP_FILE);
+                               ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService) {
+        super(SitemapType.ENTITY, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, ITEMS_PER_SITEMAP_FILE);
     }
 
     @PostConstruct

@@ -3,6 +3,7 @@ package eu.europeana.sitemap.service.update;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.StorageFileName;
+import eu.europeana.sitemap.exceptions.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
@@ -39,18 +40,21 @@ public abstract class UpdateAbstractService implements UpdateService {
     private final ActiveDeploymentService deploymentService;
     private final ReadSitemapService readSitemapService;
     private final ResubmitService resubmitService;
+    private final MailService mailService;
     private final int itemsPerSitemap;
 
     private String updateStatus = "initial";
     private Date updateStartTime;
 
     public UpdateAbstractService(SitemapType type, ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
-                                 ReadSitemapService readSitemapService, ResubmitService resubmitService, int itemsPerSitemap) {
+                                 ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
+                                 int itemsPerSitemap) {
         this.sitemapType = type;
         this.objectStorage = objectStorage;
         this.deploymentService = deploymentService;
         this.readSitemapService = readSitemapService;
         this.resubmitService = resubmitService;
+        this.mailService = mailService;
         this.itemsPerSitemap = itemsPerSitemap;
     }
 
@@ -87,10 +91,10 @@ public abstract class UpdateAbstractService implements UpdateService {
             this.notifySearchEngines(sitemapType);
 
         } catch (Exception e) {
-            LOG.error("Error updating sitemap {}", e.getMessage(), e);
-            // TODO add email notification
-            //   sendUpdateFailedEmail(e);
-            throw new SiteMapException("Error updating " + sitemapType + " sitemap", e);
+            String message = "Error updating " + sitemapType + " sitemap";
+            mailService.sendErrorEmail(message + ": " + e.getMessage(), e);
+            // rethrow for GlobalExceptionHandler to handle it (log or not)
+            throw new SiteMapException(message, e);
         } finally {
             setUpdateDone();
         }
