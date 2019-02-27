@@ -46,7 +46,7 @@ public class UpdateScheduler {
     public void init() {
         for (UpdateService updateService : updateServices) {
             if (StringUtils.isEmpty(updateService.getUpdateInterval())) {
-                LOG.warn("No cron settings specified for updating {} sitemaps!", updateService.getSitemapType());
+                LOG.warn("No cron settings specified for updating {} sitemaps! Automatic update is off", updateService.getSitemapType());
             } else {
                 if (scheduler == null) {
                     scheduler = new ThreadPoolTaskScheduler();
