@@ -46,7 +46,7 @@ import static org.junit.Assert.assertTrue;
 @EnableAspectJAutoProxy
 public class SitemapUpdateEntityServiceTest {
 
-    private static final String PORTAL_BASE_URL = "https://www-test.eanadev.org/portal";
+    private static final String PORTAL_BASE_URL = "https://www-test.eanadev.org";
     private static final String TEST_WSKEY = "testkey";
 
     @Rule
