@@ -17,13 +17,13 @@ public class GlobalExceptionHandler {
 
     /**
      * Checks if we should log an error (with stacktrace and all) and rethrows it
-     * @param e
-     * @throws SiteMapException
+     * @param e thrown exception
+     * @throws SiteMapException we always rethrow the handled exception
      */
     @ExceptionHandler(SiteMapException.class)
     public void handleSiteMapException(SiteMapException e) throws SiteMapException {
         if (e.doLog()) {
-            LOG.error(e.getMessage(), e);
+            LOG.error("SitemapException: {}", e.getMessage(), e);
         }
         throw e;
     }

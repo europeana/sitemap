@@ -1,0 +1,358 @@
+{
+    "@context": "http://www.europeana.eu/schemas/context/entity.jsonld",
+    "id": "http://entity-api-test.eanadev.org/entity/search?query=*&scope=europeana&type=agent,concept&fl=id,type,skos_prefLabel.*&wskey=apidemo&page=0&pageSize=10",
+    "type": "ResultPage",
+    "total": 10,
+    "partOf": {
+        "id": "http://entity-api-test.eanadev.org/entity/search?query=*&scope=europeana&type=agent,concept&fl=id,type,skos_prefLabel.*&wskey=apidemo",
+        "type": "ResultList",
+        "total": 20
+    },
+    "next": "http://entity-api-test.eanadev.org/entity/search?query=*&scope=europeana&type=agent,concept&fl=id,type,skos_prefLabel.*&wskey=apidemo&page=1&pageSize=10",
+    "items": [
+        {
+            "id": "http://data.europeana.eu/agent/base/34712",
+            "type": "Agent",
+            "prefLabel": {
+                "bg": "Райко Алексиев",
+                "en": "Rayko Aleksiev"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/349",
+            "type": "Agent",
+            "prefLabel": {
+                "da": "Jacques-Martin Hotteterre",
+                "de": "Jacques-Martin Hotteterre",
+                "en": "Jacques-Martin Hotteterre",
+                "es": "Jacques-Martin Hotteterre",
+                "fr": "Jacques-Martin Hotteterre",
+                "he": "ז'אק-מרטין אוטטר",
+                "it": "Jacques Hotteterre",
+                "ja": "ジャック・オトテール",
+                "nl": "Jacques Hotteterre",
+                "no": "Jacques-Martin Hotteterre",
+                "ru": "Оттетер, Жак"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/34895",
+            "type": "Agent",
+            "prefLabel": {
+                "en": "Homer Sykes"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/34805",
+            "type": "Agent",
+            "prefLabel": {
+                "en": "Rita McAllister"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/34801",
+            "type": "Agent",
+            "prefLabel": {
+                "en": "Martin Maingaud",
+                "it": "Martin Maingaud"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/34779",
+            "type": "Agent",
+            "prefLabel": {
+                "en": "Edvard Sylou-Creutz",
+                "no": "Edvard Sylou-Creutz"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/34706",
+            "type": "Agent",
+            "prefLabel": {
+                "en": "Mark Holst"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/34718",
+            "type": "Agent",
+            "prefLabel": {
+                "en": "William Adolphus Knell"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/3490",
+            "type": "Agent",
+            "prefLabel": {
+                "bg": "Николай Пимоненко",
+                "de": "Mykola Pymonenko",
+                "en": "Mykola Pymonenko",
+                "fr": "Mykola Pymonenko",
+                "ja": "ムィコーラ・プィモネーンコ",
+                "ka": "ნიკოლოზ პიმონენკო",
+                "ru": "Пимоненко, Николай Корнильевич",
+                "uk": "Пимоненко Микола Корнилович"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/agent/base/34768",
+            "type": "Agent",
+            "prefLabel": {
+                "en": "Chalice (singer)",
+                "et": "Chalice"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/518",
+            "type": "Concept",
+            "prefLabel": {
+                "cs": "Bassline House",
+                "de": "Bassline",
+                "en": "Bassline",
+                "es": "Bassline",
+                "fr": "Bassline",
+                "ja": "ベースライン",
+                "ko": "베이스라인",
+                "nl": "Bassline",
+                "pt": "Bassline",
+                "ru": "Бейслайн",
+                "sv": "Bassline"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/64",
+            "type": "Concept",
+            "prefLabel": {
+                "ar": "دستور",
+                "az": "Konstitusiya",
+                "be": "Канстытуцыя",
+                "bg": "Конституция",
+                "bs": "Ustav",
+                "ca": "Constitució",
+                "cs": "Ústava",
+                "cy": "Cyfansoddiad",
+                "da": "Forfatning",
+                "de": "Verfassung",
+                "el": "Σύνταγμα",
+                "en": "Constitution",
+                "es": "Constitución",
+                "et": "Põhiseadus",
+                "eu": "Konstituzio",
+                "fi": "Perustuslaki",
+                "fr": "Constitution",
+                "gd": "Bun-Reachd",
+                "gl": "Constitución",
+                "he": "חוקה",
+                "hi": "संविधान",
+                "hr": "Ustav",
+                "hu": "Alkotmány",
+                "hy": "Սահմանադրություն",
+                "is": "Stjórnarskrá",
+                "it": "Costituzione",
+                "ja": "憲法",
+                "ka": "კონსტიტუცია",
+                "ko": "헌법",
+                "lt": "Konstitucija",
+                "lv": "Konstitūcija",
+                "mk": "Устав",
+                "nl": "Grondwet",
+                "no": "Konstitusjon",
+                "pl": "Konstytucja",
+                "pt": "Constituição",
+                "ro": "Constituție",
+                "ru": "Конституция",
+                "sk": "Ústava",
+                "sl": "Ustava",
+                "sq": "Kushtetuta",
+                "sv": "Grundlag",
+                "tr": "Anayasa",
+                "uk": "Конституція",
+                "yi": "קאנסטיטוציע",
+                "zh": "宪法"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/66",
+            "type": "Concept",
+            "prefLabel": {
+                "ar": "قانون",
+                "az": "Hüquq",
+                "be": "Права",
+                "bg": "Право",
+                "bs": "Pravo",
+                "ca": "Dret",
+                "cs": "Právo",
+                "cy": "Cyfraith",
+                "da": "Jura",
+                "de": "Recht",
+                "el": "Δίκαιο",
+                "en": "Law",
+                "es": "Derecho",
+                "et": "Õigus",
+                "eu": "Zuzenbide",
+                "fi": "Laki",
+                "fr": "Droit",
+                "ga": "Dlí",
+                "gd": "Lagh",
+                "gl": "Dereito",
+                "he": "דין",
+                "hi": "विधि",
+                "hr": "Pravo",
+                "hu": "Jog",
+                "hy": "Իրավունք",
+                "is": "Lögfræði",
+                "it": "Diritto",
+                "ja": "法 (法学)",
+                "ka": "სამართალი",
+                "ko": "법",
+                "lt": "Teisė",
+                "lv": "Likums",
+                "mk": "Право",
+                "nl": "Recht",
+                "pt": "Direito",
+                "ro": "Drept",
+                "ru": "Право",
+                "sk": "Objektívne právo",
+                "sl": "Pravo",
+                "sq": "Ligji",
+                "sr": "Право",
+                "sv": "Juridik",
+                "tr": "Hukuk",
+                "uk": "Право",
+                "yi": "געזעץ",
+                "zh": "法律"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/456",
+            "type": "Concept",
+            "prefLabel": {
+                "de": "mainstream rocjk",
+                "en": "Mainstream rock",
+                "nl": "Mainstream rock"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/471",
+            "type": "Concept",
+            "prefLabel": {
+                "cs": "Booty House",
+                "en": "Ghetto house",
+                "es": "Ghetto house",
+                "fr": "Ghetto house",
+                "nl": "Ghetto house"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/485",
+            "type": "Concept",
+            "prefLabel": {
+                "da": "Wrock",
+                "en": "Wizard rock",
+                "fr": "Wizard rock",
+                "it": "Wizard rock",
+                "nl": "Wizard rock",
+                "pt": "Wizard rock",
+                "ru": "рок волшебников"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/493",
+            "type": "Concept",
+            "prefLabel": {
+                "it": "emotional hardcore"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/638",
+            "type": "Concept",
+            "prefLabel": {
+                "ca": "Música carnàtica",
+                "de": "Karnatische Musik",
+                "en": "Carnatic music",
+                "es": "Música carnática",
+                "et": "Karnataka muusika",
+                "fr": "musique carnatique",
+                "hi": "कर्नाटक संगीत",
+                "it": "Musica carnatica",
+                "ja": "カルナータカ音楽",
+                "nl": "Carnatische muziek",
+                "pl": "Muzyka karnatacka",
+                "tr": "karnatik müzik",
+                "zh": "卡納蒂克音樂"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/63",
+            "type": "Concept",
+            "prefLabel": {
+                "cs": "Zvukový efekt",
+                "da": "Lydeffekt",
+                "de": "Soundeffekt",
+                "en": "Sound effect",
+                "es": "Efecto de sonido",
+                "fr": "Effet (musique)",
+                "he": "אפקט קולי",
+                "is": "Fylgihljóð",
+                "ja": "効果音",
+                "ko": "효과음",
+                "nl": "Geluidseffect",
+                "no": "Lydeffekt",
+                "pt": "Efeito sonoro",
+                "ru": "Звуковой эффект",
+                "sv": "Ljudeffekt",
+                "uk": "Звуковий ефект",
+                "zh": "音效"
+            }
+        },
+        {
+            "id": "http://data.europeana.eu/concept/base/46",
+            "type": "Concept",
+            "prefLabel": {
+                "ar": "آلة موسيقية",
+                "az": "Musiqi aləti",
+                "be": "Музычны інструмент",
+                "bg": "Музикален инструмент",
+                "bs": "Muzički instrumenti",
+                "ca": "Instrument musical",
+                "cs": "Hudební nástroj",
+                "cy": "Offeryn cerdd",
+                "da": "Musikinstrument",
+                "de": "Musikinstrument",
+                "el": "Μουσικό όργανο",
+                "en": "Musical instrument",
+                "es": "Instrumento musical",
+                "et": "Muusikainstrument",
+                "eu": "Musika tresna",
+                "fi": "Soitin",
+                "fr": "Instrument de musique",
+                "ga": "Uirlis cheoil",
+                "gl": "Instrumento musical",
+                "he": "כלי נגינה",
+                "hi": "वाद्य यन्त्र",
+                "hr": "Glazbala",
+                "hu": "Hangszer",
+                "is": "Hljóðfæri",
+                "it": "Strumento musicale",
+                "ja": "楽器",
+                "ka": "მუსიკალური ინსტრუმენტი",
+                "ko": "악기",
+                "lv": "Mūzikas instruments",
+                "mk": "Музички инструмент",
+                "nl": "Muziekinstrument",
+                "no": "Musikkinstrument",
+                "pl": "Instrument muzyczny",
+                "pt": "Instrumento musical",
+                "ro": "Instrument muzical",
+                "ru": "Музыкальные инструменты",
+                "sk": "Hudobný nástroj",
+                "sl": "Glasbilo",
+                "sq": "Instrumenti muzikor",
+                "sr": "Музички инструменти",
+                "sv": "Musikinstrument",
+                "tr": "Çalgı",
+                "uk": "Музичний інструмент",
+                "zh": "乐器"
+            }
+        }
+    ]
+}

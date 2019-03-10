@@ -8,7 +8,7 @@ public class SiteMapException extends Exception {
 
     /**
      * General error thrown by the sitemap application
-     * @param s
+     * @param s error message
      */
     public SiteMapException(String s) {
         super(s);
@@ -16,8 +16,8 @@ public class SiteMapException extends Exception {
 
     /**
      * General error thrown by the sitemap application
-     * @param s
-     * @param t
+     * @param s error message
+     * @param t throwable that caused the exception
      */
     public SiteMapException(String s, Throwable t) {
         super(s, t);

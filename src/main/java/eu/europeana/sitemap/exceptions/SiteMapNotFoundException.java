@@ -13,7 +13,7 @@ public class SiteMapNotFoundException extends SiteMapException {
 
     /**
      * Error thrown when a requested sitemap file cannot be found/retrieved
-     * @param s
+     * @param s error message
      */
     public SiteMapNotFoundException(String s) {
         super(s);
