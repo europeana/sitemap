@@ -20,6 +20,7 @@ package eu.europeana.sitemap.web;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
+import org.apache.logging.log4j.LogManager;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -58,6 +59,13 @@ public class SitemapOldRecordController extends SitemapAbstractController {
     @GetMapping(value = "europeana-sitemap-hashed.xml")
     public String getOldRecordSitemapFile(@RequestParam(value = "from") String from,
                                           @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
+        // the from values have changed, instead of starting at 0 we now start at 1
+        try {
+            Integer fromInt = Integer.parseInt(from) + 1;
+            return super.getSitemapFile(fromInt.toString(), to);
+        } catch (NumberFormatException e) {
+            LogManager.getLogger(SitemapOldRecordController.class).error("Error parsing 'from' value! ["+from+"]", e);
+        }
         return super.getSitemapFile(from, to);
     }
 
