@@ -5,6 +5,7 @@ import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.MockActiveDeployment;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.XmlUtils;
+import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.exceptions.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
@@ -17,8 +18,10 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.ImportAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.cloud.autoconfigure.RefreshAutoConfiguration;
 import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -42,7 +45,8 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @TestPropertySource("classpath:sitemap-test.properties")
-@SpringBootTest(classes = {UpdateEntityService.class})
+@SpringBootTest(classes = {UpdateEntityService.class, SitemapConfiguration.class})
+@ImportAutoConfiguration(RefreshAutoConfiguration.class)
 @EnableAspectJAutoProxy
 public class SitemapUpdateEntityServiceTest {
 
@@ -62,6 +66,8 @@ public class SitemapUpdateEntityServiceTest {
     private ResubmitService mockSubmit;
     @MockBean
     private MailService mockMail;
+    @Autowired
+    private SitemapConfiguration configuration;
     @Autowired
     private UpdateEntityService entityService;
 
@@ -108,8 +114,8 @@ public class SitemapUpdateEntityServiceTest {
     @Test
     public void testNormalUpdate() throws SiteMapException {
         // Change entity-api endpoint to use our wiremock
-        entityService.entityApi = getMockEntityApiUrl();
-        entityService.entityApiKey = TEST_WSKEY;
+        entityService.alternativeEntityApi = getMockEntityApiUrl();
+        entityService.alternativeEntityApiKey = TEST_WSKEY;
 
         entityService.update();
 

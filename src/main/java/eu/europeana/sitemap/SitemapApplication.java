@@ -1,16 +1,10 @@
 package eu.europeana.sitemap;
 
-import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.web.context.SocksProxyConfigInjector;
-import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.LogManager;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.web.support.SpringBootServletInitializer;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.PropertySource;
 
 import java.io.IOException;
@@ -19,35 +13,9 @@ import java.io.IOException;
  * Main application and configuration
  * @author Patrick Ehlert on 14-11-17.
  */
-@SpringBootApplication(exclude={MongoAutoConfiguration.class})
 @PropertySource("classpath:build.properties")
-@PropertySource("classpath:sitemap.properties")
-@PropertySource(value = "classpath:sitemap.user.properties", ignoreResourceNotFound = true)
-public class SitemapApplication extends SpringBootServletInitializer {
-
-    @Value("${s3.key}")
-    private String key;
-    @Value("${s3.secret}")
-    private String secret;
-    @Value("${s3.region}")
-    private String region;
-    @Value("${s3.bucket}")
-    private String bucket;
-    @Value("${s3.endpoint}")
-    private String endpoint;
-
-    /**
-     * Location where all sitemap files are stored (Amazon S3)
-     * @return object storage client
-     */
-    @Bean
-    public ObjectStorageClient objectStorageClient() {
-        if (StringUtils.isEmpty(endpoint)) {
-            return new S3ObjectStorageClient(key, secret, region, bucket);
-        }
-        // for IBM Cloud S3 storage we need to provide an endpoint
-        return new S3ObjectStorageClient(key, secret, region, bucket, endpoint);
-    }
+@SpringBootApplication(exclude={MongoAutoConfiguration.class})
+public class SitemapApplication {
 
     /**
      * This method is called when starting as a Spring-Boot application (e.g. from your IDE)

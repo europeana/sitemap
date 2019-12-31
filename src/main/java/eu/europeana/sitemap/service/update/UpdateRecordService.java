@@ -6,10 +6,10 @@ import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.PortalUrl;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.SitemapType;
+import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.exceptions.MailService;
-import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapService;
@@ -17,11 +17,8 @@ import eu.europeana.sitemap.service.ResubmitService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import java.util.Date;
 
@@ -43,43 +40,20 @@ public class UpdateRecordService extends UpdateAbstractService {
     private static final String COMPLETENESS = "europeanaCompleteness";
     private static final int ITEMS_PER_SITEMAP_FILE = 45_000;
 
-    @Value("${portal.base.url}")
-    private String portalBaseUrl;
-    @Value("${record.cron.update}")
-    private String updateInterval;
-    @Value("${record.resubmit}")
-    private boolean resubmit;
-    @Value("${record.min.completeness:0}")
-    private int minRecordCompleteness;
 
-
-    @Value("${mongodb.connectionUrl}")
-    private String mongoConnectionUrl;
-    @Value("${mongodb.record.dbname}")
-    private String mongoDatabase;
-
+    private SitemapConfiguration config;
     private PortalUrl portalUrl;
     private MongoProvider mongoProvider;
 
     @Autowired
     public UpdateRecordService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
                                ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
-                               PortalUrl portalUrl) {
+                               PortalUrl portalUrl, SitemapConfiguration config) {
         super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, ITEMS_PER_SITEMAP_FILE);
+        this.config = config;
         this.portalUrl = portalUrl;
+        this.mongoProvider = new MongoProvider(config.getMongoConnectionUrl(), config.getMongoDatabase());
     }
-
-    @PostConstruct
-    private void checkConfiguration() throws SiteMapConfigException {
-        if (StringUtils.isEmpty(portalBaseUrl)) {
-            throw new SiteMapConfigException("Property portal.base.url is not set");
-        }
-        // trim to avoid problems with accidental trailing spaces
-        portalBaseUrl = portalBaseUrl.trim();
-
-        mongoProvider = new MongoProvider(mongoConnectionUrl, mongoDatabase);
-    }
-
 
     /**
      * Generate record data (and save it with sitemapGenerator.addItem() method)
@@ -108,7 +82,7 @@ public class UpdateRecordService extends UpdateAbstractService {
 
     @Override
     public String getWebsiteBaseUrl() {
-        return portalBaseUrl;
+        return config.getPortalBaseUrl();
     }
 
     /**
@@ -116,7 +90,7 @@ public class UpdateRecordService extends UpdateAbstractService {
      */
     @Override
     public String getUpdateInterval() {
-        return updateInterval;
+        return config.getRecordUpdateInterval();
     }
 
     /**
@@ -124,7 +98,7 @@ public class UpdateRecordService extends UpdateAbstractService {
      */
     @Override
     public boolean doResubmit() {
-        return resubmit;
+        return config.isRecordResubmit();
     }
 
     private DBCursor getRecordData() {
@@ -133,9 +107,9 @@ public class UpdateRecordService extends UpdateAbstractService {
         DBObject query = new BasicDBObject();
         // 2017-05-30 as part of ticket #624 we are filtering records based on completeness value.
         // This is an experiment to see if high-quality records improve the number of indexed records
-        if (minRecordCompleteness >= 0) {
-            LOG.info("Filtering records based on Europeana Completeness score of at least {}", minRecordCompleteness);
-            query.put(COMPLETENESS, new BasicDBObject("$gte", minRecordCompleteness));
+        if (config.getRecordMinCompleteness() >= 0) {
+            LOG.info("Filtering records based on Europeana Completeness score of at least {}", config.getRecordMinCompleteness());
+            query.put(COMPLETENESS, new BasicDBObject("$gte", config.getRecordMinCompleteness()));
         }
 
         DBObject fields = new BasicDBObject();

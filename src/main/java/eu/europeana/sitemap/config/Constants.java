@@ -1,4 +1,4 @@
-package eu.europeana.sitemap;
+package eu.europeana.sitemap.config;
 
 /**
  * Constants used for generating urls

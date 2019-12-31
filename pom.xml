@@ -17,10 +17,10 @@
     <description>Application for generating sitemap files that cover Europeana's record and entity collections</description>
 
     <scm>
-        <connection>scm:git:git@github.com:europeana/europeana-sitemap.git</connection>
-        <developerConnection>scm:git:git@github.com:europeana/europeana-sitemap.git</developerConnection>
+        <connection>scm:git:git@github.com:europeana/sitemap.git</connection>
+        <developerConnection>scm:git:git@github.com:europeana/sitemap.git</developerConnection>
         <tag>HEAD</tag>
-        <url>https://github.com/europeana/europeana-sitemap</url>
+        <url>https://github.com/europeana/sitemap</url>
     </scm>
 
     <properties>
@@ -29,8 +29,8 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <spring-boot.version>1.5.9.RELEASE</spring-boot.version>
-        <spring-cloud.version>1.4.3.RELEASE</spring-cloud.version>
+        <spring-boot.version>2.1.4.RELEASE</spring-boot.version>
+        <spring-cloud.version>2.1.2.RELEASE</spring-cloud.version>
         <mongo.driver.version>3.6.4</mongo.driver.version>
         <object-storage.version>1.6</object-storage.version>
     </properties>
@@ -80,18 +80,13 @@
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+            <version>${spring-cloud.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-mail</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-hystrix</artifactId>
-            <version>${spring-cloud.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-hystrix-dashboard</artifactId>
-            <version>${spring-cloud.version}</version>
         </dependency>
 
         <!-- for retrieving record data -->
@@ -156,7 +151,11 @@
             <version>2.18.0</version>
             <scope>test</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-aspects</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

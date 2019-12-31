@@ -1,7 +1,7 @@
 package eu.europeana.sitemap.service.update;
 
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.PortalUrl;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.StorageFileName;
 import eu.europeana.sitemap.service.Deployment;
 import eu.europeana.sitemap.SitemapType;

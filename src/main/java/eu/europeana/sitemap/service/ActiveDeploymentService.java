@@ -2,7 +2,7 @@ package eu.europeana.sitemap.service;
 
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.Constants;
+import eu.europeana.sitemap.config.Constants;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.StorageFileName;
 import org.apache.commons.io.IOUtils;

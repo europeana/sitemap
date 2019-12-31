@@ -1,5 +1,6 @@
 package eu.europeana.sitemap;
 
+import eu.europeana.sitemap.config.Constants;
 import eu.europeana.sitemap.service.Deployment;
 import org.apache.commons.lang.StringUtils;
 

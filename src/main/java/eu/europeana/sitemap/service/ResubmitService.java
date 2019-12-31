@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.service;
 
-import eu.europeana.sitemap.PortalUrl;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.SitemapType;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;

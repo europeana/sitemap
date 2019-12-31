@@ -1,6 +1,8 @@
 package eu.europeana.sitemap;
 
 
+import eu.europeana.sitemap.config.Constants;
+
 /**
  * Enumeration of supported sitemap types (and accompanying base file name)
  *
