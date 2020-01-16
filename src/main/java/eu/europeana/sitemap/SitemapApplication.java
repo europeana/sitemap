@@ -11,9 +11,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.web.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
+import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Main application and configuration
@@ -35,6 +42,12 @@ public class SitemapApplication extends SpringBootServletInitializer {
     private String bucket;
     @Value("${s3.endpoint}")
     private String endpoint;
+
+    @Value("${features.security.enable}")
+    private boolean securityEnable;
+
+    @Value("${security.config.ipRanges}")
+    private String ipRanges;
 
     /**
      * Location where all sitemap files are stored (Amazon S3)
@@ -78,5 +91,27 @@ public class SitemapApplication extends SpringBootServletInitializer {
         }
         socksConfig.inject();
     }
-    
+
+    @EnableWebSecurity
+    @Configuration
+    class SecurityConfig extends WebSecurityConfigurerAdapter {
+
+        @Override
+        protected void configure(HttpSecurity http) throws Exception {
+            if(securityEnable) {
+                http.authorizeRequests()
+                        .antMatchers("/entity/**" , "/sitemap/**", "/record/**", "/**").access(createHasIpRangeExpression());
+            }
+        }
+
+        /**
+         * creates the string for authorizing request for the provided ipRanges
+         */
+        private String createHasIpRangeExpression() {
+            List<String> validIps = Arrays.asList(ipRanges.split("\\s*,\\s*"));
+            return validIps.stream()
+                    .collect(Collectors.joining("') or hasIpAddress('", "hasIpAddress('", "')"));
+        }
+    }
+
 }
