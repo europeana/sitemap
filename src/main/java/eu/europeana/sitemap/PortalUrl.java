@@ -77,7 +77,7 @@ public class PortalUrl {
      * @return portal record page url
      */
     public String getRecordUrl(String europeanaId) {
-        return portalBaseUrl + recordPortalPath + europeanaId + Constants.HTML_EXTENSION;
+        return portalBaseUrl + recordPortalPath + europeanaId;
     }
 
     /**
@@ -93,7 +93,7 @@ public class PortalUrl {
     }
 
     /**
-     * Return a language-specific portal entity page url
+     * Return a language-specific portal entity page url (currently not used when generating sitemaps)
      * @param language page language
      * @param type entity type (either "agent" or "concept")
      * @param id entity id number, note that this is only unique within an entity type
@@ -149,7 +149,7 @@ public class PortalUrl {
         if (!StringUtils.isEmpty(prefLabel)) {
             result = result + '-' + convertPrefLabel(prefLabel);
         }
-        return result + Constants.HTML_EXTENSION;
+        return result;
     }
 
     /**

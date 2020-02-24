@@ -9,8 +9,6 @@ public class Constants {
         // empty constructor to prevent initialization
     }
 
-    public static final String HTML_EXTENSION = ".html";
-
     public static final String XML_EXTENSION = ".xml";
 
     public static final String TXT_EXTENSION = ".txt";

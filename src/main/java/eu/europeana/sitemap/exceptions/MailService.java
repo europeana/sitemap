@@ -35,9 +35,9 @@ public class MailService {
      * @param t exeception that occurred (as body of the email), can be null
      */
     public void sendErrorEmail(String errorMessage, Throwable t)  {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
         try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message);
             helper.setFrom(mailFrom);
             helper.setTo(mailTo);
             helper.setSubject(errorMessage);
@@ -47,7 +47,7 @@ public class MailService {
 
             mailSender.send(message);
             LogManager.getLogger(MailService.class).info("Email error alert was sent");
-        } catch (MessagingException me) {
+        } catch (RuntimeException | MessagingException me) {
             LogManager.getLogger(MailService.class).error("Error sending email error alert", me);
         }
     }
