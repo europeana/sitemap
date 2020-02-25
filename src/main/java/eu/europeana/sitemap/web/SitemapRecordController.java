@@ -25,6 +25,7 @@ import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.update.UpdateRecordService;
 import eu.europeana.sitemap.service.update.UpdateService;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -55,8 +56,9 @@ public class SitemapRecordController extends SitemapAbstractController {
     /**
      * @see SitemapAbstractController#getSitemapIndex()
      */
-    @GetMapping(value = {"index",
-            Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION})
+    @GetMapping(value = {"index"+ Constants.XML_EXTENSION,
+            Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION},
+            produces = MediaType.TEXT_XML_VALUE)
     public String getRecordSitemapIndex() throws SiteMapNotFoundException {
         return super.getSitemapIndex();
     }
@@ -64,7 +66,8 @@ public class SitemapRecordController extends SitemapAbstractController {
     /**
      * @see SitemapAbstractController#getSitemapFile(String, String)
      */
-    @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.XML_EXTENSION)
+    @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.XML_EXTENSION,
+            produces = MediaType.TEXT_XML_VALUE)
     public String getRecordSitemapFile(@RequestParam(value = "from") String from,
                                        @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
         return super.getSitemapFile(from, to);
