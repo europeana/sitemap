@@ -1,11 +1,11 @@
 package eu.europeana.sitemap.service.update;
 
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.PortalUrl;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.StorageFileName;
 import eu.europeana.sitemap.service.Deployment;
 import eu.europeana.sitemap.SitemapType;
-import org.apache.commons.lang.time.DateFormatUtils;
+import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.jclouds.io.payloads.ByteArrayPayload;

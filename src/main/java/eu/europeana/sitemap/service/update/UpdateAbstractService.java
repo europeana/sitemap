@@ -3,7 +3,7 @@ package eu.europeana.sitemap.service.update;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.StorageFileName;
-import eu.europeana.sitemap.exceptions.MailService;
+import eu.europeana.sitemap.service.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;

@@ -1,7 +1,7 @@
 package eu.europeana.sitemap;
 
 import eu.europeana.sitemap.service.Deployment;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Generates file names for internal usage (so with blue/green deployment)

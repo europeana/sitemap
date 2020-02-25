@@ -1,5 +1,6 @@
 package eu.europeana.sitemap;
 
+import eu.europeana.sitemap.config.PortalUrl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;

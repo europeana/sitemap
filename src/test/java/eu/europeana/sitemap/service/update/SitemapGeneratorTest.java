@@ -5,7 +5,7 @@ import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.XmlUtils;
 import eu.europeana.sitemap.service.Deployment;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;

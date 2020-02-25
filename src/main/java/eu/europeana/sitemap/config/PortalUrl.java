@@ -1,10 +1,11 @@
-package eu.europeana.sitemap;
+package eu.europeana.sitemap.config;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import eu.europeana.sitemap.Constants;
+import eu.europeana.sitemap.SitemapType;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.Locale;
@@ -16,7 +17,6 @@ import java.util.regex.Pattern;
  * sitemap file urls.
  */
 @Configuration
-@Component
 @PropertySource("classpath:sitemap.properties")
 @PropertySource(value = "classpath:sitemap.user.properties", ignoreResourceNotFound = true)
 public class PortalUrl {

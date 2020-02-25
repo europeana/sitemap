@@ -2,12 +2,12 @@ package eu.europeana.sitemap.service.update;
 
 
 import com.jayway.jsonpath.JsonPath;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixCommand;
-import com.netflix.hystrix.contrib.javanica.annotation.HystrixProperty;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
+import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.exceptions.*;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
+import eu.europeana.sitemap.service.MailService;
 import eu.europeana.sitemap.service.ReadSitemapService;
 import eu.europeana.sitemap.service.ResubmitService;
 import org.apache.http.HttpEntity;
@@ -20,13 +20,9 @@ import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
-import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
 
@@ -48,44 +44,15 @@ public class UpdateEntityService extends UpdateAbstractService {
     private static final String ENTITY_QUERY = "*&scope=europeana&type=agent,concept&fl=id" + //,type,skos_prefLabel.*"
             "&pageSize=" +ENTITY_QUERY_PAGE_SIZE;
 
-    @Value("${portal.base.url}")
-    private String portalBaseUrl;
-    @Value("${entity.cron.update}")
-    private String updateInterval;
-    @Value("${entity.resubmit}")
-    private boolean resubmit;
-
-    @Value("${entity.api.url}")
-    private String entityApiUrl;
-    protected URL entityApi;
-    @Value("${entity.api.wskey}")
-    protected String entityApiKey;
+    private SitemapConfiguration config;
 
     private CloseableHttpClient httpClient = HttpClients.createDefault();
 
     @Autowired
-    public UpdateEntityService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
+    public UpdateEntityService(SitemapConfiguration config, ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
                                ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService) {
         super(SitemapType.ENTITY, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, ITEMS_PER_SITEMAP_FILE);
-    }
-
-    @PostConstruct
-    private void init() throws SiteMapConfigException {
-        // check configuration for required properties
-        if (StringUtils.isEmpty(portalBaseUrl)) {
-            throw new SiteMapConfigException("Portal.base.url is not set");
-        }
-        if (StringUtils.isEmpty(entityApiUrl)) {
-            throw new SiteMapConfigException("Property entity.api.url is not set");
-        }
-        try {
-            this.entityApi = new URL(entityApiUrl);
-        } catch (MalformedURLException e) {
-            throw new SiteMapConfigException("Property entity.api.url is incorrect: "+entityApiUrl);
-        }
-
-        // trim to avoid problems with accidental trailing spaces
-        portalBaseUrl = portalBaseUrl.trim();
+        this.config = config;
     }
 
     /**
@@ -99,7 +66,7 @@ public class UpdateEntityService extends UpdateAbstractService {
 
         LOG.info("Retrieving entity data...");
         while (retrieved < totalEntities || totalEntities < 0) {
-            String entityData = this.getEntityJson(entityApi, ENTITY_QUERY, pageNr, entityApiKey);
+            String entityData = this.getEntityJson(config.getEntityApi(), ENTITY_QUERY, pageNr, config.getEntityApiKey());
 
             List<String> entityIds = this.getEntityIds(entityData);
             for (String entityId : entityIds) {
@@ -119,7 +86,7 @@ public class UpdateEntityService extends UpdateAbstractService {
 
     @Override
     public String getWebsiteBaseUrl() {
-        return portalBaseUrl;
+        return config.getPortalBaseUrl();
     }
 
     /**
@@ -127,7 +94,7 @@ public class UpdateEntityService extends UpdateAbstractService {
      */
     @Override
     public String getUpdateInterval() {
-        return updateInterval;
+        return config.getEntityUpdateInterval();
     }
 
     /**
@@ -135,16 +102,12 @@ public class UpdateEntityService extends UpdateAbstractService {
      */
     @Override
     public boolean doResubmit() {
-        return resubmit;
+        return config.isEntityResubmit();
     }
 
     /**
      * Send query to Entity API and retrieve data
      */
-    @HystrixCommand(ignoreExceptions = {EntityQueryException.class}, commandProperties = {
-            @HystrixProperty(name = "execution.isolation.thread.timeoutInMilliseconds", value = "20000"),
-            @HystrixProperty(name = "fallback.enabled", value="false")
-    })
     private String getEntityJson(URL entityApi, String query, long pageNr, String wsKey) throws SiteMapException {
         String result= null;
 
