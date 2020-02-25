@@ -38,7 +38,7 @@ public class UpdateEntityService extends UpdateAbstractService {
 
     private static final Logger LOG = LogManager.getLogger(UpdateEntityService.class);
 
-    private static final int ITEMS_PER_SITEMAP_FILE = 20_000;
+    private static final int ITEMS_PER_SITEMAP_FILE = 15_000;
 
     private static final int ENTITY_QUERY_PAGE_SIZE = 100;
     private static final String ENTITY_QUERY = "*&scope=europeana&type=agent,concept&fl=id" + //,type,skos_prefLabel.*"
