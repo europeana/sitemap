@@ -28,7 +28,7 @@ public enum Deployment {
         } else if (GREEN.toString().equals(name)) {
             return GREEN;
         }
-        LogManager.getLogger(Deployment.class).warn("Unknown deployment type: "+name);
+        LogManager.getLogger(Deployment.class).warn("Unknown deployment type: {} ", name);
         return null;
     }
 }

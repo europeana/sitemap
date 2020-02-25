@@ -33,6 +33,8 @@ public class ActiveDeploymentService {
 
     private static final Logger LOG = LogManager.getLogger(ActiveDeploymentService.class);
 
+    private static final int PROGRESS_INTERVAL = 100;
+
     private final ObjectStorageClient objectStorageProvider;
 
     /**
@@ -82,7 +84,7 @@ public class ActiveDeploymentService {
      * Returns the inactive deployment (blue or green)
      */
     public Deployment getInactiveDeployment(SitemapType sitemapType) {
-        if (Deployment.BLUE.equals(getActiveDeployment(sitemapType))) {
+        if (Deployment.BLUE == getActiveDeployment(sitemapType)) {
             return Deployment.GREEN;
         }
         return Deployment.BLUE;
@@ -112,7 +114,7 @@ public class ActiveDeploymentService {
                     i++;
                 }
                 // report on progress
-                if (i > 0 && i % 100 == 0) {
+                if (i > 0 && i % PROGRESS_INTERVAL == 0) {
                     LOG.info("Deleted {} old files", i);
                 }
             }
@@ -140,7 +142,7 @@ public class ActiveDeploymentService {
      */
     private String saveToStorageProvider(Deployment blueGreen, String activeFileName) {
         Payload payload = new StringPayload(blueGreen.toString());
-        LOG.debug("Saving value {} in file {} ", blueGreen.toString(), activeFileName);
+        LOG.debug("Saving value {} in file {} ", blueGreen, activeFileName);
         return objectStorageProvider.put(activeFileName, payload);
     }
 

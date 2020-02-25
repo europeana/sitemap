@@ -20,8 +20,12 @@ public class StorageFileName {
      * @return sitemap index file name
      */
     public static String getSitemapIndexFileName(SitemapType type, Deployment blueGreen) {
-        return type.getFileNameBase() + Constants.DASH + blueGreen.toString() + Constants.SITEMAP_INDEX_SUFFIX +
-                Constants.XML_EXTENSION;
+        StringBuilder sb = new StringBuilder(type.getFileNameBase())
+                .append(Constants.DASH)
+                .append(blueGreen.toString())
+                .append(Constants.SITEMAP_INDEX_SUFFIX)
+                .append(Constants.XML_EXTENSION);
+        return sb.toString();
     }
 
     /**
@@ -32,11 +36,14 @@ public class StorageFileName {
      * @return sitemap file name
      */
     public static String getSitemapFileName(SitemapType type, Deployment blueGreen, String appendix) {
-        String result = type.getFileNameBase() + Constants.DASH + blueGreen.toString() + Constants.XML_EXTENSION;
+        StringBuilder sb = new StringBuilder(type.getFileNameBase())
+                .append(Constants.DASH)
+                .append(blueGreen.toString())
+                .append(Constants.XML_EXTENSION);
         if (StringUtils.isNotEmpty(appendix)) {
-            return result + appendix;
+            sb.append(appendix);
         }
-        return result;
+        return sb.toString();
     }
 
     /**

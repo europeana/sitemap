@@ -87,7 +87,7 @@ public class SitemapConfiguration {
         try {
             this.entityApi = new URL(entityApiUrl);
         } catch (MalformedURLException e) {
-            throw new SiteMapConfigException("Property entity.api.url is incorrect: "+entityApiUrl);
+            throw new SiteMapConfigException("Property entity.api.url is incorrect: " + entityApiUrl, e);
         }
 
         // trim to avoid problems with accidental trailing spaces

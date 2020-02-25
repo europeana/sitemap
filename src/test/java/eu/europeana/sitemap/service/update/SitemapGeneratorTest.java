@@ -50,7 +50,7 @@ public class SitemapGeneratorTest {
      */
     @Test
     public void testGenerator() {
-        String websiteBaseUrl = "https://www.europeana.eu/portal";
+        String websiteBaseUrl = "https://www.europeana.eu";
         String fileName = SitemapType.ENTITY.getFileNameBase();
         Deployment deployment = Deployment.BLUE;
 

@@ -3,11 +3,7 @@ package eu.europeana.sitemap;
 /**
  * Constants used for generating urls
  */
-public class Constants {
-
-    private Constants() {
-        // empty constructor to prevent initialization
-    }
+public final class Constants {
 
     public static final String XML_EXTENSION = ".xml";
 
@@ -25,4 +21,7 @@ public class Constants {
 
     public static final String SITEMAP_ACTIVE_DEPLOYMENT_SUFFIX = "-active";
 
+    private Constants() {
+        // empty constructor to prevent initialization
+    }
 }

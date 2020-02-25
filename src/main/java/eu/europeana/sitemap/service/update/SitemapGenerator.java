@@ -61,6 +61,10 @@ public class SitemapGenerator {
     private static final String FROM_PARAM = "?from=";
     private static final String TO_PARAM = "&to=";
 
+    private static final int MAX_SAVE_ATTEMPTS = 3;
+    private static final long RETRY_SAVE_INTERVAL = 5000;
+    private static final int MS_PER_SEC = 1000;
+
     private final ObjectStorageClient objectStorage;
     private final SitemapType type;
 
@@ -68,17 +72,17 @@ public class SitemapGenerator {
     private String websiteBaseUrl;
     private int itemsPerSitemap;
 
-    private boolean generationStarted = false;
-    private boolean generationFinished = false;
+    private boolean generationStarted;
+    private boolean generationFinished;
 
     private StringBuilder sitemapIndex;
     private StringBuilder sitemap;
     private long fileStartTime; // this is for the current sitemap file
 
     // global stats
-    private long nrRecords = 0;
-    private int nrSitemaps = 0;
-    private long from = 0;
+    private long nrRecords;
+    private int nrSitemaps;
+    private long from;
 
     /**
      * Setup a new sitemap generator
@@ -165,7 +169,7 @@ public class SitemapGenerator {
         String fileContents = this.sitemapIndex.toString();
         LOG.debug("Generated contents for sitemap index\n{}", fileContents);
         if (saveToStorage(fileName, fileContents)) {
-            LOG.info("Created sitemap file "+fileName);
+            LOG.info("Created sitemap file {}", fileName);
         }
     }
 
@@ -249,13 +253,12 @@ public class SitemapGenerator {
 
             // verify is save was successful
             int nrSaveAttempts = 1;
-            int maxAttempts = 3;
             LOG.debug("Checking if file {} exists...", key);
             result = checkIfFileExists(key);
-            while ((StringUtils.isEmpty(eTag) || !result) && (nrSaveAttempts < maxAttempts)) {
-                long timeout = nrSaveAttempts * 5000L;
+            while ((StringUtils.isEmpty(eTag) || !result) && (nrSaveAttempts < MAX_SAVE_ATTEMPTS)) {
+                long timeout = nrSaveAttempts * RETRY_SAVE_INTERVAL;
                 LOG.warn("Failed to save file {} to storage provider (etag = {}, siteMapCacheFileExists={}). "
-                        +"Waiting {} seconds before trying again...", key, eTag, result, (timeout / 1000));
+                        +"Waiting {} seconds before trying again...", key, eTag, result, (timeout / MS_PER_SEC));
                 Thread.sleep(timeout);
 
                 LOG.info("Retry saving the file...");
@@ -263,7 +266,7 @@ public class SitemapGenerator {
                 result = checkIfFileExists(key);
                 nrSaveAttempts++;
             }
-            if (nrSaveAttempts >= maxAttempts) {
+            if (nrSaveAttempts >= MAX_SAVE_ATTEMPTS) {
                 LOG.error("Failed to save file {} to storage provider. Giving up because we retried it {} times.", key, nrSaveAttempts);
             }
         } catch (InterruptedException e) {

@@ -5,9 +5,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
  * Connects to the (production) mongo server to retrieve all records.
  *
@@ -18,7 +15,6 @@ public class MongoProvider {
     private static final Logger LOG = LogManager.getLogger(MongoProvider.class);
 
     private MongoClient mongoClient;
-    private String database;
     private DBCollection collection;
 
     // TODO replace deprecated getDb() record retrieval with more up-to-date method
@@ -34,44 +30,11 @@ public class MongoProvider {
      */
     public MongoProvider(String connectionUrl, String database) {
         MongoClientURI uri = new MongoClientURI(connectionUrl);
-        this.database = database;
         if (StringUtils.isEmpty(database)) {
             database = uri.getDatabase();
         }
-        LOG.info("Connecting to Mongo {} database at {}...", this.database, uri.getHosts());
+        LOG.info("Connecting to Mongo {} database at {}...", database, uri.getHosts());
         this.mongoClient = new MongoClient(uri);
-        this.collection = this.mongoClient.getDB(database).getCollection("record");
-        LOG.info("Mongo collection retrieved.");
-    }
-
-    /**
-     * Setup a new connection to the Mongo database
-     * @param mongoHosts list of mongo host names separated by comma
-     * @param port port number of mongo host
-     * @param authDatabase database name used for authentication
-     * @param username username
-     * @param password password
-     * @param database database name used for retrieving record data
-     */
-    public MongoProvider(String mongoHosts, String port, String authDatabase, String username, String password, String database) {
-        String[] addresses = mongoHosts.split(",");
-        List<ServerAddress> mongoAddresses = new ArrayList<>(addresses.length);
-        for (String address : addresses) {
-            ServerAddress mongoAddress = new ServerAddress(address, Integer.parseInt(port));
-            mongoAddresses.add(mongoAddress);
-        }
-        this.database = database;
-
-        LOG.info("Connecting to Mongo {} database at {} ...", mongoAddresses, this.database);
-        if (StringUtils.isNotEmpty(username) && StringUtils.isNotEmpty(password)) {
-            MongoCredential credential = MongoCredential.createCredential(username, authDatabase, password.toCharArray());
-            List<MongoCredential> credentials = new ArrayList<>();
-            credentials.add(credential);
-
-            this.mongoClient = new MongoClient(mongoAddresses, credentials);
-        } else {
-            this.mongoClient = new MongoClient(mongoAddresses);
-        }
         this.collection = this.mongoClient.getDB(database).getCollection("record");
         LOG.info("Mongo collection retrieved.");
     }

@@ -22,7 +22,6 @@ import java.util.regex.Pattern;
 public class PortalUrl {
 
     private static final Pattern CHAR_NUMBER_OR_DASH = Pattern.compile("[^-a-zA-Z0-9]");
-    private static final String PORTAL = "/portal";
 
     @Value("${portal.base.url}")
     private String portalBaseUrl;
@@ -102,20 +101,13 @@ public class PortalUrl {
      */
     public String getEntityUrl(String language, String type, String id, String prefLabel) {
         StringBuilder s = new StringBuilder(portalBaseUrl);
-        if (entityPortalPath.startsWith(PORTAL)) {
-            s.append(PORTAL).
-                    append(Constants.PATH_SEPARATOR).
-                    append(language).
-                    append(entityPortalPath.substring(entityPortalPath.lastIndexOf(PORTAL) + PORTAL.length()));
-        } else {
-            s.append(Constants.PATH_SEPARATOR).
-                    append(language).
-                    append(entityPortalPath);
-        }
         s.append(Constants.PATH_SEPARATOR).
-                append(convertEntityTypeToPortalPath(type)).
-                append(Constants.PATH_SEPARATOR).
-                append(convertEntityIdPrefLabelToPortalFile(id, prefLabel));
+                    append(language).
+                    append(entityPortalPath).
+                    append(Constants.PATH_SEPARATOR).
+                    append(convertEntityTypeToPortalPath(type)).
+                    append(Constants.PATH_SEPARATOR).
+                    append(convertEntityIdPrefLabelToPortalFile(id, prefLabel));
         return s.toString();
     }
 
@@ -145,11 +137,13 @@ public class PortalUrl {
      */
     private String convertEntityIdPrefLabelToPortalFile(String id, String prefLabel) {
         // we assume id is never empty
-        String result = id;
+        StringBuilder sb = new StringBuilder(id);
         if (!StringUtils.isEmpty(prefLabel)) {
-            result = result + '-' + convertPrefLabel(prefLabel);
+            sb.append('-')
+                    .append(convertPrefLabel(prefLabel));
+
         }
-        return result;
+        return sb.toString();
     }
 
     /**

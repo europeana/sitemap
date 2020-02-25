@@ -37,6 +37,7 @@ public class SitemapApplication {
         }
     }
 
+    @SuppressWarnings("squid:S1166") // we intentionally do not log exception stacktrace here
     private static void injectSocksProxySettings() throws IOException {
         SocksProxyConfigInjector socksConfig = new SocksProxyConfigInjector("sitemap.properties");
         try {

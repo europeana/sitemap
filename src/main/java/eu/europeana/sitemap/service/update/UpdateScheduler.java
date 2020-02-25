@@ -62,7 +62,7 @@ public class UpdateScheduler {
         }
     }
 
-    private class UpdateRunnable implements Runnable {
+    private static class UpdateRunnable implements Runnable {
 
         private UpdateService updateService;
 
