@@ -19,12 +19,13 @@ package eu.europeana.sitemap.web;
 
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
+import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.update.UpdateRecordService;
 import eu.europeana.sitemap.service.update.UpdateService;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,22 +43,22 @@ import javax.servlet.http.HttpServletResponse;
 @RequestMapping("/record")
 public class SitemapRecordController extends SitemapAbstractController {
 
+    private SitemapConfiguration config;
     private UpdateService updateService;
 
-    @Value("${admin.apikey}")
-    private String adminKey;
-
     public SitemapRecordController(ActiveDeploymentService activeDeployment, SitemapFileController readController,
-                                   UpdateRecordService updateService) {
+                                   UpdateRecordService updateService, SitemapConfiguration config) {
         super(SitemapType.RECORD, activeDeployment, readController);
+        this.config = config;
         this.updateService = updateService;
     }
 
     /**
      * @see SitemapAbstractController#getSitemapIndex()
      */
-    @GetMapping(value = {"index",
-            Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION})
+    @GetMapping(value = {"index"+ Constants.XML_EXTENSION,
+            Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION},
+            produces = MediaType.TEXT_XML_VALUE)
     public String getRecordSitemapIndex() throws SiteMapNotFoundException {
         return super.getSitemapIndex();
     }
@@ -65,7 +66,8 @@ public class SitemapRecordController extends SitemapAbstractController {
     /**
      * @see SitemapAbstractController#getSitemapFile(String, String)
      */
-    @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.XML_EXTENSION)
+    @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.XML_EXTENSION,
+            produces = MediaType.TEXT_XML_VALUE)
     public String getRecordSitemapFile(@RequestParam(value = "from") String from,
                                        @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
         return super.getSitemapFile(from, to);
@@ -80,7 +82,7 @@ public class SitemapRecordController extends SitemapAbstractController {
     @GetMapping(value = "update")
     public String update(@RequestParam(value = "wskey") String wskey,
                          HttpServletResponse response) throws SiteMapException {
-        if (AdminUtils.verifyKey(adminKey, wskey)) {
+        if (AdminUtils.verifyKey(config.getAdminKey(), wskey)) {
             response.setStatus(HttpServletResponse.SC_ACCEPTED);
             // TODO make asynchronous!?
             updateService.update();

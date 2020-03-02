@@ -1,10 +1,11 @@
-package eu.europeana.sitemap;
+package eu.europeana.sitemap.config;
 
-import org.apache.commons.lang.StringEscapeUtils;
+import eu.europeana.sitemap.Constants;
+import eu.europeana.sitemap.SitemapType;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.Locale;
@@ -16,13 +17,11 @@ import java.util.regex.Pattern;
  * sitemap file urls.
  */
 @Configuration
-@Component
 @PropertySource("classpath:sitemap.properties")
 @PropertySource(value = "classpath:sitemap.user.properties", ignoreResourceNotFound = true)
 public class PortalUrl {
 
     private static final Pattern CHAR_NUMBER_OR_DASH = Pattern.compile("[^-a-zA-Z0-9]");
-    private static final String PORTAL = "/portal";
 
     @Value("${portal.base.url}")
     private String portalBaseUrl;
@@ -77,7 +76,7 @@ public class PortalUrl {
      * @return portal record page url
      */
     public String getRecordUrl(String europeanaId) {
-        return portalBaseUrl + recordPortalPath + europeanaId + Constants.HTML_EXTENSION;
+        return portalBaseUrl + recordPortalPath + europeanaId;
     }
 
     /**
@@ -93,7 +92,7 @@ public class PortalUrl {
     }
 
     /**
-     * Return a language-specific portal entity page url
+     * Return a language-specific portal entity page url (currently not used when generating sitemaps)
      * @param language page language
      * @param type entity type (either "agent" or "concept")
      * @param id entity id number, note that this is only unique within an entity type
@@ -102,20 +101,13 @@ public class PortalUrl {
      */
     public String getEntityUrl(String language, String type, String id, String prefLabel) {
         StringBuilder s = new StringBuilder(portalBaseUrl);
-        if (entityPortalPath.startsWith(PORTAL)) {
-            s.append(PORTAL).
-                    append(Constants.PATH_SEPARATOR).
-                    append(language).
-                    append(entityPortalPath.substring(entityPortalPath.lastIndexOf(PORTAL) + PORTAL.length()));
-        } else {
-            s.append(Constants.PATH_SEPARATOR).
-                    append(language).
-                    append(entityPortalPath);
-        }
         s.append(Constants.PATH_SEPARATOR).
-                append(convertEntityTypeToPortalPath(type)).
-                append(Constants.PATH_SEPARATOR).
-                append(convertEntityIdPrefLabelToPortalFile(id, prefLabel));
+                    append(language).
+                    append(entityPortalPath).
+                    append(Constants.PATH_SEPARATOR).
+                    append(convertEntityTypeToPortalPath(type)).
+                    append(Constants.PATH_SEPARATOR).
+                    append(convertEntityIdPrefLabelToPortalFile(id, prefLabel));
         return s.toString();
     }
 
@@ -145,11 +137,13 @@ public class PortalUrl {
      */
     private String convertEntityIdPrefLabelToPortalFile(String id, String prefLabel) {
         // we assume id is never empty
-        String result = id;
+        StringBuilder sb = new StringBuilder(id);
         if (!StringUtils.isEmpty(prefLabel)) {
-            result = result + '-' + convertPrefLabel(prefLabel);
+            sb.append('-')
+                    .append(convertPrefLabel(prefLabel));
+
         }
-        return result + Constants.HTML_EXTENSION;
+        return sb.toString();
     }
 
     /**

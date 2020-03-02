@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.service;
 
-import eu.europeana.sitemap.PortalUrl;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.SitemapType;
 import org.apache.http.HttpResponse;
 import org.apache.http.HttpStatus;
@@ -72,7 +72,7 @@ public class ResubmitService {
      * @throws IOException when there is a problem sending the ping request
      */
     private void resubmitToService(String serviceName, String serviceUrl, String serviceProperty, URI sitemapFile) throws URISyntaxException, IOException {
-        LOG.info("Pinging {} with index = {}", serviceName, sitemapFile.toString());
+        LOG.info("Pinging {} with index = {}", serviceName, sitemapFile);
         URIBuilder uriBuilder = new URIBuilder(serviceUrl);
         uriBuilder.setParameter(serviceProperty, sitemapFile.toString());
         HttpGet getRequest = new HttpGet(uriBuilder.build());
@@ -83,7 +83,9 @@ public class ResubmitService {
         HttpResponse response = HTTP_CLIENT.execute(getRequest);
         int statusCode = response.getStatusLine().getStatusCode();
         if (statusCode == HttpStatus.SC_OK) {
-            LOG.info("{} says OK: {} ", serviceName, EntityUtils.toString(response.getEntity()));
+            if (LOG.isInfoEnabled()) {
+                LOG.info("{} says OK: {} ", serviceName, EntityUtils.toString(response.getEntity()));
+            }
         } else {
             LOG.error("{} says {} (status code {})", serviceName, response.getStatusLine().getReasonPhrase(), statusCode);
         }

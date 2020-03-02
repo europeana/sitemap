@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.web;
 
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * Utility class to check if a provided key is valid.

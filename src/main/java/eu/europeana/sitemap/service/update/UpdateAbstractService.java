@@ -3,7 +3,7 @@ package eu.europeana.sitemap.service.update;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.StorageFileName;
-import eu.europeana.sitemap.exceptions.MailService;
+import eu.europeana.sitemap.service.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
@@ -66,7 +66,7 @@ public abstract class UpdateAbstractService implements UpdateService {
         try {
             // 1. Get inactive deployment
             Deployment inactive = deploymentService.getInactiveDeployment(sitemapType);
-            LOG.info("Inactive deployment is " + inactive);
+            LOG.info("Inactive deployment is {}", inactive);
 
             // 2. Delete inactive files
             deploymentService.deleteInactiveFiles(sitemapType);
@@ -90,7 +90,7 @@ public abstract class UpdateAbstractService implements UpdateService {
             // 6. Notify search engines (only if index changed)
             this.notifySearchEngines(sitemapType);
 
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             String message = "Error updating " + sitemapType + " sitemap";
             mailService.sendErrorEmail(message + ": " + e.getMessage(), e);
             // rethrow for GlobalExceptionHandler to handle it (log or not)
@@ -146,6 +146,7 @@ public abstract class UpdateAbstractService implements UpdateService {
         }
     }
 
+    @SuppressWarnings("squid:S1166") // we intentionally do not log exception stacktrace here when catching SiteMapNotFoundException
     private void notifySearchEngines(SitemapType sitemapType) {
         if (this.doResubmit()) {
             String indexBlue = null;

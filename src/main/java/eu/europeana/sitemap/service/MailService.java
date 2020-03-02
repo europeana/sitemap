@@ -1,9 +1,9 @@
-package eu.europeana.sitemap.exceptions;
+package eu.europeana.sitemap.service;
 
-import org.apache.commons.lang.exception.ExceptionUtils;
+import eu.europeana.sitemap.config.SitemapConfiguration;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -20,26 +20,26 @@ import javax.mail.internet.MimeMessage;
 @Service
 public class MailService {
 
-    @Lazy
-    @Autowired
+    private SitemapConfiguration config;
     private JavaMailSender mailSender;
 
-    @Value("${spring.mail.from:}")
-    private String mailFrom;
-    @Value("${spring.mail.to:}")
-    private String mailTo;
+    @Autowired
+    public MailService(SitemapConfiguration config) {
+        this.config = config;
+        this.mailSender = config.mailSender;
+    }
 
     /**
      * Send an email alert
      * @param errorMessage subject of the email
-     * @param t exeception that occurred (as body of the email), can be null
+     * @param t exception that occurred (as body of the email), can be null
      */
     public void sendErrorEmail(String errorMessage, Throwable t)  {
-        MimeMessage message = mailSender.createMimeMessage();
-        MimeMessageHelper helper = new MimeMessageHelper(message);
         try {
-            helper.setFrom(mailFrom);
-            helper.setTo(mailTo);
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message);
+            helper.setFrom(config.getMailFrom());
+            helper.setTo(config.getMailTo());
             helper.setSubject(errorMessage);
             if (t !=  null) {
                 helper.setText(ExceptionUtils.getStackTrace(t));
@@ -47,7 +47,7 @@ public class MailService {
 
             mailSender.send(message);
             LogManager.getLogger(MailService.class).info("Email error alert was sent");
-        } catch (MessagingException me) {
+        } catch (RuntimeException | MessagingException me) {
             LogManager.getLogger(MailService.class).error("Error sending email error alert", me);
         }
     }
