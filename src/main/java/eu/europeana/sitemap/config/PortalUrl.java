@@ -88,7 +88,7 @@ public class PortalUrl {
      */
     public String getEntityUrl(String type, String id) {
         return portalBaseUrl + entityPortalPath + Constants.PATH_SEPARATOR + convertEntityTypeToPortalPath(type) +
-                Constants.PATH_SEPARATOR + id;
+                Constants.PATH_SEPARATOR + getEntityIdNumber(id);
     }
 
     /**
@@ -107,8 +107,20 @@ public class PortalUrl {
                     append(Constants.PATH_SEPARATOR).
                     append(convertEntityTypeToPortalPath(type)).
                     append(Constants.PATH_SEPARATOR).
-                    append(convertEntityIdPrefLabelToPortalFile(id, prefLabel));
+                    append(getEntityIdNumber(id));
+        if (!StringUtils.isEmpty(prefLabel)) {
+            s.append('-');
+            s.append(convertPrefLabel(prefLabel));
+        }
         return s.toString();
+    }
+
+    /**
+     * @return String containing only the number of an entity id
+     * (e.g. 23 when entityId = http://data.europeana.eu/agent/base/23)
+     */
+    private String getEntityIdNumber(String id) {
+        return id.substring(id.lastIndexOf('/') + 1);
     }
 
     /**
@@ -127,30 +139,15 @@ public class PortalUrl {
     }
 
     /**
-     * Converts an entity id number and English(!) preflabel to a html file name as used by Portal. The idea is that
-     * by generating the precise Portal url we'll prevent including urls in the sitemap that redirect somewhere else (at
-     * least as much as possible).
+     * Converts an English(!) preflabel to a String as used by Portal in entity-urls. The idea is that by generating the
+     * precise Portal url we'll prevent including urls in the sitemap that redirect somewhere else (at least as much as
+     * possible).
      *
-     * @param id entity id number, note that this is only unique with an entity type
-     * @param prefLabel, english preflabel of the entity, can be empty or null
-     * @return html file name as used by Portal
-     */
-    private String convertEntityIdPrefLabelToPortalFile(String id, String prefLabel) {
-        // we assume id is never empty
-        StringBuilder sb = new StringBuilder(id);
-        if (!StringUtils.isEmpty(prefLabel)) {
-            sb.append('-')
-                    .append(convertPrefLabel(prefLabel));
-
-        }
-        return sb.toString();
-    }
-
-    /**
-     * This should return the same results as the Ruby library used by Portal which is https://github.com/rsl/stringex
+     * March 2020: This should return the same results as the Ruby library used by Portal which is https://github.com/rsl/stringex
+     * but sadly this doesn't in all cases, so at the moment this code is not used.
      */
     private String convertPrefLabel(String prefLabel) {
-        String result = prefLabel.replaceAll("\\s", "-").replaceAll("&", "and");
+        String result = prefLabel.replaceAll("\\s", "-").replace("&", "and");
 
         // strip everything that's not a normal character, number or dash
         Matcher matcher = CHAR_NUMBER_OR_DASH.matcher(result);
