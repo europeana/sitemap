@@ -142,10 +142,10 @@ public class PortalUrl {
      */
     private String convertEntityTypeToPortalPath(String type) {
         if ("agent".equalsIgnoreCase(type)) {
-            return "people";
+            return "person";
         }
         if ("concept".equalsIgnoreCase(type)) {
-            return "topics";
+            return "topic";
         }
         return null;
     }
