@@ -37,8 +37,12 @@ public class PortalUrl {
      * @return the url of a public sitemap index file
      */
     public String getSitemapIndexUrl(SitemapType type) {
-        return portalBaseUrl + Constants.PATH_SEPARATOR + type.getFileNameBase() + Constants.SITEMAP_INDEX_SUFFIX
-                + Constants.XML_EXTENSION;
+        StringBuilder s = new StringBuilder(portalBaseUrl)
+                .append(Constants.PATH_SEPARATOR)
+                .append(type.getFileNameBase())
+                .append(Constants.SITEMAP_INDEX_SUFFIX)
+                .append(Constants.XML_EXTENSION);
+        return s.toString();
     }
 
     /**
@@ -62,12 +66,15 @@ public class PortalUrl {
      * @return the url of a public sitemap file
      */
     public static String getSitemapUrl(String baseUrl, SitemapType type, String appendix, boolean urlEncode) {
-        String result = baseUrl + Constants.PATH_SEPARATOR + type.getFileNameBase()  +
-                Constants.XML_EXTENSION + appendix;
+        StringBuilder s = new StringBuilder(baseUrl)
+                .append(Constants.PATH_SEPARATOR)
+                .append(type.getFileNameBase())
+                .append(Constants.XML_EXTENSION)
+                .append(appendix);
         if (urlEncode) {
-            return StringEscapeUtils.escapeXml(result);
+            return StringEscapeUtils.escapeXml(s.toString());
         }
-        return result;
+        return s.toString();
     }
 
     /**
@@ -87,8 +94,13 @@ public class PortalUrl {
      * @return canonical portal entity page url
      */
     public String getEntityUrl(String type, String id) {
-        return portalBaseUrl + entityPortalPath + Constants.PATH_SEPARATOR + convertEntityTypeToPortalPath(type) +
-                Constants.PATH_SEPARATOR + getEntityIdNumber(id);
+        StringBuilder s = new StringBuilder(portalBaseUrl)
+                .append(entityPortalPath)
+                .append(Constants.PATH_SEPARATOR)
+                .append(convertEntityTypeToPortalPath(type))
+                .append(Constants.PATH_SEPARATOR)
+                .append(getEntityIdNumber(id));
+        return s.toString();
     }
 
     /**
