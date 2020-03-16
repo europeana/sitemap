@@ -4,8 +4,11 @@ package eu.europeana.sitemap.service.update;
 import com.jayway.jsonpath.JsonPath;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
-import eu.europeana.sitemap.exceptions.*;
+import eu.europeana.sitemap.exceptions.EntityQueryException;
+import eu.europeana.sitemap.exceptions.InvalidApiKeyException;
+import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.MailService;
 import eu.europeana.sitemap.service.ReadSitemapService;
@@ -24,7 +27,7 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.net.URL;
-import java.util.List;
+import java.util.HashMap;
 
 /**
  * Service for updating the entity sitemap. This class gathers all the relevant entity data to add it to the sitemap
@@ -41,18 +44,21 @@ public class UpdateEntityService extends UpdateAbstractService {
     private static final int ITEMS_PER_SITEMAP_FILE = 15_000;
 
     private static final int ENTITY_QUERY_PAGE_SIZE = 100;
-    private static final String ENTITY_QUERY = "*&scope=europeana&type=agent,concept&fl=id" + //,type,skos_prefLabel.*"
+    private static final String ENTITY_QUERY = "*&scope=europeana&type=agent,concept&fl=id,type" + //,skos_prefLabel.*"
             "&pageSize=" +ENTITY_QUERY_PAGE_SIZE;
 
     private SitemapConfiguration config;
+    private PortalUrl portalUrl;
 
     private CloseableHttpClient httpClient = HttpClients.createDefault();
 
     @Autowired
     public UpdateEntityService(SitemapConfiguration config, ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
-                               ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService) {
+                               ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
+                               PortalUrl portalUrl) {
         super(SitemapType.ENTITY, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, ITEMS_PER_SITEMAP_FILE);
         this.config = config;
+        this.portalUrl = portalUrl;
     }
 
     /**
@@ -68,12 +74,13 @@ public class UpdateEntityService extends UpdateAbstractService {
         while (retrieved < totalEntities || totalEntities < 0) {
             String entityData = this.getEntityJson(config.getEntityApi(), ENTITY_QUERY, pageNr, config.getEntityApiKey());
 
-            List<String> entityIds = this.getEntityIds(entityData);
-            for (String entityId : entityIds) {
-                LOG.debug("Adding entity {}", entityId);
-                sitemapGenerator.addItem(entityId, null, null);
+            EntityData[] entities = this.parseEntityData(entityData);
+            for (EntityData entity : entities) {
+                LOG.debug("Adding entity {} with type {}", entity.getId(), entity.getType());
+                String url = portalUrl.getEntityUrl("en", entity.getType(), entity.getId(), null);
+                sitemapGenerator.addItem(url, null, null);
             }
-            retrieved = retrieved + entityIds.size();
+            retrieved = retrieved + entities.length;
             long newTotalEntities = this.getTotalEntitiesCount(entityData);
             if (totalEntities > 0 && newTotalEntities != totalEntities) {
                 LOG.warn("Total number of entities has changed during update! Not all entities may be listed");
@@ -151,8 +158,27 @@ public class UpdateEntityService extends UpdateAbstractService {
         return JsonPath.parse(entityJson).read("$.partOf.total", Long.class);
     }
 
-    private List<String> getEntityIds(String entityJson) {
-        return JsonPath.parse(entityJson).read("$.items[*].id", List.class);
+    private EntityData[]  parseEntityData(String entityJson) {
+        return JsonPath.parse(entityJson).read("$.items[*]", EntityData[].class);
     }
 
+    /**
+     * Class that contains all entity fields we specified in the query
+     */
+    public static class EntityData extends HashMap<String, Object> {
+
+        /**
+         * @return the entity id (url with data.europeana.eu as FQDN)
+         */
+        public String getId() {
+            return (String) this.get("id");
+        }
+
+        /**
+         * @return the type of Entity (agent or concept)
+         */
+        public String getType() {
+            return (String) this.get("type");
+        }
+    }
 }

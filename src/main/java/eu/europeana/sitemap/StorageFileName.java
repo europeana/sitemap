@@ -22,7 +22,7 @@ public class StorageFileName {
     public static String getSitemapIndexFileName(SitemapType type, Deployment blueGreen) {
         StringBuilder sb = new StringBuilder(type.getFileNameBase())
                 .append(Constants.DASH)
-                .append(blueGreen.toString())
+                .append(blueGreen)
                 .append(Constants.SITEMAP_INDEX_SUFFIX)
                 .append(Constants.XML_EXTENSION);
         return sb.toString();
@@ -38,7 +38,7 @@ public class StorageFileName {
     public static String getSitemapFileName(SitemapType type, Deployment blueGreen, String appendix) {
         StringBuilder sb = new StringBuilder(type.getFileNameBase())
                 .append(Constants.DASH)
-                .append(blueGreen.toString())
+                .append(blueGreen)
                 .append(Constants.XML_EXTENSION);
         if (StringUtils.isNotEmpty(appendix)) {
             sb.append(appendix);

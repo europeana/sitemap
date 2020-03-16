@@ -5,6 +5,7 @@ import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.MockActiveDeployment;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.XmlUtils;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.service.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapException;
@@ -43,7 +44,7 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(SpringJUnit4ClassRunner.class)
 @TestPropertySource("classpath:sitemap-test.properties")
-@SpringBootTest(classes = {UpdateEntityService.class, SitemapConfiguration.class})
+@SpringBootTest(classes = {UpdateEntityService.class, SitemapConfiguration.class, PortalUrl.class})
 @EnableAspectJAutoProxy
 public class SitemapUpdateEntityServiceTest {
 
@@ -65,6 +66,8 @@ public class SitemapUpdateEntityServiceTest {
     private MailService mockMail;
     @Autowired
     private SitemapConfiguration configuration;
+    @Autowired
+    private PortalUrl portalUrl;
     @Autowired
     private UpdateEntityService entityService;
 
@@ -127,7 +130,7 @@ public class SitemapUpdateEntityServiceTest {
         // check sitemap file
         String generatedSitemap = new String(mockStorage.getContent("sitemap-entity-blue.xml?from=1&to=20"));
         assertNotNull(generatedSitemap);
-        String expectedEntity = "http://data.europeana.eu/agent/base/34712";
+        String expectedEntity = "https://www-test.eanadev.org/en/explore/person/34712";
         expected = "<url><loc>"+expectedEntity+"</loc></url>";
         assertTrue("String \"" + expected +"\" not found in sitemap file:\n"+ generatedSitemap,
                 XmlUtils.harmonizeXml(generatedSitemap).contains(expected));
