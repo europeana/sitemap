@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
  *
  * @author luthien, created on 07/12/2015.
  * @author Patrick Ehlert, major refactoring on 21/08/2017 and 30/05/2018
- * @deprecated will be removed shortly after the new record and entities urls are in production
+ * @deprecated
+ * @since February 2019 (1 year later we still see some search engines requesting these old sitemap files)
  */
 @RestController
-@Deprecated
+@Deprecated(since = "2.1")
 @RequestMapping("/sitemap")
 public class SitemapOldRecordController extends SitemapAbstractController {
 

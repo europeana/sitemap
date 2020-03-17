@@ -167,6 +167,8 @@ public class UpdateEntityService extends UpdateAbstractService {
      */
     public static class EntityData extends HashMap<String, Object> {
 
+        private static final long serialVersionUID = 9157945603571553860L;
+
         /**
          * @return the entity id (url with data.europeana.eu as FQDN)
          */
