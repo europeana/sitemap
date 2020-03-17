@@ -130,7 +130,7 @@ public class SitemapUpdateEntityServiceTest {
         // check sitemap file
         String generatedSitemap = new String(mockStorage.getContent("sitemap-entity-blue.xml?from=1&to=20"));
         assertNotNull(generatedSitemap);
-        String expectedEntity = "https://www-test.eanadev.org/en/explore/person/34712";
+        String expectedEntity = "https://www-test.eanadev.org/en/collections/person/34712";
         expected = "<url><loc>"+expectedEntity+"</loc></url>";
         assertTrue("String \"" + expected +"\" not found in sitemap file:\n"+ generatedSitemap,
                 XmlUtils.harmonizeXml(generatedSitemap).contains(expected));
