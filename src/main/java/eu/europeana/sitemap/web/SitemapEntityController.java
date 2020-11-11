@@ -41,7 +41,7 @@ import javax.servlet.http.HttpServletResponse;
  * Created on 30-05-2018
  */
 @RestController
-@RequestMapping("/entity")
+@RequestMapping(value = "/entity",  produces = {MediaType.TEXT_XML_VALUE, MediaType.APPLICATION_XML_VALUE})
 public class SitemapEntityController extends SitemapAbstractController {
 
     private SitemapConfiguration config;
@@ -58,8 +58,7 @@ public class SitemapEntityController extends SitemapAbstractController {
      * @see SitemapAbstractController#getSitemapIndex()
      */
     @GetMapping(value = {"index"+ Constants.XML_EXTENSION,
-            Constants.SITEMAP_ENTITY_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION},
-            produces = MediaType.TEXT_XML_VALUE)
+            Constants.SITEMAP_ENTITY_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION})
     public String getEntitySitemapIndex() throws SiteMapNotFoundException {
         return super.getSitemapIndex();
     }
@@ -67,8 +66,7 @@ public class SitemapEntityController extends SitemapAbstractController {
     /**
      * @see SitemapAbstractController#getSitemapFile(String, String)
      */
-    @GetMapping(value = Constants.SITEMAP_ENTITY_FILENAME_BASE + Constants.XML_EXTENSION,
-                produces = MediaType.TEXT_XML_VALUE)
+    @GetMapping(value = Constants.SITEMAP_ENTITY_FILENAME_BASE + Constants.XML_EXTENSION)
     public String getEntitySitemapFile(@RequestParam(value = "from") String from,
                                        @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
         return super.getSitemapFile(from, to);
@@ -80,7 +78,7 @@ public class SitemapEntityController extends SitemapAbstractController {
      * @param response automatically added to method to set response status
      * @return finished message
      */
-    @GetMapping(value = "update")
+    @GetMapping(value = "update", produces = MediaType.TEXT_PLAIN_VALUE)
     public String update(@RequestParam(value = "wskey") String wskey,
                          HttpServletResponse response) throws SiteMapException {
         if (AdminUtils.verifyKey(config.getAdminKey(), wskey)) {
