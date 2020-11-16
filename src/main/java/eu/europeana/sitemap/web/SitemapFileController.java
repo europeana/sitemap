@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * Created on 30-05-2018
  */
 @RestController
-@RequestMapping("/")
+@RequestMapping(value = "/", produces = {MediaType.TEXT_PLAIN_VALUE, MediaType.TEXT_XML_VALUE, MediaType.APPLICATION_XML_VALUE})
 public class SitemapFileController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapFileController.class);
@@ -34,7 +34,7 @@ public class SitemapFileController {
      * Lists all files stored in the used bucket (for debugging purposes)
      * @return list of all files in the bucket
      */
-    @GetMapping(value = {"list", "files"}, produces = MediaType.TEXT_PLAIN_VALUE)
+    @GetMapping(value = {"list", "files"})
     public String files() {
         return service.getFiles();
     }
@@ -44,7 +44,7 @@ public class SitemapFileController {
      * @param fileName name of the requested file
      * @return contents of the requested file
      */
-    @GetMapping(value = "file", produces = {MediaType.TEXT_PLAIN_VALUE, MediaType.TEXT_XML_VALUE})
+    @GetMapping("file")
     public String file(@RequestParam(value = "name", defaultValue = "") String fileName) throws SiteMapNotFoundException {
         LOG.debug("Retrieving file {} ", fileName);
         if (fileName == null || fileName.isEmpty()) {
