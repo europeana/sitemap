@@ -54,25 +54,22 @@ public class ActiveDeploymentService {
     public Deployment getActiveDeployment(SitemapType sitemapType) {
         Deployment result = null;
         String activeFileName = StorageFileName.getActiveDeploymentFileName(sitemapType);
-        if (objectStorageProvider.isAvailable(activeFileName)) {
-            LOG.debug("Reading active file {}", activeFileName);
-            Optional<StorageObject> optional = objectStorageProvider.get(activeFileName);
-            if (optional.isPresent()) {
-                StorageObject storageObject = optional.get();
-                try (InputStream in = storageObject.getPayload().openStream();
-                     StringWriter writer = new StringWriter()) {
-                    IOUtils.copy(in, writer);
-                    result = Deployment.fromString(writer.toString());
-                    storageObject.getPayload().close();
-                } catch (IOException e) {
-                    LOG.error("Error while processing the file {} to determine the current active site map", activeFileName, e);
-                }
-            } else {
-                LOG.error("Active file should be present, but was not retrieved!");
+        LOG.debug("Reading active file {}", activeFileName);
+        Optional<StorageObject> optional = objectStorageProvider.get(activeFileName);
+        if (optional.isPresent()) {
+            StorageObject storageObject = optional.get();
+            try (InputStream in = storageObject.getPayload().openStream();
+                 StringWriter writer = new StringWriter()) {
+                IOUtils.copy(in, writer);
+                result = Deployment.fromString(writer.toString());
+                storageObject.getPayload().close();
+            } catch (IOException e) {
+                LOG.error("Error while processing the file {} to determine the current active site map", activeFileName, e);
             }
         } else {
             // if the active file does not exist we create a new one
-            LOG.debug("Initializing active deployment file...");
+            // Ideally, it should be present
+            LOG.error("Active not present. Initializing active deployment file...");
             saveToStorageProvider(Deployment.GREEN, activeFileName);
             result = Deployment.GREEN;
         }

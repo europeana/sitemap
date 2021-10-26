@@ -52,11 +52,10 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
      */
     @Override
     public String getFileContent(String fileName) throws SiteMapNotFoundException {
-        Optional<StorageObject> file = objectStorageProvider.get(fileName);
-        if (file.isPresent()) {
-            return new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
+        String fileContent = new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
+        if (fileContent.isEmpty()) {
+            throw new SiteMapNotFoundException("File " + fileName + " not found!");
         }
-        throw new SiteMapNotFoundException("File " + fileName + " not found!");
+        return fileContent;
     }
-
 }
