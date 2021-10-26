@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Read sitemap files directly from the object storage provider
