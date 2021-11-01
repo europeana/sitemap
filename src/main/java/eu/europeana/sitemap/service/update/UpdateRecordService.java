@@ -56,7 +56,6 @@ public class UpdateRecordService extends UpdateAbstractService {
         Cursor cursor = getRecordDataOnTiers();
         while (cursor.hasNext()) {
             DBObject record = cursor.next();
-            System.out.println(record);
             // gather the required data
             String about = record.get(Constants.ABOUT).toString();
             int contentTier = Integer.parseInt(record.get(Constants.CONTENT_TIER).toString());
@@ -66,9 +65,8 @@ public class UpdateRecordService extends UpdateAbstractService {
             Date dateUpdated = (timestampUpdated == null ? null : (Date) timestampUpdated);
 
             String url = portalUrl.getRecordUrl(about);
-           // String priority = UpdateRecordServiceUtils.getPriority(contentTier, metaDataTier);
             LOG.trace("Adding record {}, contentTier = {}, metadataTier = {} , updated = {}", url, contentTier, metaDataTier, dateUpdated);
-//          sitemapGenerator.addItem(url, priority, dateUpdated);
+            sitemapGenerator.addItem(url, UpdateRecordServiceUtils.getPriorityForTiers(contentTier), dateUpdated);
         }
         cursor.close();
     }

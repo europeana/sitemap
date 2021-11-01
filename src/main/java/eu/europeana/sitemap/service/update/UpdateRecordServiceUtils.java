@@ -27,16 +27,14 @@ public class UpdateRecordServiceUtils {
 
     /**
      * calculate sitemap priority based on Tiers
+     * divide the content tier by 4 (total nr of tier values),
+     * so priority for  T2=0.5, T3=0.75, T4=1
      * @param contentTier
-     * @param metadatTier
      * @return String
      */
-    // TODO discuss the piority for contentTier and metadataTier
-    public static String getPriorityForTiers(int contentTier, String metadatTier) {
-        if (contentTier > 3 && ( metadatTier.equals(Constants.METADATA_TIER_A) || metadatTier.equals(Constants.METADATA_TIER_B))) {
-          return "1.0";
-      }
-      return  "0.9";
+    public static String getPriorityForTiers(int contentTier) {
+       double priority = contentTier / 4.0 ;
+       return String.valueOf(priority);
     }
 
     /**
@@ -72,7 +70,7 @@ public class UpdateRecordServiceUtils {
                         .append("metadataTierValue",
                                 new BasicDBObject(Constants.ARRAY_ELEMENT_AT, Arrays.asList(Constants.MONGO_QA_BODY, -1L))));
 
-        // extracts the value from the urls fetched previously. ex: contentTier:"2" , metadataTier:"0"
+        // extracts the value from the urls fetched previously. ex: contentTier:"2" , metadataTier:"A"
         BasicDBObject getTierValues = new BasicDBObject(Constants.PROJECT,
                 getCommonProjections()
                         .append(Constants.CONTENT_TIER,

@@ -17,9 +17,6 @@ public final class Constants {
     public static final String SITEMAP_ENTITY_FILENAME_BASE = "sitemap-entity";
     public static final String SITEMAP_INDEX_SUFFIX = "-index";
     public static final String SITEMAP_ACTIVE_DEPLOYMENT_SUFFIX = "-active";
-    public static final String METADATA_TIER_A = "A";
-    public static final String METADATA_TIER_B = "B";
-    public static final String METADATA_TIER_C = "C";
 
     // MONGO Constants
 
