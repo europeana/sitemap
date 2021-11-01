@@ -55,14 +55,35 @@ public class UpdateRecordServiceUtils {
     }
 
     /**
-     * Returns the aggregation pipeline
+     * Returns the aggregation pipeline : [
+     *  {$project: {
+     *    about: 1,
+     *    timestampUpdated : 1,
+     *    europeanaCompleteness :1,
+     *    contentTierUrl: { $arrayElemAt: [ "$qualityAnnotations.body", 0 ] },
+     *    metadataTierUrl: { $arrayElemAt: [ "$qualityAnnotations.body", -1 ] }
+     *   }},
+     * {$project: {
+     *      about: 1,
+     *      timestampUpdated : 1,
+     *      europeanaCompleteness :1,
+     *      "contentTier":
+     *        { $arrayElemAt:
+     *                [{$split: ["$contentTierUrl" , "contentTier"]}, -1]},
+     *      "metadataTier":
+     *        { $arrayElemAt:
+     *                [{$split: ["$metadataTierUrl" , "metadataTier"]}, -1]}}},
+     *  {$match: {
+     *    $and : [ {contentTier : {$in : ["2", "3", "4"] } },{metadataTier : {$in : ["A", "B", "C"] }}]
+     * }}]
+     *
      * @param contentTier contentTier values to be included
      * @param metadataTier metadataTier values to be included
      * @return List<BasicDBObject>
      */
     public static List<BasicDBObject> getPipeline(String contentTier, String metadataTier) {
         // fetches the value of contentTier and metaDataTier present in #qualityAnnotation.body
-        // ex: contentTierUrl:"http://www.europeana.eu/schemas/epf/contentTier2" , metadataTierUrl:"http://www.europeana.eu/schemas/epf/metadataTier0
+        // ex: contentTierUrl:"http://www.europeana.eu/schemas/epf/contentTier2" , metadataTierUrl:"http://www.europeana.eu/schemas/epf/metadataTierA
         BasicDBObject getTiersIndividually = new BasicDBObject(Constants.PROJECT,
                 getCommonProjections()
                         .append("contentTierValue",
