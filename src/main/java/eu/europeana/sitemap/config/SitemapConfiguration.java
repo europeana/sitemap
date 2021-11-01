@@ -39,7 +39,10 @@ public class SitemapConfiguration {
     private boolean recordResubmit;
     @Value("${record.min.completeness:0}")
     private int recordMinCompleteness;
-
+    @Value("${record.content.tier}")
+    private String recordContentTier;
+    @Value("${record.metadata.tier}")
+    private String recordMetadataTier;
     @Value("${mongodb.connectionUrl}")
     private String mongoConnectionUrl;
     @Value("${mongodb.record.dbname}")
@@ -130,6 +133,14 @@ public class SitemapConfiguration {
 
     public int getRecordMinCompleteness() {
         return recordMinCompleteness;
+    }
+
+    public String getRecordContentTier() {
+        return recordContentTier;
+    }
+
+    public String getRecordMetadataTier() {
+        return recordMetadataTier;
     }
 
     public String getEntityUpdateInterval() {

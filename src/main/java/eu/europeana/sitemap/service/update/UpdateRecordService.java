@@ -1,10 +1,9 @@
 package eu.europeana.sitemap.service.update;
 
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBCollection;
-import com.mongodb.DBCursor;
-import com.mongodb.DBObject;
+import com.mongodb.*;
+import eu.europeana.sitemap.Constants;
+
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.SitemapType;
@@ -34,13 +33,6 @@ public class UpdateRecordService extends UpdateAbstractService {
 
     private static final Logger LOG = LogManager.getLogger(UpdateRecordService.class);
 
-    /** Used mongo fields **/
-    private static final String ABOUT = "about";
-    private static final String LASTUPDATED = "timestampUpdated";
-    private static final String COMPLETENESS = "europeanaCompleteness";
-    private static final int ITEMS_PER_SITEMAP_FILE = 45_000;
-
-
     private SitemapConfiguration config;
     private PortalUrl portalUrl;
     private MongoProvider mongoProvider;
@@ -49,7 +41,7 @@ public class UpdateRecordService extends UpdateAbstractService {
     public UpdateRecordService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
                                ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
                                PortalUrl portalUrl, SitemapConfiguration config) {
-        super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, ITEMS_PER_SITEMAP_FILE);
+        super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, Constants.ITEMS_PER_SITEMAP_FILE);
         this.config = config;
         this.portalUrl = portalUrl;
         this.mongoProvider = config.mongoProvider();
@@ -61,24 +53,25 @@ public class UpdateRecordService extends UpdateAbstractService {
      */
     @Override
     protected void generate(SitemapGenerator sitemapGenerator) {
-        DBCursor cur = getRecordData();
-        while (cur.hasNext()) {
+        Cursor cursor = getRecordDataOnTiers();
+        while (cursor.hasNext()) {
+            DBObject record = cursor.next();
+            System.out.println(record);
             // gather the required data
-            DBObject record = cur.next();
-            String about = record.get(ABOUT).toString();
-            int completeness = Integer.parseInt(record.get(COMPLETENESS).toString());
-            Object timestampUpdated = record.get(LASTUPDATED);
+            String about = record.get(Constants.ABOUT).toString();
+            int contentTier = Integer.parseInt(record.get(Constants.CONTENT_TIER).toString());
+            String metaDataTier = record.get(Constants.METADATA_TIER).toString();
+            Object timestampUpdated = record.get(Constants.LASTUPDATED);
             // very old records do not have a timestampUpdated or timestampCreated field
             Date dateUpdated = (timestampUpdated == null ? null : (Date) timestampUpdated);
 
             String url = portalUrl.getRecordUrl(about);
-            String completenessStr = (completeness > 9 ? "1.0" : ("0." + completeness));
-            LOG.trace("Adding record {}, completeness = {}, updated = {}", url, completeness, dateUpdated);
-            sitemapGenerator.addItem(url, completenessStr, dateUpdated);
+           // String priority = UpdateRecordServiceUtils.getPriority(contentTier, metaDataTier);
+            LOG.trace("Adding record {}, contentTier = {}, metadataTier = {} , updated = {}", url, contentTier, metaDataTier, dateUpdated);
+//          sitemapGenerator.addItem(url, priority, dateUpdated);
         }
-        cur.close();
+        cursor.close();
     }
-
 
     @Override
     public String getWebsiteBaseUrl() {
@@ -101,24 +94,29 @@ public class UpdateRecordService extends UpdateAbstractService {
         return config.isRecordResubmit();
     }
 
-    private DBCursor getRecordData() {
-        DBCollection col = mongoProvider.getCollection();
-
-        DBObject query = new BasicDBObject();
-        // 2017-05-30 as part of ticket #624 we are filtering records based on completeness value.
-        // This is an experiment to see if high-quality records improve the number of indexed records
-        if (config.getRecordMinCompleteness() >= 0) {
-            LOG.info("Filtering records based on Europeana Completeness score of at least {}", config.getRecordMinCompleteness());
-            query.put(COMPLETENESS, new BasicDBObject("$gte", config.getRecordMinCompleteness()));
-        }
-
-        DBObject fields = new BasicDBObject();
-        fields.put(ABOUT, 1);
-        fields.put(COMPLETENESS, 1);
-        fields.put(LASTUPDATED, 1);
-
+    /**
+     * Gets the record data based on contentTier, metadataTier value
+     * Note: Don't pass value of the filter (in property file), we do not want to add
+     * @return
+     */
+    private Cursor getRecordDataOnTiers() {
+        DBCollection collection = mongoProvider.getCollection();
+        AggregationOptions options = AggregationOptions.builder().batchSize(Constants.ITEMS_PER_SITEMAP_FILE).build();
         LOG.info("Starting record query...");
-        DBCursor cursor = col.find(query, fields).batchSize(ITEMS_PER_SITEMAP_FILE);
+        Cursor  cursor = collection.aggregate(UpdateRecordServiceUtils.getPipeline(config.getRecordContentTier(), config.getRecordMetadataTier()), options);
+        LOG.info("Query finished. Retrieving records...");
+        return cursor;
+    }
+
+    /**
+     * Gets the record data based on europeanaCompleteness value
+     * @return
+     */
+    private DBCursor getRecordDataOnCompleteness() {
+        DBCollection col = mongoProvider.getCollection();
+        LOG.info("Starting record query...");
+        DBCursor cursor = col.find(UpdateRecordServiceUtils.getQuery(config.getRecordMinCompleteness()), UpdateRecordServiceUtils.getCommonProjections())
+                             .batchSize(Constants.ITEMS_PER_SITEMAP_FILE);
         LOG.info("Query finished. Retrieving records...");
         return cursor;
     }
