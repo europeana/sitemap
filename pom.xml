@@ -36,7 +36,7 @@
         <mongo.snappy.version>1.1.7.3</mongo.snappy.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <httpclient.version>4.5.13</httpclient.version>
-        <commons.io.version>2.6</commons.io.version>
+        <commons.io.version>2.7</commons.io.version>
         <commons.lang.version>3.9</commons.lang.version>
 
         <mockito.version>3.3.0</mockito.version>
