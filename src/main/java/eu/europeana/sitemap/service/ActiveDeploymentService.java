@@ -54,7 +54,7 @@ public class ActiveDeploymentService {
     public Deployment getActiveDeployment(SitemapType sitemapType) {
         Deployment result = null;
         String activeFileName = StorageFileName.getActiveDeploymentFileName(sitemapType);
-        if (objectStorageProvider.isAvailable(activeFileName)) {
+        if (objectStorageProvider.isAvailable(activeFileName)) { // note that isAvailable() does a head request to S3!
             LOG.debug("Reading active file {}", activeFileName);
             Optional<StorageObject> optional = objectStorageProvider.get(activeFileName);
             if (optional.isPresent()) {

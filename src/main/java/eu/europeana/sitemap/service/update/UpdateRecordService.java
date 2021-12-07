@@ -55,12 +55,12 @@ public class UpdateRecordService extends UpdateAbstractService {
     protected void generate(SitemapGenerator sitemapGenerator) {
         Cursor cursor = getRecordDataOnTiers();
         while (cursor.hasNext()) {
-            DBObject record = cursor.next();
+            DBObject obj = cursor.next();
             // gather the required data
-            String about = record.get(Constants.ABOUT).toString();
-            int contentTier = Integer.parseInt(record.get(Constants.CONTENT_TIER).toString());
-            String metaDataTier = record.get(Constants.METADATA_TIER).toString();
-            Object timestampUpdated = record.get(Constants.LASTUPDATED);
+            String about = obj.get(Constants.ABOUT).toString();
+            int contentTier = Integer.parseInt(obj.get(Constants.CONTENT_TIER).toString());
+            String metaDataTier = obj.get(Constants.METADATA_TIER).toString();
+            Object timestampUpdated = obj.get(Constants.LASTUPDATED);
             // very old records do not have a timestampUpdated or timestampCreated field
             Date dateUpdated = (timestampUpdated == null ? null : (Date) timestampUpdated);
 
@@ -102,19 +102,6 @@ public class UpdateRecordService extends UpdateAbstractService {
         AggregationOptions options = AggregationOptions.builder().batchSize(Constants.ITEMS_PER_SITEMAP_FILE).build();
         LOG.info("Starting record query...");
         Cursor  cursor = collection.aggregate(UpdateRecordServiceUtils.getPipeline(config.getRecordContentTier(), config.getRecordMetadataTier()), options);
-        LOG.info("Query finished. Retrieving records...");
-        return cursor;
-    }
-
-    /**
-     * Gets the record data based on europeanaCompleteness value
-     * @return
-     */
-    private DBCursor getRecordDataOnCompleteness() {
-        DBCollection col = mongoProvider.getCollection();
-        LOG.info("Starting record query...");
-        DBCursor cursor = col.find(UpdateRecordServiceUtils.getQuery(config.getRecordMinCompleteness()), UpdateRecordServiceUtils.getCommonProjections())
-                             .batchSize(Constants.ITEMS_PER_SITEMAP_FILE);
         LOG.info("Query finished. Retrieving records...");
         return cursor;
     }

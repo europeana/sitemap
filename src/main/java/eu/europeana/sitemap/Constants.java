@@ -23,7 +23,6 @@ public final class Constants {
     /** Used mongo fields **/
     public static final String ABOUT = "about";
     public static final String LASTUPDATED = "timestampUpdated";
-    public static final String COMPLETENESS = "europeanaCompleteness";
     public static final String QUALITY_ANNOTATIONS_BODY = "qualityAnnotations.body";
     public static final String METADATA_TIER = "metadataTier";
     public static final String CONTENT_TIER = "contentTier";

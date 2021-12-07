@@ -1,7 +1,6 @@
 package eu.europeana.sitemap.service.update;
 
 import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import eu.europeana.sitemap.Constants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,35 +37,16 @@ public class UpdateRecordServiceUtils {
     }
 
     /**
-     * Calculate sitemap priority based on europeanaCompleteness
-     * @param completeness europeanaCompleteness
-     * @return String
-     */
-    public static String getPriorityForCompleteness(int completeness) {
-       return (completeness > 9 ? "1.0" : ("0." + completeness));
-    }
-
-    public static DBObject getQuery(int recordCompleteness) {
-        if (recordCompleteness  >= 0) {
-            LOG.info("Filtering records based on Europeana Completeness score of at least {}", recordCompleteness);
-            return new BasicDBObject(Constants.COMPLETENESS, new BasicDBObject(Constants.GTE, recordCompleteness) );
-        }
-        return new BasicDBObject();
-    }
-
-    /**
      * Returns the aggregation pipeline : [
      *  {$project: {
      *    about: 1,
      *    timestampUpdated : 1,
-     *    europeanaCompleteness :1,
      *    contentTierUrl: { $arrayElemAt: [ "$qualityAnnotations.body", 0 ] },
      *    metadataTierUrl: { $arrayElemAt: [ "$qualityAnnotations.body", -1 ] }
      *   }},
      * {$project: {
      *      about: 1,
      *      timestampUpdated : 1,
-     *      europeanaCompleteness :1,
      *      "contentTier":
      *        { $arrayElemAt:
      *                [{$split: ["$contentTierUrl" , "contentTier"]}, -1]},
@@ -103,7 +83,7 @@ public class UpdateRecordServiceUtils {
 
         BasicDBObject matchCriteria = getMatchCriteria(contentTier, metadataTier);
         // if content tier and metadataTier are empty, will just return the basic values without filtering
-        // ex: { about:"test", europeanaCompleteness: 2, timestampUpdated:2016-04-30T17:57:10.744+00:00, contentTier:"2", metadataTier:"A"}
+        // ex: <pre>{ about:"test", timestampUpdated:2016-04-30T17:57:10.744+00:00, contentTier:"2", metadataTier:"A"}</pre>
         // This is to avoid any Mongo aggregation exception
         if (matchCriteria.isEmpty()) {
             return Arrays.asList(getTiersIndividually, getTierValues);
@@ -117,8 +97,7 @@ public class UpdateRecordServiceUtils {
      */
     public static BasicDBObject getCommonProjections(){
         return new BasicDBObject(Constants.ABOUT, 1L)
-                .append(Constants.LASTUPDATED, 1L)
-                .append(Constants.COMPLETENESS, 1L);
+                .append(Constants.LASTUPDATED, 1L);
     }
 
     /**
@@ -140,7 +119,9 @@ public class UpdateRecordServiceUtils {
                     new BasicDBObject(Constants.IN, values)));
         }
         if (!metadataTier.isEmpty()) {
-            LOG.info("Filtering records based on Europeana metaData Tier {}", metadataTier.toUpperCase(Locale.ROOT));
+            if (LOG.isInfoEnabled()) {
+                LOG.info("Filtering records based on Europeana metaData Tier {}", metadataTier.toUpperCase(Locale.ROOT));
+            }
             List<String> values = List.of(metadataTier.toUpperCase(Locale.ROOT).split(","));
             andStages.add(new BasicDBObject(Constants.METADATA_TIER,
                     new BasicDBObject(Constants.IN, values)));
