@@ -32,7 +32,8 @@ public class UpdateRecordServiceUtils {
      * @return String
      */
     public static String getPriorityForTiers(int contentTier) {
-       double priority = contentTier / 4.0 ;
+        // times and dividing by 10 to make sure we use only 1 decimal digit
+       double priority = Math.round(contentTier * 10.0 / 4.0) / 10.0 ;
        return String.valueOf(priority);
     }
 
