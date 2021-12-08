@@ -5,10 +5,6 @@ package eu.europeana.sitemap;
  */
 public final class Constants {
 
-    private Constants() {
-        // empty constructor to prevent initialization
-    }
-
     public static final String XML_EXTENSION = ".xml";
     public static final String TXT_EXTENSION = ".txt";
     public static final char PATH_SEPARATOR = '/';
@@ -36,4 +32,8 @@ public final class Constants {
     public static final String AND = "$and";
     public static final String IN = "$in";
     public static final String GTE = "$gte";
+
+    private Constants() {
+        // empty constructor to prevent initialization
+    }
 }
