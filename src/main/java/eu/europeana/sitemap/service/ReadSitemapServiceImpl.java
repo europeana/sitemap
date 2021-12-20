@@ -12,7 +12,6 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Read sitemap files directly from the object storage provider
@@ -52,11 +51,10 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
      */
     @Override
     public String getFileContent(String fileName) throws SiteMapNotFoundException {
-        Optional<StorageObject> file = objectStorageProvider.get(fileName);
-        if (file.isPresent()) {
-            return new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
+        String fileContent = new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
+        if (fileContent.isEmpty()) {
+            throw new SiteMapNotFoundException("File " + fileName + " not found!");
         }
-        throw new SiteMapNotFoundException("File " + fileName + " not found!");
+        return fileContent;
     }
-
 }
