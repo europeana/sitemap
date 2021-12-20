@@ -7,13 +7,10 @@ import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.mail.javamail.JavaMailSender;
 
 import javax.annotation.PostConstruct;
 import java.net.MalformedURLException;
@@ -37,9 +34,10 @@ public class SitemapConfiguration {
     private String recordUpdateInterval;
     @Value("${record.resubmit}")
     private boolean recordResubmit;
-    @Value("${record.min.completeness:0}")
-    private int recordMinCompleteness;
-
+    @Value("${record.content.tier}")
+    private String recordContentTier;
+    @Value("${record.metadata.tier}")
+    private String recordMetadataTier;
     @Value("${mongodb.connectionUrl}")
     private String mongoConnectionUrl;
     @Value("${mongodb.record.dbname}")
@@ -74,6 +72,7 @@ public class SitemapConfiguration {
     protected SitemapConfiguration()  {
         LogManager.getLogger(SitemapConfiguration.class).debug("Init sitemap configuration");
     }
+
 
     @PostConstruct
     private void validateConfiguration() throws SiteMapConfigException {
@@ -112,10 +111,6 @@ public class SitemapConfiguration {
         return new MongoProvider(mongoConnectionUrl, mongoDatabase);
     }
 
-    @Lazy
-    @Autowired
-    public JavaMailSender mailSender;
-
     public String getPortalBaseUrl() {
         return portalBaseUrl;
     }
@@ -128,8 +123,12 @@ public class SitemapConfiguration {
         return recordResubmit;
     }
 
-    public int getRecordMinCompleteness() {
-        return recordMinCompleteness;
+    public String getRecordContentTier() {
+        return recordContentTier;
+    }
+
+    public String getRecordMetadataTier() {
+        return recordMetadataTier;
     }
 
     public String getEntityUpdateInterval() {

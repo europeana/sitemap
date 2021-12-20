@@ -1,14 +1,12 @@
 package eu.europeana.sitemap;
 
-import eu.europeana.sitemap.web.context.SocksProxyConfigInjector;
+import eu.europeana.sitemap.config.SocksProxyConfig;
+import eu.europeana.sitemap.util.SocksProxyActivator;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.annotation.PropertySource;
-
-
-import java.io.IOException;
 
 /**
  * Main application and configuration
@@ -24,29 +22,17 @@ public class SitemapApplication {
      */
     @SuppressWarnings("squid:S2095") // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
     public static void main(String[] args)  {
-        LogManager.getLogger(SitemapApplication.class).info("MAIN START");
-        LogManager.getLogger(SitemapApplication.class).info("CF_INSTANCE_INDEX  = {}, CF_INSTANCE_GUID = {}, CF_INSTANCE_IP  = {}",
-                System.getenv("CF_INSTANCE_INDEX"), System.getenv("CF_INSTANCE_GUID"), System.getenv("CF_INSTANCE_IP"));
+        // When deploying to Cloud Foundry, this will log the instance index number, IP and GUID
+        LogManager.getLogger(SitemapApplication.class).
+                info("CF_INSTANCE_INDEX  = {}, CF_INSTANCE_GUID = {}, CF_INSTANCE_IP  = {}",
+                        System.getenv("CF_INSTANCE_INDEX"),
+                        System.getenv("CF_INSTANCE_GUID"),
+                        System.getenv("CF_INSTANCE_IP"));
 
-        try {
-            injectSocksProxySettings();
-            SpringApplication.run(SitemapApplication.class, args);
-        } catch (IOException e) {
-            LogManager.getLogger(SitemapApplication.class).fatal("Error reading properties", e);
-            System.exit(-1);
-        }
+        // Activate socks proxy (if your application requires it)
+        SocksProxyActivator.activate(new SocksProxyConfig("sitemap.properties", "sitemap.user.properties"));
+
+        SpringApplication.run(SitemapApplication.class, args);
     }
 
-    @SuppressWarnings("squid:S1166") // we intentionally do not log exception stacktrace here
-    private static void injectSocksProxySettings() throws IOException {
-        SocksProxyConfigInjector socksConfig = new SocksProxyConfigInjector("sitemap.properties");
-        try {
-            socksConfig.addProperties("sitemap.user.properties");
-        } catch (IOException e) {
-            // user.properties may not be available so only show warning
-            LogManager.getLogger(SitemapApplication.class).warn("Cannot read sitemap.user.properties file");
-        }
-        socksConfig.inject();
-    }
-    
 }

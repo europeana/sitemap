@@ -13,6 +13,8 @@ import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -29,13 +31,13 @@ public class UpdateScheduler {
 
     private static final Logger LOG = LogManager.getLogger(UpdateScheduler.class);
 
-    private final List<UpdateService> updateServices;
+    private final Collection<UpdateService> updateServices;
 
     private ThreadPoolTaskScheduler scheduler;
 
     @Autowired
     public UpdateScheduler(List<UpdateService> updateServices) {
-        this.updateServices = updateServices;
+        this.updateServices = Collections.unmodifiableCollection(updateServices);
     }
 
     /**

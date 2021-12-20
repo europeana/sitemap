@@ -24,9 +24,9 @@ public class MailService {
     private JavaMailSender mailSender;
 
     @Autowired
-    public MailService(SitemapConfiguration config) {
+    public MailService(SitemapConfiguration config, JavaMailSender mailSender) {
         this.config = config;
-        this.mailSender = config.mailSender;
+        this.mailSender = mailSender;
     }
 
     /**
