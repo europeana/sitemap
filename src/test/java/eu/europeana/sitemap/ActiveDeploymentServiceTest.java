@@ -3,15 +3,11 @@ package eu.europeana.sitemap;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 /**
@@ -21,7 +17,6 @@ import static org.mockito.Mockito.mock;
  * @author Patrick Ehlert
  * Created on 28-01-2019
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 public class ActiveDeploymentServiceTest {
 
     private static ObjectStorageClient mockStorage = mock(ObjectStorageClient.class);
@@ -29,7 +24,7 @@ public class ActiveDeploymentServiceTest {
     /**
      * Setup mock objectstorage
      */
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         mockStorage = MockObjectStorage.setup(mockStorage);
     }
@@ -37,7 +32,7 @@ public class ActiveDeploymentServiceTest {
     /**
      * Clear mock storage before each test
      */
-    @Before
+    @BeforeEach
     public void init() {
         MockObjectStorage.clear();
     }

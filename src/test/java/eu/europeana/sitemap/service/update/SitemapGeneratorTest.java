@@ -6,16 +6,17 @@ import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.XmlUtils;
 import eu.europeana.sitemap.service.Deployment;
 import org.apache.commons.lang3.StringUtils;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-import org.junit.runner.RunWith;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import java.util.Date;
 
-import static org.junit.Assert.*;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
+import static org.springframework.test.util.AssertionErrors.assertEquals;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 /**
  * Tests the SitemapGenerator class
@@ -24,7 +25,6 @@ import static org.mockito.Mockito.mock;
  * @author Patrick Ehlert
  * Created on 05-06-2018
  */
-@RunWith(SpringJUnit4ClassRunner.class)
 public class SitemapGeneratorTest {
 
     private static ObjectStorageClient mockStorage = mock(ObjectStorageClient.class);
@@ -32,7 +32,7 @@ public class SitemapGeneratorTest {
     /**
      * Setup mock objectstorage
      */
-    @BeforeClass
+    @BeforeAll
     public static void setup() {
         mockStorage = MockObjectStorage.setup(mockStorage);
     }
@@ -40,7 +40,7 @@ public class SitemapGeneratorTest {
     /**
      * Clear mock storage before each test
      */
-    @Before
+    @BeforeEach
     public void init() {
         MockObjectStorage.clear();
     }
@@ -82,8 +82,8 @@ public class SitemapGeneratorTest {
         assertEquals("Index file should only contain 2 references to sitemap files", 2, StringUtils.countMatches(indexContent, "<sitemap>"));
         String expectFileInIndex1 = websiteBaseUrl + "/" + fileName + ".xml?from=1&amp;to=3";
         String expectFileInIndex2 = websiteBaseUrl + "/" + fileName + ".xml?from=4&amp;to=5";
-        assertTrue(indexContent.contains("<sitemap><loc>" + expectFileInIndex1 + "</loc></sitemap>"));
-        assertTrue(indexContent.contains("<sitemap><loc>" + expectFileInIndex2 + "</loc></sitemap>"));
+        assertTrue("Contains file1", indexContent.contains("<sitemap><loc>" + expectFileInIndex1 + "</loc></sitemap>"));
+        assertTrue("Contains file2", indexContent.contains("<sitemap><loc>" + expectFileInIndex2 + "</loc></sitemap>"));
 
         // check sitemap file 1 contents
         String sitemap1Content = XmlUtils.harmonizeXml(new String(mockStorage.getContent(expectSitemapFileName1)));
@@ -102,43 +102,46 @@ public class SitemapGeneratorTest {
         }
     }
 
-
-
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateNotStarted1() {
         SitemapGenerator generator = new SitemapGenerator(SitemapType.RECORD, mockStorage);
-        generator.addItem("http://some.item/1", null, null);
+        Assertions.assertThrows(IllegalStateException.class, () ->
+                generator.addItem("http://some.item/1", null, null));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateNotStarted2() {
         SitemapGenerator generator = new SitemapGenerator(SitemapType.RECORD, mockStorage);
-        generator.finish();
+        Assertions.assertThrows(IllegalStateException.class, () ->
+                generator.finish());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateStartTwice() {
         SitemapGenerator generator = new SitemapGenerator(SitemapType.ENTITY, mockStorage);
         generator.init(Deployment.BLUE, "https://www.fail.com", 5);
-        generator.init(Deployment.GREEN, "https://www.fail.com", 5);
+        Assertions.assertThrows(IllegalStateException.class, () ->
+            generator.init(Deployment.GREEN, "https://www.fail.com", 5));
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateFinishTwice() {
         SitemapGenerator generator = new SitemapGenerator(SitemapType.ENTITY, mockStorage);
         generator.init(Deployment.BLUE, "https://www.fail.com", 5);
         generator.addItem("http://some.item/1", null, null);
         generator.finish();
-        generator.finish();
+        Assertions.assertThrows(IllegalStateException.class, () ->
+            generator.finish());
     }
 
-    @Test(expected = IllegalStateException.class)
+    @Test
     public void testGenerateAddAfterFinish() {
         SitemapGenerator generator = new SitemapGenerator(SitemapType.RECORD, mockStorage);
         generator.init(Deployment.GREEN, "https://www.fail.com", 7);
         generator.addItem("http://some.item/1", null, null);
         generator.finish();
-        generator.addItem("http://some.item/2", null, null);
+        Assertions.assertThrows(IllegalStateException.class, () ->
+            generator.addItem("http://some.item/2", null, null));
     }
 
 }

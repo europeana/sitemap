@@ -3,8 +3,9 @@ package eu.europeana.sitemap.util;
 import eu.europeana.sitemap.config.SocksProxyConfig;
 import org.junit.jupiter.api.Test;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 
 /**
  * Test if activating usage of a sock proxy works fine
