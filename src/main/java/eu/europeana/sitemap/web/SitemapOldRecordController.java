@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
  * @author Patrick Ehlert, major refactoring on 21/08/2017 and 30/05/2018
  * @deprecated
  * @since February 2019 (1 year later we still see some search engines requesting these old sitemap files)
+ *          Weirdly December 2021 and we still see quite a bit of bots querying for it regularly (including
+ *          GooglBot, YandexBot, bingbot (or agents that mask themselves as such) -> 1005 hits in 30 days
  */
 @RestController
 @Deprecated(since = "2.1")
