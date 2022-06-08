@@ -43,13 +43,24 @@ public class PortalUrlTest {
     }
 
     @Test
-    public void testGetEntityUrlCanonical() {
+    public void testGetOldEntityUrlCanonical() {
         String type1 = "Agent";
         String id1 = "http://data.europeana.eu/agent/base/312";
         assertEquals(PORTAL_BASE_URL + "/collections/person/312", fnp.getEntityUrl(type1, id1));
 
         String type2 = "Concept";
         String id2 = "http://data.europeana.eu/concept/base/999";
+        assertEquals(PORTAL_BASE_URL + "/collections/topic/999", fnp.getEntityUrl(type2, id2));
+    }
+
+    @Test
+    public void testGetNewEntityUrlCanonical() {
+        String type1 = "Agent";
+        String id1 = "http://data.europeana.eu/agent/312";
+        assertEquals(PORTAL_BASE_URL + "/collections/person/312", fnp.getEntityUrl(type1, id1));
+
+        String type2 = "Concept";
+        String id2 = "http://data.europeana.eu/concept/999";
         assertEquals(PORTAL_BASE_URL + "/collections/topic/999", fnp.getEntityUrl(type2, id2));
     }
 
