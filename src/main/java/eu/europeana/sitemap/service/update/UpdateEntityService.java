@@ -44,7 +44,7 @@ public class UpdateEntityService extends UpdateAbstractService {
     private static final int ITEMS_PER_SITEMAP_FILE = 15_000;
 
     private static final int ENTITY_QUERY_PAGE_SIZE = 100;
-    private static final String ENTITY_QUERY = "*&scope=europeana&type=agent,concept&fl=id,type" + //,skos_prefLabel.*"
+    private static final String ENTITY_QUERY = "*&scope=europeana&type=agent,concept,timespan,organization&fl=id,type" + //,skos_prefLabel.*"
             "&pageSize=" +ENTITY_QUERY_PAGE_SIZE;
 
     private SitemapConfiguration config;
@@ -78,7 +78,7 @@ public class UpdateEntityService extends UpdateAbstractService {
             for (EntityData entity : entities) {
                 LOG.debug("Adding entity {} with type {}", entity.getId(), entity.getType());
                 String url = portalUrl.getEntityUrl("en", entity.getType(), entity.getId(), null);
-                sitemapGenerator.addItem(url, null, null);
+                sitemapGenerator.addItem(url, null, null); // there's no priority or lastmodified for entities
             }
             retrieved = retrieved + entities.length;
             long newTotalEntities = this.getTotalEntitiesCount(entityData);

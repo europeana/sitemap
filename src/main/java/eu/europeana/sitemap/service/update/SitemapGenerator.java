@@ -193,7 +193,7 @@ public class SitemapGenerator {
 
         // add fileName to index (filename is location where file is retrievable for search engines)
         String fromToText = FROM_PARAM + from + TO_PARAM + nrRecords;
-        String sitemapFileName = PortalUrl.getSitemapUrl(websiteBaseUrl, type, fromToText, true);
+        String sitemapFileName = PortalUrl.getSitemapUrlEncoded(websiteBaseUrl, type, fromToText);
         LOG.debug("Add sitemap file {} to index", sitemapFileName);
         sitemapIndex.append(SITEMAP_OPENING).append(LN)
                 .append(LOC_OPENING)
