@@ -2,13 +2,13 @@ package eu.europeana.sitemap.config;
 
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.util.StringUtils;
 
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -75,7 +75,7 @@ public class PortalUrl {
      * @return the url of a public sitemap file
      */
     public static String getSitemapUrlEncoded(String baseUrl, SitemapType type, String appendix) {
-        return StringEscapeUtils.escapeXml(getSitemapUrlPlain(baseUrl, type, appendix));
+        return StringEscapeUtils.escapeXml10(getSitemapUrlPlain(baseUrl, type, appendix));
     }
 
 
