@@ -47,4 +47,22 @@
         <packageUrl regex="true">^pkg:maven/eu\.europeana/object\-storage@.*$</packageUrl>
         <cpe>cpe:/a:storage_project:storage</cpe>
     </suppress>
+
+    <!-- We don't use HttpInvoker -->
+    <suppress>
+        <notes><![CDATA[
+   file name: spring-web-5.3.22.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-web@.*$</packageUrl>
+        <cve>CVE-2016-1000027</cve>
+    </suppress>
+
+    <!-- Usage of this library is shielded (no direct access by users) -->
+    <suppress>
+        <notes><![CDATA[
+   file name: jclouds-core-2.4.0.jar: gson-2.8.5.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.google\.code\.gson/gson@.*$</packageUrl>
+        <cve>CVE-2022-25647</cve>
+    </suppress>
 </suppressions>

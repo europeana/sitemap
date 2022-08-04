@@ -4,6 +4,7 @@ import eu.europeana.sitemap.config.SocksProxyConfig;
 import eu.europeana.sitemap.util.SocksProxyActivator;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.autoconfigure.metrics.mongo.MongoMetricsAutoConfiguration;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.context.annotation.PropertySource;
@@ -12,7 +13,7 @@ import org.springframework.context.annotation.PropertySource;
  * Main application and configuration
  * @author Patrick Ehlert on 14-11-17.
  */
-@SpringBootApplication(exclude={MongoAutoConfiguration.class})
+@SpringBootApplication(exclude={MongoAutoConfiguration.class, MongoMetricsAutoConfiguration.class})
 @PropertySource("classpath:build.properties")
 public class SitemapApplication {
 
