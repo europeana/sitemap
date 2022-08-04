@@ -6,6 +6,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,8 +23,10 @@ public class ActuatorTest {
 
     @Test
     public void testActuatorInfo() throws Exception {
-        mockMvc.perform(get("/actuator/info"))
-                .andExpect(status().is(HttpStatus.OK.value()));
+        MvcResult result = mockMvc.perform(get("/actuator/info"))
+                .andExpect(status().is(HttpStatus.OK.value())).andReturn();
+        // also check that there are contents
+        assert result.getResponse().getContentAsString().contains("app");
     }
 
 }
