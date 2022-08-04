@@ -57,7 +57,6 @@ public class ResubmitService {
     private void resubmitToServices(URI sitemapFile) {
         try {
             resubmitToService("Google", "http://google.com/ping", "sitemap", sitemapFile);
-            resubmitToService("Bing", "http://www.bing.com/ping", "sitemap", sitemapFile);
         } catch (URISyntaxException | IOException e) {
             LOG.error("Error pinging service", e);
         }
