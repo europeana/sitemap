@@ -28,11 +28,9 @@ public class PortalUrlTest {
         String appendix = "?from=0&to=10";
         String encoded_appendix = "?from=0&amp;to=10";
         assertEquals(PORTAL_BASE_URL + "/sitemap-record.xml" + encoded_appendix,
-                fnp.getSitemapUrl(SitemapType.RECORD, appendix));
+                fnp.getSitemapUrlEncoded(SitemapType.RECORD, appendix));
         assertEquals(PORTAL_BASE_URL + "/sitemap-entity.xml" + encoded_appendix,
-                fnp.getSitemapUrl(SitemapType.ENTITY, appendix));
-
-        // TODO test without url_encoding?
+                fnp.getSitemapUrlEncoded(SitemapType.ENTITY, appendix));
     }
 
     @Test

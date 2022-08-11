@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
@@ -31,14 +33,15 @@
 
         <object-storage.version>1.10</object-storage.version>
 
-        <spring-boot.version>2.4.13</spring-boot.version>
-        <mongo.driver.version>3.12.10</mongo.driver.version>
+        <spring-boot.version>2.7.2</spring-boot.version>
+        <mongo.driver.version>3.12.11</mongo.driver.version>
         <mongo.snappy.version>1.1.8.4</mongo.snappy.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <httpclient.version>4.5.13</httpclient.version>
         <commons.io.version>2.11.0</commons.io.version>
         <commons.lang.version>3.12.0</commons.lang.version>
-        <log4j2.version>2.17.1</log4j2.version>
+        <commons.text.version>1.9</commons.text.version>
+        <log4j2.version>2.18.0</log4j2.version>
 
         <mockito.version>3.3.0</mockito.version>
         <wiremock.version>2.27.2</wiremock.version>
@@ -169,6 +172,13 @@
             <artifactId>commons-lang3</artifactId>
             <version>${commons.lang.version}</version>
         </dependency>
+        <!-- StringEscape utils -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
+        </dependency>
+
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -215,7 +225,7 @@
                      To skip (e.g. during debugging) use 'mvn clean package')-->
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>6.5.0</version>
+                <version>7.1.1</version>
                 <configuration>
                     <failBuildOnCVSS>7</failBuildOnCVSS>
                     <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>

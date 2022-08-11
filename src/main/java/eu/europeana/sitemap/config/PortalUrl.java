@@ -2,11 +2,13 @@ package eu.europeana.sitemap.config;
 
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
-import org.apache.commons.lang3.StringEscapeUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.text.StringEscapeUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-import org.springframework.util.StringUtils;
 
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -20,6 +22,8 @@ import java.util.regex.Pattern;
 @PropertySource("classpath:sitemap.properties")
 @PropertySource(value = "classpath:sitemap.user.properties", ignoreResourceNotFound = true)
 public class PortalUrl {
+
+    private static final Logger LOG = LogManager.getLogger(PortalUrl.class);
 
     private static final Pattern CHAR_NUMBER_OR_DASH = Pattern.compile("[^-a-zA-Z0-9]");
 
@@ -48,35 +52,43 @@ public class PortalUrl {
     /**
      * Return the public url of a sitemap file (as it appears in the sitemap index file).
      *
-     * @param type sitemap type (record or entity)
-     * @param appendix appendix of the file (e.g. ?from=0&to=45000)
-     * @return the url of a public sitemap file
-     */
-    public String getSitemapUrl(SitemapType type, String appendix) {
-        return PortalUrl.getSitemapUrl(portalBaseUrl, type, appendix, true);
-    }
-
-    /**
-     * Return the public url of a sitemap file (as it appears in the sitemap index file).
-     *
      * @param baseUrl baseUrl used for generating the result
      * @param type sitemap type (record or entity)
      * @param appendix appendix of the file (e.g. ?from=0&to=45000)
-     * @param urlEncode if true then the result is urlencoded, if false no url-encoding is applied
      * @return the url of a public sitemap file
      */
-    public static String getSitemapUrl(String baseUrl, SitemapType type, String appendix, boolean urlEncode) {
+    private static String getSitemapUrlPlain(String baseUrl, SitemapType type, String appendix) {
         StringBuilder s = new StringBuilder(baseUrl)
                 .append(Constants.PATH_SEPARATOR)
                 .append(type.getFileNameBase())
                 .append(Constants.XML_EXTENSION)
                 .append(appendix);
-        if (urlEncode) {
-            return StringEscapeUtils.escapeXml(s.toString());
-        }
         return s.toString();
     }
 
+    /**
+     * Return the public url of a sitemap file (as it appears in the sitemap index file) but url encoded
+     *
+     * @param baseUrl baseUrl used for generating the result
+     * @param type sitemap type (record or entity)
+     * @param appendix appendix of the file (e.g. ?from=0&to=45000)
+     * @return the url of a public sitemap file
+     */
+    public static String getSitemapUrlEncoded(String baseUrl, SitemapType type, String appendix) {
+        return StringEscapeUtils.escapeXml10(getSitemapUrlPlain(baseUrl, type, appendix));
+    }
+
+
+    /**
+     * Return the public url of a sitemap file (as it appears in the sitemap index file).
+     *
+     * @param type sitemap type (record or entity)
+     * @param appendix appendix of the file (e.g. ?from=0&to=45000)
+     * @return the url of a public sitemap file
+     */
+    public String getSitemapUrlEncoded(SitemapType type, String appendix) {
+        return getSitemapUrlEncoded(portalBaseUrl, type, appendix);
+    }
     /**
      * Return a portal record page url
      * @param europeanaId CHO id of format /<datasetId>/<recordId>
@@ -141,13 +153,20 @@ public class PortalUrl {
      * @return portal path name
      */
     private String convertEntityTypeToPortalPath(String type) {
+        String result = null;
         if ("agent".equalsIgnoreCase(type)) {
-            return "person";
+            result = "person";
+        } else if ("concept".equalsIgnoreCase(type)) {
+            result = "topic";
+        } else if ("timespan".equalsIgnoreCase(type)) {
+            result = "time";
+        } else if ("organization".equalsIgnoreCase(type)) {
+            result = "organisation";
         }
-        if ("concept".equalsIgnoreCase(type)) {
-            return "topic";
+        if (result == null) {
+            LOG.warn("Unknown entity type '{}'", type);
         }
-        return null;
+        return result;
     }
 
     /**
@@ -155,9 +174,11 @@ public class PortalUrl {
      * precise Portal url we'll prevent including urls in the sitemap that redirect somewhere else (at least as much as
      * possible).
      *
-     * March 2020: This should return the same results as the Ruby library used by Portal which is https://github.com/rsl/stringex
-     * but sadly this doesn't in all cases, so at the moment this code is not used.
+     * @deprecated March 2020: This should return the same results as the Ruby library used by Portal which is https://github.com/rsl/stringex
+     * but sadly it doesn't in all cases, so at the moment this code is not used.
+     *
      */
+    @Deprecated(since = "March 2020")
     private String convertPrefLabel(String prefLabel) {
         String result = prefLabel.replaceAll("\\s", "-").replace("&", "and");
 
