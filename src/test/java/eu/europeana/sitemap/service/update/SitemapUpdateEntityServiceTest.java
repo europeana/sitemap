@@ -1,29 +1,27 @@
 package eu.europeana.sitemap.service.update;
 
-import com.github.tomakehurst.wiremock.junit.WireMockRule;
+import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
+import com.github.tomakehurst.wiremock.junit5.WireMockTest;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.MockActiveDeployment;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.XmlUtils;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
-import eu.europeana.sitemap.service.MailService;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
+import eu.europeana.sitemap.service.MailService;
 import eu.europeana.sitemap.service.ReadSitemapServiceImpl;
 import eu.europeana.sitemap.service.ResubmitService;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.runner.RunWith;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.context.annotation.EnableAspectJAutoProxy;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -31,8 +29,8 @@ import java.net.URL;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.springframework.test.util.AssertionErrors.assertTrue;
 
 
 /**
@@ -42,17 +40,20 @@ import static org.junit.Assert.assertTrue;
  * @author Patrick Ehlert
  * Created on 30-01-2019
  */
-@RunWith(SpringJUnit4ClassRunner.class)
+@WireMockTest(httpsEnabled = true)
 @TestPropertySource("classpath:sitemap-test.properties")
 @SpringBootTest(classes = {UpdateEntityService.class, SitemapConfiguration.class, PortalUrl.class})
-@EnableAspectJAutoProxy
 public class SitemapUpdateEntityServiceTest {
+
+    // TODO test works fine in IntelliJ, but fails when run with Maven.
 
     private static final String PORTAL_BASE_URL = "https://www-test.eanadev.org";
     private static final String TEST_WSKEY = "testkey";
 
-    @Rule
-    public WireMockRule wireMockRule = new WireMockRule(wireMockConfig().dynamicPort().dynamicHttpsPort());
+    @RegisterExtension
+    static WireMockExtension wmExtension = WireMockExtension.newInstance()
+            .options(wireMockConfig().dynamicPort().dynamicHttpsPort())
+            .build();
 
     @MockBean
     private ObjectStorageClient mockStorage;
@@ -71,8 +72,7 @@ public class SitemapUpdateEntityServiceTest {
     @Autowired
     private UpdateEntityService entityService;
 
-
-    @Before
+    @BeforeEach
     public void init() throws IOException {
         // note that the mocks are not connected to each other, so MockActiveDeployment does not use MockObjectStorage for example
         mockStorage = MockObjectStorage.setup(mockStorage);
@@ -82,20 +82,20 @@ public class SitemapUpdateEntityServiceTest {
 
     private void setupEntityApiMock() throws IOException {
         LogManager.getLogger(SitemapUpdateEntityServiceTest.class).info("Mock API port {}, httpsPort {}",
-                wireMockRule.port(), wireMockRule.httpsPort());
+                wmExtension.getPort(), wmExtension.getHttpsPort());
 
         String dummyEntitySearchResult = IOUtils.toString(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("dummy_search_result.json"),"UTF-8");
 
         // return 401 for all unknown wskeys
-        stubFor(get(urlPathMatching("/entity/search"))
+        wmExtension.stubFor(get(urlPathMatching("/entity/search"))
                 .withQueryParam("wskey", matching(".*"))
                 .willReturn(aResponse()
                         .withStatus(401)
                         .withHeader("Content-Type", "application/json;charset=UTF-8")
                         .withBody("{\"action\":\"/entity/search\",\"success\":false,\"error\":\"Empty apiKey!\"}")));
         // return dummy entity search results (if wskey is valid)
-        stubFor(get(urlPathMatching("/entity/search"))
+        wmExtension.stubFor(get(urlPathMatching("/entity/search"))
                 .withQueryParam("wskey", equalTo(TEST_WSKEY))
                 .willReturn(aResponse()
                         .withStatus(200)
@@ -105,7 +105,7 @@ public class SitemapUpdateEntityServiceTest {
 
     private URL getMockEntityApiUrl() {
         try {
-            return new URL("http://localhost:" + wireMockRule.port() +"/entity/search");
+            return new URL("http://localhost:" + wmExtension.getPort() +"/entity/search");
         } catch (MalformedURLException mue) {
             throw new RuntimeException("Malformed server URL");
         }
