@@ -37,6 +37,64 @@
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
         <cve>CVE-2020-12691</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: openstack-keystone-2.4.0.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
+        <cve>CVE-2020-12692</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: openstack-keystone-2.4.0.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
+        <cve>CVE-2018-14432</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: openstack-keystone-2.4.0.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
+        <cve>CVE-2018-20170</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: openstack-swift-2.4.0.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-swift@.*$</packageUrl>
+        <cve>CVE-2017-8761</cve>
+    </suppress>
+    <!-- users have no direct access to AWS S3 paths -->
+    <suppress>
+        <notes><![CDATA[
+   file name: aws-java-sdk-core-1.12.129.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-java\-sdk\-core@.*$</packageUrl>
+        <cve>CVE-2022-31159</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: aws-java-sdk-s3-1.12.129.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-java\-sdk\-s3@.*$</packageUrl>
+        <cve>CVE-2022-31159</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: aws-java-sdk-kms-1.12.129.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-java\-sdk\-kms@.*$</packageUrl>
+        <cve>CVE-2022-31159</cve>
+    </suppress>
+    <!-- users have no direct access to AWS S3 paths -->
+    <suppress>
+        <notes><![CDATA[
+   file name: jmespath-java-1.12.129.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/com\.amazonaws/jmespath\-java@.*$</packageUrl>
+        <cve>CVE-2022-31159</cve>
+    </suppress>
 
     <!-- There's a false positive with dependency-check thinking our ObjectStorage library is actually a different
          library -->
