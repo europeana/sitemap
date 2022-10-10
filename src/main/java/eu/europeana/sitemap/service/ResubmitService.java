@@ -48,7 +48,7 @@ public class ResubmitService {
             // check if uri is valid
             URI sitemapFile = new URIBuilder(portalUrl.getSitemapIndexUrl(sitemapType)).build();
             LOG.info("Notifying search engines that {} sitemap is updated...", sitemapType);
-            //resubmitToServices(sitemapFile);
+            resubmitToServices(sitemapFile);
         } catch (URISyntaxException e) {
             LOG.error("No valid {} sitemap index url", sitemapType, e);
         }
