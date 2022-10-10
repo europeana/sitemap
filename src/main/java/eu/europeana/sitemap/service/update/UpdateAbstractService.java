@@ -162,6 +162,8 @@ public abstract class UpdateAbstractService implements UpdateService {
             }
             if (indexBlue != null && !indexBlue.equalsIgnoreCase(indexGreen)) {
                 resubmitService.notifySearchEngines(sitemapType);
+            } else {
+                LOG.info("Skipping search engine notification. Generated index is the same as previous index");
             }
         } else {
             LOG.info("Skipping search engine notification because it's disabled in the configuration");
