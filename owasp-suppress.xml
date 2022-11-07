@@ -60,6 +60,13 @@
     </suppress>
     <suppress>
         <notes><![CDATA[
+   file name: openstack-keystone-2.4.0.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
+        <cve>CVE-2021-3563</cve>
+    </suppress>
+    <suppress>
+        <notes><![CDATA[
    file name: openstack-swift-2.4.0.jar
    ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-swift@.*$</packageUrl>
@@ -94,6 +101,15 @@
    ]]></notes>
         <packageUrl regex="true">^pkg:maven/com\.amazonaws/jmespath\-java@.*$</packageUrl>
         <cve>CVE-2022-31159</cve>
+    </suppress>
+
+    <!-- users don't have access to yaml files -->
+    <suppress>
+        <notes><![CDATA[
+   file name: snakeyaml-1.30.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
+        <cve>CVE-2022-25857</cve>
     </suppress>
 
     <!-- There's a false positive with dependency-check thinking our ObjectStorage library is actually a different
