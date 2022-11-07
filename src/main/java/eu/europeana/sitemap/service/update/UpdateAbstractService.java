@@ -149,24 +149,31 @@ public abstract class UpdateAbstractService implements UpdateService {
     @SuppressWarnings("squid:S1166") // we intentionally do not log exception stacktrace here when catching SiteMapNotFoundException
     private void notifySearchEngines(SitemapType sitemapType) {
         if (this.doResubmit()) {
-            String indexBlue = null;
-            String indexGreen = null;
-            String blueFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.BLUE);
-            String greenFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.GREEN);
-            try {
-                indexBlue = readSitemapService.getFileContent(blueFileName);
-                indexGreen = readSitemapService.getFileContent(greenFileName);
-            } catch (SiteMapNotFoundException e) {
-                // Note that the first time we run the application there is no green index, so it will always give a warning then
-                LOG.warn("Could not read file {}", greenFileName);
-            }
-            if (indexBlue != null && !indexBlue.equalsIgnoreCase(indexGreen)) {
+            // Check for indexFileChanges commented out for EA-3189. We would like to sent update signal always now
+            //if (indexFileChanged(sitemapType)) {
                 resubmitService.notifySearchEngines(sitemapType);
-            } else {
-                LOG.info("Skipping search engine notification. Generated index is the same as previous index");
-            }
+            //} else {
+            //    LOG.info("Skipping search engine notification. Generated index is the same as previous index");
+            //}
         } else {
             LOG.info("Skipping search engine notification because it's disabled in the configuration");
+        }
+    }
+
+    private boolean indexFileChanged(SitemapType sitemapType) {
+        String blueFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.BLUE);
+        String greenFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.GREEN);
+        try {
+            String indexBlue = readSitemapService.getFileContent(blueFileName);
+            String indexGreen = readSitemapService.getFileContent(greenFileName);
+            if (indexBlue != null) {
+                return !indexBlue.equalsIgnoreCase(indexGreen);
+            }
+            return true;
+        } catch (SiteMapNotFoundException e) {
+            // Note that the first time we run the application there is no green index, so it will always give a warning then
+            LOG.warn("Could not read file {}", greenFileName, e);
+            return false;
         }
     }
 
