@@ -20,8 +20,8 @@ import javax.mail.internet.MimeMessage;
 @Service
 public class MailService {
 
-    private SitemapConfiguration config;
-    private JavaMailSender mailSender;
+    private final SitemapConfiguration config;
+    private final JavaMailSender mailSender;
 
     @Autowired
     public MailService(SitemapConfiguration config, JavaMailSender mailSender) {

@@ -60,11 +60,11 @@ public final class SocksProxyActivator {
         boolean result = false;
         if (StringUtils.isEmpty(config.getHost())) {
             LOG.info("No socks proxy configured");
-        } else if (!config.isSocksEnabled()) {
-            LOG.info("Socks proxy disabled");
-        } else {
+        } else if (config.isSocksEnabled()) {
             LOG.info("Setting up socks proxy at {}. Non-proxy hosts are {}", config.getHost(), config.getNonProxyhosts());
             result = true;
+        } else {
+            LOG.info("Socks proxy disabled");
         }
         return result;
     }

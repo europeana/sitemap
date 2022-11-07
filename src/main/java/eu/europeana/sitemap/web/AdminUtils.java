@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
  * @author Patrick Ehlert
  * Created on 14-06-2018
  */
-public class AdminUtils {
+public final class AdminUtils {
 
     private AdminUtils() {
         // empty constructor to prevent initialization

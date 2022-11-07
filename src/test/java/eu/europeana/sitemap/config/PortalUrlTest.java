@@ -1,6 +1,6 @@
-package eu.europeana.sitemap;
+package eu.europeana.sitemap.config;
 
-import eu.europeana.sitemap.config.PortalUrl;
+import eu.europeana.sitemap.SitemapType;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;

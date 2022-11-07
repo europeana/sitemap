@@ -15,7 +15,7 @@ import java.util.Locale;
  *
  * @author Srishti Singh on 31 October 2021
  */
-public class UpdateRecordServiceUtils {
+public final class UpdateRecordServiceUtils {
 
     private static final Logger LOG = LogManager.getLogger(UpdateRecordServiceUtils.class);
 

@@ -140,7 +140,7 @@ public class SitemapConfiguration {
     }
 
     public String getEntityApiUrl() {
-        return entityApiUrl;
+        return entityApi.toString();
     }
 
     /**

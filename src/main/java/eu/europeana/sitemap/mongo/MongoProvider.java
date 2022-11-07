@@ -14,8 +14,8 @@ public class MongoProvider {
 
     private static final Logger LOG = LogManager.getLogger(MongoProvider.class);
 
-    private MongoClient mongoClient;
-    private DBCollection collection;
+    private final MongoClient mongoClient;
+    private final DBCollection collection;
 
     // TODO replace deprecated getDb() record retrieval with more up-to-date method
 

@@ -8,7 +8,7 @@ import org.apache.commons.lang3.StringUtils;
  *
  * @author Patrick Ehlert on 2-1-18.
  */
-public class StorageFileName {
+public final class StorageFileName {
 
     private StorageFileName() {
         // empty constructor to prevent initialization

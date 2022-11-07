@@ -86,7 +86,7 @@ public class PortalUrl {
      * @param appendix appendix of the file (e.g. ?from=0&to=45000)
      * @return the url of a public sitemap file
      */
-    public String getSitemapUrlEncoded(SitemapType type, String appendix) {
+    protected String getSitemapUrlEncoded(SitemapType type, String appendix) {
         return getSitemapUrlEncoded(portalBaseUrl, type, appendix);
     }
     /**

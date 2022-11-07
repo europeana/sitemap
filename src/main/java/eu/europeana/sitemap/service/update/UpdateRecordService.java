@@ -33,9 +33,9 @@ public class UpdateRecordService extends UpdateAbstractService {
 
     private static final Logger LOG = LogManager.getLogger(UpdateRecordService.class);
 
-    private SitemapConfiguration config;
-    private PortalUrl portalUrl;
-    private MongoProvider mongoProvider;
+    private final SitemapConfiguration config;
+    private final PortalUrl portalUrl;
+    private final MongoProvider mongoProvider;
 
     @Autowired
     public UpdateRecordService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,

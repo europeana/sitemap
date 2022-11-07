@@ -47,8 +47,8 @@ public class UpdateEntityService extends UpdateAbstractService {
     private static final String ENTITY_QUERY = "*&scope=europeana&type=agent,concept,timespan,organization&fl=id,type" + //,skos_prefLabel.*"
             "&pageSize=" +ENTITY_QUERY_PAGE_SIZE;
 
-    private SitemapConfiguration config;
-    private PortalUrl portalUrl;
+    private final SitemapConfiguration config;
+    private final PortalUrl portalUrl;
 
     private CloseableHttpClient httpClient = HttpClients.createDefault();
 
@@ -119,12 +119,12 @@ public class UpdateEntityService extends UpdateAbstractService {
         String result= null;
 
         StringBuilder request = new StringBuilder(entityApi.toString());
-        request.append("?query=");
-        request.append(query);
-        request.append("&page=");
-        request.append(pageNr);
-        request.append("&wskey=");
-        request.append(wsKey);
+        request.append("?query=")
+                .append(query)
+                .append("&page=")
+                .append(pageNr)
+                .append("&wskey=")
+                .append(wsKey);
 
         try {
             String requestUrl = request.toString();
@@ -139,12 +139,12 @@ public class UpdateEntityService extends UpdateAbstractService {
                 }
 
                 HttpEntity entity = response.getEntity();
-                if (entity != null) {
+                if (entity == null) {
+                    LOG.warn("Reponse = null");
+                } else {
                     result = EntityUtils.toString(entity);
                     LOG.debug("Response = {}", result);
                     EntityUtils.consume(entity); // make sure entity is consumed fully so connection can be reused
-                } else {
-                    LOG.warn("Reponse = null");
                 }
             }
         } catch (IOException e) {
