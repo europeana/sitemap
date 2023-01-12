@@ -1,4 +1,4 @@
-package eu.europeana.sitemap.service;
+package eu.europeana.sitemap.service.update;
 
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.SitemapType;
