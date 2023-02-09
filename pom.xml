@@ -5,14 +5,14 @@
     <parent>
         <groupId>eu.europeana</groupId>
         <artifactId>europeana-parent-pom</artifactId>
-        <version>2.3</version>
+        <version>2.4</version>
     </parent>
 
     <artifactId>sitemap</artifactId>
     <version>2.4.2-SNAPSHOT</version>
     <packaging>war</packaging>
 
-    <name>Europeana Sitemap</name>
+    <name>Sitemap</name>
     <description>Application for generating sitemap files that cover Europeana's record and entity collections</description>
 
     <scm>
