@@ -111,6 +111,13 @@
         <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
         <cve>CVE-2022-25857</cve>
     </suppress>
+    <suppress>
+        <notes><![CDATA[
+   file name: snakeyaml-1.30.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
+        <cve>CVE-2022-1471</cve>
+    </suppress>
 
     <!-- There's a false positive with dependency-check thinking our ObjectStorage library is actually a different
          library -->
