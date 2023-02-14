@@ -4,6 +4,7 @@ import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ReadSitemapService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import javax.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -22,6 +23,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class SitemapFileController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapFileController.class);
+
+    private static final String FILENAME_REGEX = "^[a-zA-Z0-9_\\-\\.]*$";
+    private static final String INVALID_FILENAME_MSG = "Illegal file name";
 
     protected final ReadSitemapService service;
 
@@ -45,7 +49,8 @@ public class SitemapFileController {
      * @return contents of the requested file
      */
     @GetMapping(value = "file.txt", produces = MediaType.TEXT_PLAIN_VALUE)
-    public String fileTxt(@RequestParam(value = "name", defaultValue = "") String fileName) throws SiteMapNotFoundException {
+    public String fileTxt(@RequestParam(value = "name", defaultValue = "")
+                              @Pattern(regexp = FILENAME_REGEX, message = INVALID_FILENAME_MSG) String fileName) throws SiteMapNotFoundException {
         return file(fileName);
     }
 
@@ -55,7 +60,8 @@ public class SitemapFileController {
      * @return contents of the requested file
      */
     @GetMapping(value = {"file", "file.xml"}, produces = MediaType.TEXT_XML_VALUE)
-    public String file(@RequestParam(value = "name", defaultValue = "") String fileName) throws SiteMapNotFoundException {
+    public String file(@RequestParam(value = "name", defaultValue = "")
+                           @Pattern(regexp = FILENAME_REGEX, message = INVALID_FILENAME_MSG) String fileName) throws SiteMapNotFoundException {
         LOG.debug("Retrieving file {} ", fileName);
         if (fileName == null || fileName.isEmpty()) {
             throw new IllegalArgumentException("Please provide a file name");
