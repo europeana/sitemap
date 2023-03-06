@@ -5,6 +5,6 @@ metadata:
 spec:
   type: NodePort
   ports:
-    - port: 8080
-      nodePort: 31000
+    - port: 8081
+      nodePort: 31100
   # selector provided via kustomize
