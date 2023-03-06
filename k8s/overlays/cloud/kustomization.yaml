@@ -1,0 +1,8 @@
+resources:
+  - ../../base
+  - service.yaml
+  - ingress.yaml
+  - cronjob.yaml
+
+patchesStrategicMerge:
+  - deployment_patch.yaml
