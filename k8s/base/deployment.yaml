@@ -30,7 +30,7 @@ spec:
             - name: config
               mountPath: "/opt/app/config/sitemap.user.properties"
               readOnly: true
-              subPath: fulltext.user.properties
+              subPath: sitemap.user.properties
       volumes:
         - name: config
           configMap:
