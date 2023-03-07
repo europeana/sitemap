@@ -19,6 +19,7 @@ spec:
                 - java
                 - -jar
                 - /opt/app/sitemap.jar
+                - entity
               env:
                 - name: SPRING_CONFIG_ADDITIONAL_LOCATION
                   value: "file:/opt/app/config/sitemap.user.properties"
@@ -70,6 +71,7 @@ spec:
                 - java
                 - -jar
                 - /opt/app/sitemap.jar
+                - record
               env:
                 - name: SPRING_CONFIG_ADDITIONAL_LOCATION
                   value: "file:/opt/app/config/sitemap.user.properties"

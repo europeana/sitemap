@@ -4,11 +4,8 @@ import eu.europeana.sitemap.exceptions.SiteMapException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Import;
-import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.scheduling.support.CronTrigger;
-import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import javax.annotation.PostConstruct;
@@ -22,11 +19,12 @@ import java.util.TimeZone;
  * Automatically starts the update process for all sitemap types using a cron scheduler. Note that updates will
  * only be activated when deployed to a Cloud Foundry environment and then only on instance 0
  *
+ * @deprecated As updates are now triggered via program args, and scheduling
+ * is done via Kubernetes. This class should be removed after all update scheduling logic is moved to
+ * Kubernetes.
  * @author Patrick Ehlert on 18-9-17.
  */
-@Service
-@EnableScheduling
-@Import({UpdateRecordService.class, UpdateEntityService.class})
+@Deprecated(since = "07-03-2023")
 public class UpdateScheduler {
 
     private static final Logger LOG = LogManager.getLogger(UpdateScheduler.class);
