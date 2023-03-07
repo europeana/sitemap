@@ -34,10 +34,10 @@ spec:
               resources:
                 requests:
                   memory: "${ENTITY_UPDATE_MEMORY}M"
-                  cpu: "${ENTITY_UPDATE_CPU}M"
+                  cpu: "${ENTITY_UPDATE_CPU}m"
                 limits:
                   memory: "${ENTITY_UPDATE_MEMORY}M"
-                  cpu: "${ENTITY_UPDATE_CPU}M"
+                  cpu: "${ENTITY_UPDATE_CPU}m"
               volumeMounts:
                 - name: config
                   mountPath: "/opt/app/config/sitemap.user.properties"
@@ -86,10 +86,10 @@ spec:
               resources:
                 requests:
                   memory: "${RECORD_UPDATE_MEMORY}M"
-                  cpu: "${RECORD_UPDATE_CPU}M"
+                  cpu: "${RECORD_UPDATE_CPU}m"
                 limits:
                   memory: "${RECORD_UPDATE_MEMORY}M"
-                  cpu: "${RECORD_UPDATE_CPU}M"
+                  cpu: "${RECORD_UPDATE_CPU}m"
               volumeMounts:
                 - name: config
                   mountPath: "/opt/app/config/sitemap.user.properties"
