@@ -1,0 +1,102 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sitemap-entity-update-cronjob
+spec:
+  schedule: "${ENTITY_UPDATE_SCHEDULE}"
+  suspend: ${SUSPEND_ENTITY_UPDATE}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60
+      template:
+        spec:
+          containers:
+            - name: sitemap-entity-update
+              image: europeana/sitemap
+              imagePullPolicy: Always
+              command:
+                - java
+                - -jar
+                - /opt/app/sitemap.jar
+                - entity
+              env:
+                - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+                  value: "file:/opt/app/config/sitemap.user.properties"
+                - name: JAVA_OPTS
+                  value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
+                          -Delastic.apm.application_packages=eu.europeana
+                          -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
+                          -Delastic.apm.service_name=sitemap-entity-update-cronjob
+                          -Delastic.apm.enabled=${COLLECT_LOGS}
+                          -Delastic.apm.environment=${K8S_NAMESPACE}
+                          -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+              resources:
+                requests:
+                  memory: "${ENTITY_UPDATE_MEMORY}M"
+                  cpu: "${ENTITY_UPDATE_CPU}m"
+                limits:
+                  memory: "${ENTITY_UPDATE_MEMORY}M"
+                  cpu: "${ENTITY_UPDATE_CPU}m"
+              volumeMounts:
+                - name: config
+                  mountPath: "/opt/app/config/sitemap.user.properties"
+                  readOnly: true
+                  subPath: sitemap.user.properties
+          restartPolicy: Never
+          volumes:
+            - name: config
+              configMap:
+                name: sitemap-config
+
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: sitemap-record-update-cronjob
+spec:
+  schedule: "${RECORD_UPDATE_SCHEDULE}"
+  suspend: ${SUSPEND_RECORD_UPDATE}
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      ttlSecondsAfterFinished: 60
+      template:
+        spec:
+          containers:
+            - name: sitemap-entity-update
+              image: europeana/sitemap
+              imagePullPolicy: Always
+              command:
+                - java
+                - -jar
+                - /opt/app/sitemap.jar
+                - record
+              env:
+                - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+                  value: "file:/opt/app/config/sitemap.user.properties"
+                - name: JAVA_OPTS
+                  value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
+                          -Delastic.apm.application_packages=eu.europeana
+                          -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
+                          -Delastic.apm.service_name=sitemap-record-update-cronjob
+                          -Delastic.apm.enabled=${COLLECT_LOGS}
+                          -Delastic.apm.environment=${K8S_NAMESPACE}
+                          -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+              resources:
+                requests:
+                  memory: "${RECORD_UPDATE_MEMORY}M"
+                  cpu: "${RECORD_UPDATE_CPU}m"
+                limits:
+                  memory: "${RECORD_UPDATE_MEMORY}M"
+                  cpu: "${RECORD_UPDATE_CPU}m"
+              volumeMounts:
+                - name: config
+                  mountPath: "/opt/app/config/sitemap.user.properties"
+                  readOnly: true
+                  subPath: sitemap.user.properties
+          restartPolicy: Never
+          volumes:
+            - name: config
+              configMap:
+                name: sitemap-config

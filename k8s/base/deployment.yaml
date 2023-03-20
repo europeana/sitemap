@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sitemap-deployment
+spec:
+  # selector.matchLabels is provided via Kustomize
+  template:
+    spec:
+      containers:
+        - name: sitemap
+          image: europeana/sitemap
+          ports:
+            - containerPort: 8081
+          livenessProbe:
+            httpGet:
+              port: 8081
+              path: /actuator/info
+            initialDelaySeconds: 100
+            periodSeconds: 60
+          readinessProbe:
+            httpGet:
+              port: 8081
+              path: /actuator/info
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          env:
+            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
+              value: "file:/opt/app/config/sitemap.user.properties"
+          volumeMounts:
+            - name: config
+              mountPath: "/opt/app/config/sitemap.user.properties"
+              readOnly: true
+              subPath: sitemap.user.properties
+      volumes:
+        - name: config
+          configMap:
+            name: sitemap-config

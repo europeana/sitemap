@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sitemap-nodeport
+spec:
+  type: NodePort
+  ports:
+    - port: 8081
+      nodePort: 31100
+  # selector provided via kustomize

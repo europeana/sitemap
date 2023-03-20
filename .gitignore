@@ -11,3 +11,5 @@ sitemap.user.properties
 .idea/
 *.iml
 target/
+
+.env
