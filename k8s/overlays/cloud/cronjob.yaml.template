@@ -8,8 +8,12 @@ spec:
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
-      ttlSecondsAfterFinished: 60
+      ttlSecondsAfterFinished: 300
       template:
+        metadata:
+          annotations:
+            fluentd/include: '${COLLECT_LOGS}'
+            fluentd/multiline: 'true'
         spec:
           containers:
             - name: sitemap-entity-update
@@ -25,10 +29,10 @@ spec:
                   value: "file:/opt/app/config/sitemap.user.properties"
                 - name: JAVA_OPTS
                   value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
-                          -Delastic.apm.application_packages=eu.europeana
+                          -Delastic.apm.enabled=${COLLECT_APM}
+                          -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
                           -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
                           -Delastic.apm.service_name=sitemap-entity-update-cronjob
-                          -Delastic.apm.enabled=${COLLECT_LOGS}
                           -Delastic.apm.environment=${K8S_NAMESPACE}
                           -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
               resources:
@@ -60,8 +64,12 @@ spec:
   concurrencyPolicy: Forbid
   jobTemplate:
     spec:
-      ttlSecondsAfterFinished: 60
+      ttlSecondsAfterFinished: 300
       template:
+        metadata:
+          annotations:
+            fluentd/include: '${COLLECT_LOGS}'
+            fluentd/multiline: 'true'
         spec:
           containers:
             - name: sitemap-entity-update
@@ -77,10 +85,10 @@ spec:
                   value: "file:/opt/app/config/sitemap.user.properties"
                 - name: JAVA_OPTS
                   value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
-                          -Delastic.apm.application_packages=eu.europeana
+                          -Delastic.apm.enabled=${COLLECT_APM}
+                          -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
                           -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
                           -Delastic.apm.service_name=sitemap-record-update-cronjob
-                          -Delastic.apm.enabled=${COLLECT_LOGS}
                           -Delastic.apm.environment=${K8S_NAMESPACE}
                           -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
               resources:
