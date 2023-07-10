@@ -3,12 +3,10 @@ package eu.europeana.sitemap;
 import static eu.europeana.sitemap.SitemapType.ENTITY;
 import static eu.europeana.sitemap.SitemapType.RECORD;
 
-import eu.europeana.sitemap.config.SocksProxyConfig;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.service.update.UpdateAbstractService;
 import eu.europeana.sitemap.service.update.UpdateEntityService;
 import eu.europeana.sitemap.service.update.UpdateRecordService;
-import eu.europeana.sitemap.util.SocksProxyActivator;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,8 +43,6 @@ public class SitemapApplication implements CommandLineRunner {
   @SuppressWarnings("squid:S2095")
   // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
   public static void main(String[] args) {
-    SocksProxyActivator.activate(
-        new SocksProxyConfig("sitemap.properties", "sitemap.user.properties"));
     if (args.length == 0) {
       logger.info("No args provided to application. Starting web server");
       SpringApplication.run(SitemapApplication.class, args);
