@@ -1,4 +1,4 @@
-FROM tomcat:9.0-jre11
+FROM tomcat:9.0-jre17
 LABEL Author="Europeana Foundation <development@europeana.eu>"
 
 ENV ELASTIC_APM_VERSION 1.34.1
