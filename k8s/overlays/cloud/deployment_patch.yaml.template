@@ -15,13 +15,13 @@ spec:
           imagePullPolicy: Always
           env:
             - name: JAVA_OPTS
-              value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
-                          -Delastic.apm.enabled=${COLLECT_APM}              
-                          -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
-                          -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
-                          -Delastic.apm.service_name=sitemap-api
-                          -Delastic.apm.environment=${K8S_NAMESPACE}
-                          -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+              value: "-javaagent:/usr/local/elastic-apm-agent.jar
+                      -Delastic.apm.enabled=${COLLECT_APM}              
+                      -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
+                      -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
+                      -Delastic.apm.service_name=${APP_NAME}
+                      -Delastic.apm.environment=${K8S_NAMESPACE}
+                      -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
           resources:
             requests:
               memory: "${API_MEMORY_REQUEST}M"
