@@ -23,15 +23,12 @@ spec:
               path: /actuator/info
             initialDelaySeconds: 30
             periodSeconds: 30
-          env:
-            - name: SPRING_CONFIG_ADDITIONAL_LOCATION
-              value: "file:/opt/app/config/sitemap.user.properties"
           volumeMounts:
-            - name: config
-              mountPath: "/opt/app/config/sitemap.user.properties"
+            - name: secret
+              mountPath: "/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/sitemap.user.properties"
               readOnly: true
-              subPath: sitemap.user.properties
+              subPath: iiif.user.properties
       volumes:
-        - name: config
-          configMap:
-            name: sitemap-config
+        - name: secret
+          secret:
+            secretName: sitemap-secret

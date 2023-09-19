@@ -4,7 +4,7 @@ resources:
 commonLabels:
   app: sitemap
 
-configMapGenerator:
-  - name: sitemap-config
+secretGenerator:
+  - name: sitemap-secret
     files:
       - sitemap.user.properties

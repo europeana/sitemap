@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: sitemap-deployment
 spec:
-  replicas: 1
+  replicas: ${MIN_REPLICAS}
   template:
     metadata:
       annotations:
