@@ -27,7 +27,7 @@ spec:
             - name: secret
               mountPath: "/usr/local/tomcat/webapps/ROOT/WEB-INF/classes/sitemap.user.properties"
               readOnly: true
-              subPath: iiif.user.properties
+              subPath: sitemap.user.properties
       volumes:
         - name: secret
           secret:
