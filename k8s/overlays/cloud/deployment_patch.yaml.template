@@ -14,7 +14,7 @@ spec:
         - name: sitemap
           imagePullPolicy: Always
           env:
-            - name: JAVA_OPTS
+            - name: CATALINA_OPTS
               value: "-javaagent:/usr/local/elastic-apm-agent.jar
                       -Delastic.apm.enabled=${COLLECT_APM}              
                       -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
