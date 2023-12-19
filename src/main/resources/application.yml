@@ -14,8 +14,20 @@ management:
   endpoints:
     web:
       exposure:
-        include: info
+        include: info, health
 
   info:
     env:
+      enabled: true
+
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: always
+
+  health:
+    livenessState:
+      enabled: true
+    readinessState:
       enabled: true
