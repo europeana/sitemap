@@ -14,15 +14,15 @@ spec:
           livenessProbe:
             httpGet:
               port: 8081
-              path: /actuator/info
-            initialDelaySeconds: 100
-            periodSeconds: 60
+              path: /actuator/health/liveness
+            initialDelaySeconds: 55
+            periodSeconds: 20
           readinessProbe:
             httpGet:
               port: 8081
-              path: /actuator/info
-            initialDelaySeconds: 30
-            periodSeconds: 30
+              path: /actuator/health/readiness
+            initialDelaySeconds: 55
+            periodSeconds: 20
           env:
             - name: SPRING_CONFIG_ADDITIONAL_LOCATION
               value: "file:/opt/app/config/sitemap.user.properties"
