@@ -41,7 +41,7 @@
         <commons.text.version>1.10.0</commons.text.version>
 
         <mockito.version>3.3.0</mockito.version>
-        <wiremock.version>2.33.2</wiremock.version>
+        <wiremock.version>2.35.1</wiremock.version>
     </properties>
 
     <dependencyManagement>
