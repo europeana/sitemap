@@ -33,7 +33,7 @@
 
         <spring-boot.version>2.7.5</spring-boot.version>
         <mongo.driver.version>3.12.11</mongo.driver.version>
-        <mongo.snappy.version>1.1.10.1</mongo.snappy.version>
+        <mongo.snappy.version>1.1.10.4</mongo.snappy.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <httpclient.version>4.5.13</httpclient.version>
         <commons.io.version>2.11.0</commons.io.version>
