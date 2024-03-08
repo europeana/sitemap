@@ -26,12 +26,15 @@ import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.update.UpdateRecordService;
 import eu.europeana.sitemap.service.update.UpdateService;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.InputStream;
 
 /**
  * Handles requests for record sitemap files from external parties
@@ -63,12 +66,40 @@ public class SitemapRecordController extends SitemapAbstractController {
     }
 
     /**
+     * @see SitemapAbstractController#getSitemapIndex()
+     */
+    @GetMapping(value = {"index-as-stream"+ Constants.XML_EXTENSION,
+            Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION})
+    public ResponseEntity<StreamingResponseBody> getRecordSitemapIndexStream() throws SiteMapNotFoundException {
+        InputStream s = super.getSitemapIndexAsStream();
+        StreamingResponseBody responseBody = outputStream -> {
+            outputStream.write(s.readAllBytes());
+            s.close();
+        };
+        return ResponseEntity.ok().body(responseBody);
+    }
+
+    /**
      * @see SitemapAbstractController#getSitemapFile(String, String)
      */
     @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.XML_EXTENSION)
     public String getRecordSitemapFile(@RequestParam(value = "from") String from,
                                        @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
         return super.getSitemapFile(from, to);
+    }
+
+    /**
+     * @see SitemapAbstractController#getSitemapFile(String, String)
+     */
+    @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + "-as-stream" + Constants.XML_EXTENSION)
+    public ResponseEntity<StreamingResponseBody> getRecordSitemapFileAsStream(@RequestParam(value = "from") String from,
+                                              @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
+        InputStream s = super.getSitemapFileAsStream(from, to);
+        StreamingResponseBody responseBody = outputStream -> {
+            outputStream.write(s.readAllBytes());
+            s.close();
+        };
+        return ResponseEntity.ok().body(responseBody);
     }
 
     /**

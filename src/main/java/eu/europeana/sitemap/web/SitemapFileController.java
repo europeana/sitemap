@@ -4,13 +4,15 @@ import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ReadSitemapService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import javax.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import javax.validation.constraints.Pattern;
+import java.io.InputStream;
 
 /**
  * Generic functionality for reading sitemap files (for testing and debugging)
@@ -67,5 +69,10 @@ public class SitemapFileController {
             throw new IllegalArgumentException("Please provide a file name");
         }
         return service.getFileContent(fileName);
+    }
+
+    public InputStream fileAsStream(@RequestParam(value = "name", defaultValue = "")
+                          @Pattern(regexp = FILENAME_REGEX, message = INVALID_FILENAME_MSG) String fileName) throws SiteMapNotFoundException {
+        return service.getFileContentAsStream(fileName);
     }
 }

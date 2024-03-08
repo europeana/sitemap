@@ -2,6 +2,8 @@ package eu.europeana.sitemap.service;
 
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 
+import java.io.InputStream;
+
 /**
  * All supported reading sitemap methods
  *
@@ -22,5 +24,7 @@ public interface ReadSitemapService {
      * @throws SiteMapNotFoundException thrown when requested file is not available
      */
     String getFileContent(String fileName) throws SiteMapNotFoundException;
+
+    InputStream getFileContentAsStream(String fileName) throws SiteMapNotFoundException;
 
 }

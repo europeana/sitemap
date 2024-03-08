@@ -29,7 +29,7 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <object-storage.version>1.10</object-storage.version>
+        <object-storage.version>1.11-SNAPSHOT</object-storage.version>
 
         <spring-boot.version>2.7.5</spring-boot.version>
         <mongo.driver.version>3.12.11</mongo.driver.version>

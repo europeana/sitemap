@@ -23,6 +23,8 @@ import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
 
+import java.io.InputStream;
+
 /**
  * Abstract class that provides the basic controller functionality for handling retrieval requests for
  * the various sitemap types
@@ -52,6 +54,12 @@ public abstract class SitemapAbstractController {
         return readController.file(fileName);
     }
 
+    public InputStream getSitemapIndexAsStream() throws SiteMapNotFoundException {
+        Deployment active = activeDeployment.getActiveDeployment(sitemapType);
+        String fileName = StorageFileName.getSitemapIndexFileName(sitemapType, active);
+        return readController.fileAsStream(fileName);
+    }
+
     /**
      * Return a sitemap file. Note that the to and from are fixed values, a list of all files with to/from values
      * can be found in the sitemap index file
@@ -66,6 +74,13 @@ public abstract class SitemapAbstractController {
         String appendix = "?from=" + from + "&to=" + to;
         String fileName = StorageFileName.getSitemapFileName(sitemapType, active, appendix);
         return readController.file(fileName);
+    }
+
+    public InputStream getSitemapFileAsStream(String from, String to) throws SiteMapNotFoundException {
+        Deployment active = activeDeployment.getActiveDeployment(sitemapType);
+        String appendix = "?from=" + from + "&to=" + to;
+        String fileName = StorageFileName.getSitemapFileName(sitemapType, active, appendix);
+        return readController.fileAsStream(fileName);
     }
 
 }

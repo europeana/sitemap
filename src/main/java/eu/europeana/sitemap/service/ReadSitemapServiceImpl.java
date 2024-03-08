@@ -4,11 +4,11 @@ package eu.europeana.sitemap.service;
 import eu.europeana.domain.StorageObject;
 import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
-
 import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.List;
@@ -56,5 +56,10 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
             throw new SiteMapNotFoundException("File " + fileName + " not found!");
         }
         return fileContent;
+    }
+
+    @Override
+    public InputStream getFileContentAsStream(String fileName) throws SiteMapNotFoundException {
+        return objectStorageProvider.getContentAsStream(fileName);
     }
 }
