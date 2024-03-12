@@ -25,6 +25,7 @@ import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.update.UpdateRecordService;
 import eu.europeana.sitemap.service.update.UpdateService;
+import org.apache.commons.io.IOUtils;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -80,6 +81,20 @@ public class SitemapRecordController extends SitemapAbstractController {
     }
 
     /**
+     * @see SitemapAbstractController#getSitemapIndex()
+     */
+    @GetMapping(value = {"index-as-stream-with-ioutils"+ Constants.XML_EXTENSION,
+            Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION})
+    public ResponseEntity<StreamingResponseBody> getRecordSitemapIndexStreamIOUtils() throws SiteMapNotFoundException {
+        InputStream s = super.getSitemapIndexAsStream();
+        StreamingResponseBody responseBody = outputStream -> {
+            IOUtils.copy(s, outputStream);
+            s.close();
+        };
+        return ResponseEntity.ok().body(responseBody);
+    }
+
+    /**
      * @see SitemapAbstractController#getSitemapFile(String, String)
      */
     @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + Constants.XML_EXTENSION)
@@ -101,6 +116,20 @@ public class SitemapRecordController extends SitemapAbstractController {
         };
         return ResponseEntity.ok().body(responseBody);
     }
+    /**
+     * @see SitemapAbstractController#getSitemapFile(String, String)
+     */
+    @GetMapping(value = Constants.SITEMAP_RECORD_FILENAME_BASE + "-as-stream-with-ioutils" + Constants.XML_EXTENSION)
+    public ResponseEntity<StreamingResponseBody> getRecordSitemapFileAsStreamIOUtils(@RequestParam(value = "from") String from,
+                                                                              @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
+        InputStream s = super.getSitemapFileAsStream(from, to);
+        StreamingResponseBody responseBody = outputStream -> {
+            IOUtils.copy(s, outputStream);
+            s.close();
+        };
+        return ResponseEntity.ok().body(responseBody);
+    }
+
 
     /**
      * Start the sitemap update process for records
