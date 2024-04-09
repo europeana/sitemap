@@ -25,8 +25,10 @@ import java.net.URISyntaxException;
  * See also https://support.google.com/webmasters/answer/183669?hl=en and
  * https://www.bing.com/webmaster/help/how-to-submit-sitemaps-82a15bd4
  * @author Patrick Ehlert on 11-9-17.
+ * @deprecated since april 2024 because both Bing and Google no longer use these notifications
  */
 @Service
+@Deprecated
 public class ResubmitService {
 
     private static final Logger LOG = LogManager.getLogger(ResubmitService.class);
@@ -43,6 +45,7 @@ public class ResubmitService {
     /**
      * Notify Google and Bing that our sitemap has changed (but only if the provided portal sitemap index url is not empty)
      */
+    @Deprecated
     public void notifySearchEngines(SitemapType sitemapType) {
         try {
             // check if uri is valid
@@ -54,6 +57,7 @@ public class ResubmitService {
         }
     }
 
+    @Deprecated
     private void resubmitToServices(URI sitemapFile) {
         try {
             resubmitToService("Google", "http://google.com/ping", "sitemap", sitemapFile);

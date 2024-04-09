@@ -85,8 +85,8 @@ public abstract class UpdateAbstractService implements UpdateService {
             Deployment newDeploy = deploymentService.switchDeployment(sitemapType);
             LOG.info("New deployment is now {}", newDeploy);
 
-            // 6. Notify search engines (only if index changed)
-            this.notifySearchEngines(sitemapType);
+            // 6. DEPRECATED Notify search engines (only if index changed)
+            // this.notifySearchEngines(sitemapType);
 
         } catch (RuntimeException e) {
             String message = "Error updating " + sitemapType + " sitemap";
