@@ -27,14 +27,13 @@ spec:
               env:
                 - name: SPRING_CONFIG_ADDITIONAL_LOCATION
                   value: "file:/opt/app/config/sitemap.user.properties"
-                - name: JAVA_OPTS
-                  value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
+                - name: JAVA_TOOL_OPTIONS
+                  value: "-javaagent:\"/opt/app/elastic-apm-agent.jar\"
                           -Delastic.apm.enabled=${COLLECT_APM}
                           -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
                           -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
                           -Delastic.apm.service_name=sitemap-entity-update-cronjob
-                          -Delastic.apm.environment=${K8S_NAMESPACE}
-                          -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+                          -Delastic.apm.environment=${K8S_NAMESPACE}"
               resources:
                 requests:
                   memory: "${ENTITY_UPDATE_MEMORY}M"
@@ -83,14 +82,13 @@ spec:
               env:
                 - name: SPRING_CONFIG_ADDITIONAL_LOCATION
                   value: "file:/opt/app/config/sitemap.user.properties"
-                - name: JAVA_OPTS
-                  value: "-javaagent:\"/usr/local/elastic-apm-agent.jar\"
+                - name: JAVA_TOOL_OPTIONS
+                  value: "-javaagent:\"/opt/app/elastic-apm-agent.jar\"
                           -Delastic.apm.enabled=${COLLECT_APM}
                           -Delastic.apm.application_packages=${ELASTIC_APP_PACKAGES}
                           -Delastic.apm.server_urls=${ELASTIC_APM_SERVERS}
                           -Delastic.apm.service_name=sitemap-record-update-cronjob
-                          -Delastic.apm.environment=${K8S_NAMESPACE}
-                          -XX:+UseParallelGC -XX:MaxRAMPercentage=75"
+                          -Delastic.apm.environment=${K8S_NAMESPACE}"
               resources:
                 requests:
                   memory: "${RECORD_UPDATE_MEMORY}M"
