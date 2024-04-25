@@ -1,234 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <!-- Several Openstack vulnerabilties ignored because those libs are part of ObjectStorage, but we don't use
-         the affected functionality -->
+    <!-- We don't use UriComponentsBuilder -->
     <suppress>
         <notes><![CDATA[
-      file name: openstack-swift-2.4.0.jar
-      ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-swift@.*$</packageUrl>
-        <cve>CVE-2016-0738</cve>
+   file name: spring-web-6.1.5.jar
+   ]]></notes>
+        <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-web@.*$</packageUrl>
+        <vulnerabilityName>CVE-2024-22262</vulnerabilityName>
     </suppress>
+
+    <!-- We don't use Swift functionality -->
     <suppress>
-        <notes><![CDATA[
-   file name: openstack-swift-2.4.0.jar
+        <notes><![CDATA[file name: openstack-swift-2.5.0.jar
    ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-swift@.*$</packageUrl>
         <cve>CVE-2017-16613</cve>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: openstack-keystone-2.4.0.jar
+        <notes><![CDATA[file name: openstack-keystone-2.5.0.jar
    ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
         <cve>CVE-2020-12689</cve>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: openstack-keystone-2.4.0.jar
-   ]]></notes>
+        <notes><![CDATA[file name: openstack-keystone-2.5.0.jar
+       ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
         <cve>CVE-2020-12690</cve>
     </suppress>
     <suppress>
-        <notes><![CDATA[
-   file name: openstack-keystone-2.4.0.jar
+        <notes><![CDATA[file name: openstack-keystone-2.5.0.jar
    ]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
         <cve>CVE-2020-12691</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: openstack-keystone-2.4.0.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
-        <cve>CVE-2020-12692</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: openstack-keystone-2.4.0.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
-        <cve>CVE-2018-14432</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: openstack-keystone-2.4.0.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
-        <cve>CVE-2018-20170</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: openstack-keystone-2.4.0.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
-        <cve>CVE-2021-3563</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: openstack-swift-2.4.0.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-swift@.*$</packageUrl>
-        <cve>CVE-2017-8761</cve>
-    </suppress>
-    <!-- users have no direct access to AWS S3 paths -->
-    <suppress>
-        <notes><![CDATA[
-   file name: aws-java-sdk-core-1.12.129.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-java\-sdk\-core@.*$</packageUrl>
-        <cve>CVE-2022-31159</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: aws-java-sdk-s3-1.12.129.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-java\-sdk\-s3@.*$</packageUrl>
-        <cve>CVE-2022-31159</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: aws-java-sdk-kms-1.12.129.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.amazonaws/aws\-java\-sdk\-kms@.*$</packageUrl>
-        <cve>CVE-2022-31159</cve>
-    </suppress>
-    <!-- users have no direct access to AWS S3 paths -->
-    <suppress>
-        <notes><![CDATA[
-   file name: jmespath-java-1.12.129.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.amazonaws/jmespath\-java@.*$</packageUrl>
-        <cve>CVE-2022-31159</cve>
-    </suppress>
-
-    <!-- users don't have access to yaml files -->
-    <suppress>
-        <notes><![CDATA[
-   file name: snakeyaml-1.30.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
-        <cve>CVE-2022-25857</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: snakeyaml-1.30.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.yaml/snakeyaml@.*$</packageUrl>
-        <cve>CVE-2022-1471</cve>
-    </suppress>
-
-    <!-- There's a false positive with dependency-check thinking our ObjectStorage library is actually a different
-         library -->
-    <suppress>
-        <notes><![CDATA[
-   file name: object-storage-1.10-SNAPSHOT.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/eu\.europeana/object\-storage@.*$</packageUrl>
-        <cpe>cpe:/a:storage_project:storage</cpe>
-    </suppress>
-
-    <!-- We don't use HttpInvoker -->
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-web-5.3.22.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-web@.*$</packageUrl>
-        <cve>CVE-2016-1000027</cve>
-    </suppress>
-
-    <!-- Usage of this library is shielded (no direct access by users) -->
-    <suppress>
-        <notes><![CDATA[
-   file name: jclouds-core-2.4.0.jar: gson-2.8.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/com\.google\.code\.gson/gson@.*$</packageUrl>
-        <cve>CVE-2022-25647</cve>
-    </suppress>
-<!-- CVE-2023-20873 :an application that is deployed to Cloud Foundry could be susceptible to a security bypass-->
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-web-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-web@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-actuator-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-actuator@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-json-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-json@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-mail-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-mail@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-autoconfigure-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-autoconfigure@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-log4j2-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-log4j2@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-tomcat-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-tomcat@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-actuator-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-actuator@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-starter-validation-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-starter-validation@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[
-   file name: spring-boot-actuator-autoconfigure-2.7.5.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org.springframework.boot/spring-boot-actuator-autoconfigure@.*$</packageUrl>
-        <cve>CVE-2023-20873</cve>
     </suppress>
 </suppressions>

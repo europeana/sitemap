@@ -43,7 +43,7 @@
         <commons.text.version>1.10.0</commons.text.version>
 
         <mockito.version>3.3.0</mockito.version>
-        <wiremock.version>2.35.1</wiremock.version>
+        <wiremock.version>3.5.4</wiremock.version>
     </properties>
 
     <dependencyManagement>
@@ -180,9 +180,10 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <!-- https://mvnrepository.com/artifact/org.wiremock/wiremock -->
         <dependency>
-            <groupId>com.github.tomakehurst</groupId>
-            <artifactId>wiremock-jre8</artifactId>
+            <groupId>org.wiremock</groupId>
+            <artifactId>wiremock</artifactId>
             <version>${wiremock.version}</version>
             <scope>test</scope>
         </dependency>

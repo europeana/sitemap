@@ -19,6 +19,8 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.annotation.PropertySource;
 
+import java.util.Arrays;
+
 /**
  * Main application and configuration
  */
@@ -41,7 +43,7 @@ public class SitemapApplication implements CommandLineRunner {
     // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
     public static void main(String[] args) {
         if (args.length == 0) {
-            LOG.info("No arguments provided to application. Starting web server");
+            LOG.info("Starting web server");
             SpringApplication.run(SitemapApplication.class, args);
             return;
         }
@@ -73,17 +75,20 @@ public class SitemapApplication implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        LOG.info("Arguments = {}", args);
-
-        String taskArg = args[0];
-        // arg already validated, so we know it's valid at this point
-        UpdateAbstractService updateService =
-                RECORD.name().equalsIgnoreCase(taskArg) ? updateRecordService : updateEntityService;
-        LOG.info("Starting automatic updating for {} sitemap...", updateService.getSitemapType());
-        try {
-            updateService.update();
-        } catch (SiteMapException e) {
-            LOG.error("Error doing automatic update for {} sitemap", updateService.getSitemapType(), e);
+        if (args.length > 0) {
+            LOG.info("Command-line arguments = {}", Arrays.stream(args).toArray());
+            String taskArg = args[0];
+            // arg already validated, so we know it's valid at this point
+            UpdateAbstractService updateService =
+                    RECORD.name().equalsIgnoreCase(taskArg) ? updateRecordService : updateEntityService;
+            LOG.info("Starting automatic updating for {} sitemap...", updateService.getSitemapType());
+            try {
+                updateService.update();
+            } catch (SiteMapException e) {
+                LOG.error("Error doing automatic update for {} sitemap", updateService.getSitemapType(), e);
+            }
+        } else {
+            LOG.info("No command-line arguments provided");
         }
     }
 }
