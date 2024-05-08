@@ -4,7 +4,7 @@ import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ReadSitemapService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import javax.validation.constraints.Pattern;
+import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
