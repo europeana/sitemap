@@ -11,27 +11,15 @@
 
     <!-- We don't use Swift functionality -->
     <suppress>
-        <notes><![CDATA[file name: openstack-swift-2.5.0.jar
-   ]]></notes>
+        <notes><![CDATA[file name: openstack-swift-2.6.0.jar]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-swift@.*$</packageUrl>
         <cve>CVE-2017-16613</cve>
     </suppress>
     <suppress>
-        <notes><![CDATA[file name: openstack-keystone-2.5.0.jar
-   ]]></notes>
+        <notes><![CDATA[file name: openstack-keystone-2.6.0.jar]]></notes>
         <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
         <cve>CVE-2020-12689</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[file name: openstack-keystone-2.5.0.jar
-       ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
-        <cve>CVE-2020-12690</cve>
-    </suppress>
-    <suppress>
-        <notes><![CDATA[file name: openstack-keystone-2.5.0.jar
-   ]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.apache\.jclouds\.api/openstack\-keystone@.*$</packageUrl>
         <cve>CVE-2020-12691</cve>
+        <cve>CVE-2020-12690</cve>
     </suppress>
 </suppressions>
