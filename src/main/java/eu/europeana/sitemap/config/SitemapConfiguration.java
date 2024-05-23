@@ -64,9 +64,9 @@ public class SitemapConfiguration {
     @Value("${s3.endpoint}")
     private String endpoint;
 
-    @Value("${spring.mail.from:}")
+    @Value("${spring.mail.from:#{null}}")
     private String mailFrom;
-    @Value("${spring.mail.to:}")
+    @Value("${spring.mail.to:#{null}}")
     private String mailTo;
 
     protected SitemapConfiguration()  {
