@@ -212,6 +212,7 @@
                 <version>9.2.0</version>
                 <configuration>
                     <nvdApiKeyEnvironmentVariable>NVD_APIKEY</nvdApiKeyEnvironmentVariable>
+                    <knownExploitedUrl>https://artifactory.eanadev.org/artifactory/ext-release-local/gov/cisa/www/known_exploited_vulnerabilities-14-05-2024.json</knownExploitedUrl>
                     <failBuildOnCVSS>8</failBuildOnCVSS>
                     <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
                     <suppressionFiles>
