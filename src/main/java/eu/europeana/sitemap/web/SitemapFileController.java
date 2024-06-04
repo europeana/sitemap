@@ -24,7 +24,7 @@ public class SitemapFileController {
 
     private static final Logger LOG = LogManager.getLogger(SitemapFileController.class);
 
-    private static final String FILENAME_REGEX = "^[a-zA-Z0-9_\\-\\.]*$";
+    private static final String FILENAME_REGEX = "^[a-zA-Z0-9_=&\\-\\.\\?]*$";
     private static final String INVALID_FILENAME_MSG = "Illegal file name";
 
     protected final ReadSitemapService service;

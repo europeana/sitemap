@@ -34,7 +34,7 @@
         <api-commons.version>0.1.1-SNAPSHOT</api-commons.version>
 
         <spring-boot.version>3.2.4</spring-boot.version>
-        <mongo.driver.version>3.12.11</mongo.driver.version>
+        <mongo.driver.version>5.1.0</mongo.driver.version>
         <mongo.snappy.version>1.1.10.5</mongo.snappy.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
         <httpclient.version>4.5.13</httpclient.version>
@@ -115,9 +115,15 @@
         <!-- https://mvnrepository.com/artifact/org.mongodb/mongodb-driver-sync -->
         <dependency>
             <groupId>org.mongodb</groupId>
-            <artifactId>mongo-java-driver</artifactId>
+            <artifactId>mongodb-driver-sync</artifactId>
             <version>${mongo.driver.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongodb-driver-core</artifactId>
+            <version>${mongo.driver.version}</version>
+        </dependency>
+
         <!-- Compression for mongo driver -->
         <dependency>
             <groupId>org.xerial.snappy</groupId>

@@ -1,22 +1,23 @@
 package eu.europeana.sitemap.service.update;
 
 
-import com.mongodb.*;
-import eu.europeana.sitemap.Constants;
-
+import com.mongodb.client.MongoCollection;
+import com.mongodb.client.MongoCursor;
 import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.config.PortalUrl;
+import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
+import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapService;
+import jakarta.annotation.PreDestroy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.bson.Document;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import jakarta.annotation.PreDestroy;
 import java.util.Date;
 
 /**
@@ -51,14 +52,14 @@ public class UpdateRecordService extends UpdateAbstractService {
      */
     @Override
     protected void generate(SitemapGenerator sitemapGenerator) {
-        Cursor cursor = getRecordDataOnTiers();
+        MongoCursor<Document> cursor = getRecordData();
         while (cursor.hasNext()) {
-            DBObject obj = cursor.next();
+            Document doc = cursor.next();
             // gather the required data
-            String about = obj.get(Constants.ABOUT).toString();
-            int contentTier = Integer.parseInt(obj.get(Constants.CONTENT_TIER).toString());
-            String metaDataTier = obj.get(Constants.METADATA_TIER).toString();
-            Object timestampUpdated = obj.get(Constants.LASTUPDATED);
+            String about = doc.get(Constants.ABOUT).toString();
+            int contentTier = Integer.parseInt(doc.get(Constants.CONTENT_TIER).toString());
+            String metaDataTier = doc.get(Constants.METADATA_TIER).toString();
+            Object timestampUpdated = doc.get(Constants.LASTUPDATED);
             // very old records do not have a timestampUpdated or timestampCreated field
             Date dateUpdated = (timestampUpdated == null ? null : (Date) timestampUpdated);
 
@@ -95,11 +96,11 @@ public class UpdateRecordService extends UpdateAbstractService {
      * Note: Don't pass value of the filter (in property file), we do not want to add
      * @return
      */
-    private Cursor getRecordDataOnTiers() {
-        DBCollection collection = mongoProvider.getCollection();
-        AggregationOptions options = AggregationOptions.builder().batchSize(Constants.ITEMS_PER_SITEMAP_FILE).build();
+    private MongoCursor<Document> getRecordData() {
+        MongoCollection<Document> collection = mongoProvider.getCollection();
         LOG.info("Starting record query...");
-        Cursor  cursor = collection.aggregate(UpdateRecordServiceUtils.getPipeline(config.getRecordContentTier(), config.getRecordMetadataTier()), options);
+        MongoCursor cursor = collection.aggregate(UpdateRecordServiceUtils.getPipeline(config.getRecordContentTier(), config.getRecordMetadataTier()))
+                .batchSize(Constants.ITEMS_PER_SITEMAP_FILE).cursor();
         LOG.info("Query finished. Retrieving records...");
         return cursor;
     }
