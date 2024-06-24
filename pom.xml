@@ -30,8 +30,8 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <object-storage.version>1.11-SNAPSHOT</object-storage.version>
-        <api-commons.version>0.1.1-SNAPSHOT</api-commons.version>
+        <object-storage.version>2.0-SNAPSHOT</object-storage.version>
+        <api-commons-sb3.version>0.1.1-SNAPSHOT</api-commons-sb3.version>
 
         <spring-boot.version>3.2.4</spring-boot.version>
         <mongo.driver.version>5.1.0</mongo.driver.version>
@@ -108,7 +108,7 @@
         <dependency>
             <groupId>eu.europeana.api</groupId>
             <artifactId>commons-sb3-error</artifactId>
-            <version>${api-commons.version}</version>
+            <version>${api-commons-sb3.version}</version>
         </dependency>
 
         <!-- for retrieving record data -->

@@ -7,7 +7,6 @@ import org.apache.logging.log4j.LogManager;
  * @author Patrick Ehlert
  * Created on 11-06-2018
  */
-
 public enum Deployment {
     BLUE("blue"), GREEN("green");
 
@@ -22,6 +21,11 @@ public enum Deployment {
         return this.name;
     }
 
+    /**
+     * Initialize a Blue or Green deployment from a string
+     * @param name to parse
+     * @return Deployment, blue or green
+     */
     public static Deployment fromString(String name) {
         if (BLUE.toString().equals(name)) {
             return BLUE;

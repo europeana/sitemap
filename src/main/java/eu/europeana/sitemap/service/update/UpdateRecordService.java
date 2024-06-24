@@ -3,14 +3,13 @@ package eu.europeana.sitemap.service.update;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
-import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
-import eu.europeana.sitemap.service.ReadSitemapService;
 import jakarta.annotation.PreDestroy;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -21,14 +20,14 @@ import org.springframework.stereotype.Service;
 import java.util.Date;
 
 /**
- * Service for updating the record sitemap. The primarily responsibility of this class is gathering record information
+ * Service for updating the record sitemap. The primary responsibility of this class is gathering record information
  * and adding each record to the sitemap. The rest of the update process is handled by the underlying abstract service.
  *
  * Created by ymamakis on 11/16/15.
- * Major refactoring by Patrick Ehlert on February 2019
+ * Major refactoring by Patrick Ehlert on February 2019 and June 2024
  */
 @Service
-public class UpdateRecordService extends UpdateAbstractService {
+public class UpdateRecordService extends AbstractUpdateService {
 
     private static final Logger LOG = LogManager.getLogger(UpdateRecordService.class);
 
@@ -37,10 +36,9 @@ public class UpdateRecordService extends UpdateAbstractService {
     private final MongoProvider mongoProvider;
 
     @Autowired
-    public UpdateRecordService(ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
-                               ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
-                               PortalUrl portalUrl, SitemapConfiguration config) {
-        super(SitemapType.RECORD, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, Constants.ITEMS_PER_SITEMAP_FILE);
+    public UpdateRecordService(S3ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
+                               MailService mailService, PortalUrl portalUrl, SitemapConfiguration config) {
+        super(SitemapType.RECORD, objectStorage, deploymentService, mailService, Constants.ITEMS_PER_SITEMAP_FILE);
         this.config = config;
         this.portalUrl = portalUrl;
         this.mongoProvider = config.mongoProvider();
@@ -76,22 +74,6 @@ public class UpdateRecordService extends UpdateAbstractService {
     }
 
     /**
-     * @see UpdateService#getUpdateInterval()
-     */
-    @Override
-    public String getUpdateInterval() {
-        return config.getRecordUpdateInterval();
-    }
-
-    /**
-     * @see UpdateService#doResubmit()
-     */
-    @Override
-    public boolean doResubmit() {
-        return config.isRecordResubmit();
-    }
-
-    /**
      * Gets the record data based on contentTier, metadataTier value
      * Note: Don't pass value of the filter (in property file), we do not want to add
      * @return
@@ -99,8 +81,10 @@ public class UpdateRecordService extends UpdateAbstractService {
     private MongoCursor<Document> getRecordData() {
         MongoCollection<Document> collection = mongoProvider.getCollection();
         LOG.info("Starting record query...");
-        MongoCursor cursor = collection.aggregate(UpdateRecordServiceUtils.getPipeline(config.getRecordContentTier(), config.getRecordMetadataTier()))
-                .batchSize(Constants.ITEMS_PER_SITEMAP_FILE).cursor();
+        MongoCursor<Document> cursor = collection
+                .aggregate(UpdateRecordServiceUtils.getPipeline(config.getRecordContentTier(), config.getRecordMetadataTier()))
+                .batchSize(Constants.ITEMS_PER_SITEMAP_FILE)
+                .cursor();
         LOG.info("Query finished. Retrieving records...");
         return cursor;
     }

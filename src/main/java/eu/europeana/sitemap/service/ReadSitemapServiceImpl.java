@@ -1,16 +1,16 @@
 package eu.europeana.sitemap.service;
 
 
-import eu.europeana.domain.StorageObject;
-import eu.europeana.features.ObjectStorageClient;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
-
-import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -21,12 +21,15 @@ import java.util.List;
 @Service
 public class ReadSitemapServiceImpl implements ReadSitemapService {
 
-    private final ObjectStorageClient objectStorageProvider;
+    private static final int KB = 1024;
+    private static final int MB = 1024 * KB;
+    private static final int GB = 1024 * MB;
+
+    private final S3ObjectStorageClient objectStorageProvider;
 
     @Autowired
-    public ReadSitemapServiceImpl (ObjectStorageClient objectStorageProvider) {
+    public ReadSitemapServiceImpl (S3ObjectStorageClient objectStorageProvider) {
         this.objectStorageProvider = objectStorageProvider;
-        LogManager.getLogger(ReadSitemapServiceImpl.class).debug("init");
     }
 
     /**
@@ -34,27 +37,37 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
      */
     @Override
     public String getFiles() {
-        List<StorageObject> files = objectStorageProvider.list();
-        Collections.sort(files, (StorageObject o1, StorageObject o2) -> o1.getLastModified().compareTo(o2.getLastModified()));
+        List<S3ObjectSummary> files = objectStorageProvider.listAll();
+        Collections.sort(files, Comparator.comparing(S3ObjectSummary::getLastModified));
         StringBuilder result = new StringBuilder();
-        for (StorageObject file : files) {
+        for (S3ObjectSummary file : files) {
             result.append(file.getLastModified());
             result.append('\t');
-            result.append(file.getName());
+            if (file.getSize() < KB) {
+                result.append(file.getSize()).append(" bytes");
+            } else if (file.getSize() < MB) {
+                result.append(String.format("%.2d", file.getSize() / (double) KB)).append("  KB");
+            } else if (file.getSize() < GB) {
+                result.append(String.format("%.2d", file.getSize() / (double) MB)).append("  MB");
+            } else {
+                result.append(String.format("%.2d", file.getSize() / (double) GB)).append("  GB");
+            }
+            result.append('\t');
+            result.append(file.getKey());
             result.append('\n');
         }
         return result.toString();
     }
 
     /**
-     * @see ReadSitemapService#getFileContent(String)
+     * @see ReadSitemapService#getFileAsStream(String)
      */
     @Override
-    public String getFileContent(String fileName) throws SiteMapNotFoundException {
-        String fileContent = new String(objectStorageProvider.getContent(fileName), StandardCharsets.UTF_8);
-        if (fileContent.isEmpty()) {
+    public InputStream getFileAsStream(String fileName) throws SiteMapNotFoundException {
+        InputStream result = objectStorageProvider.getObjectStream(fileName);
+        if (result == null) {
             throw new SiteMapNotFoundException("File " + fileName + " not found!");
         }
-        return fileContent;
+        return result;
     }
 }

@@ -2,7 +2,7 @@ package eu.europeana.sitemap.service.update;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.MockActiveDeployment;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.XmlUtils;
@@ -54,13 +54,11 @@ public class SitemapUpdateEntityServiceTest {
             .build();
 
     @MockBean
-    private ObjectStorageClient mockStorage;
+    private S3ObjectStorageClient mockStorage;
     @MockBean
     private ActiveDeploymentService mockDeployment;
     @MockBean
     private ReadSitemapServiceImpl mockReadSitemap;
-    @MockBean
-    private ResubmitService mockSubmit;
     @MockBean
     private MailService mockMail;
     @Autowired
@@ -118,7 +116,7 @@ public class SitemapUpdateEntityServiceTest {
         entityService.update();
 
         // check index file
-        String generatedIndex = new String(mockStorage.getContent("sitemap-entity-blue-index.xml"));
+        String generatedIndex = new String(mockStorage.getObjectContent("sitemap-entity-blue-index.xml"));
         assertNotNull(generatedIndex);
         String expectedSitemapFile = "/sitemap-entity.xml?from=1&amp;to=20";
         String expected = "<loc>" +PORTAL_BASE_URL + expectedSitemapFile + "</loc>";
@@ -126,7 +124,7 @@ public class SitemapUpdateEntityServiceTest {
                 XmlUtils.harmonizeXml(generatedIndex).contains(expected));
 
         // check sitemap file
-        String generatedSitemap = new String(mockStorage.getContent("sitemap-entity-blue.xml?from=1&to=20"));
+        String generatedSitemap = new String(mockStorage.getObjectContent("sitemap-entity-blue.xml?from=1&to=20"));
         assertNotNull(generatedSitemap);
         String expectedEntity = "https://www-test.eanadev.org/en/collections/person/34712";
         expected = "<url><loc>"+expectedEntity+"</loc></url>";

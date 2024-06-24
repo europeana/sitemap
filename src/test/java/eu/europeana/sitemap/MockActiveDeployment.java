@@ -25,36 +25,22 @@ public class MockActiveDeployment {
     private static Deployment active = Deployment.GREEN;
 
     public static ActiveDeploymentService setup(ActiveDeploymentService mockActiveDeployment) {
-        when(mockActiveDeployment.getActiveDeployment(any())).thenAnswer(new Answer<Deployment>() {
-            @Override
-            public Deployment answer(InvocationOnMock invocation) throws Throwable {
-                return active;
+        when(mockActiveDeployment.getActiveDeployment(any())).thenAnswer((Answer<Deployment>) invocation -> active);
+        when(mockActiveDeployment.getInactiveDeployment(any())).thenAnswer((Answer<Deployment>) invocation -> {
+            if (Deployment.GREEN.equals(active)) {
+                return Deployment.BLUE;
             }
+            return Deployment.GREEN;
         });
-        when(mockActiveDeployment.getInactiveDeployment(any())).thenAnswer(new Answer<Deployment>() {
-            @Override
-            public Deployment answer(InvocationOnMock invocation) throws Throwable {
-                if (Deployment.GREEN.equals(active)) {
-                    return Deployment.BLUE;
-                }
-                return Deployment.GREEN;
+        when(mockActiveDeployment.switchDeployment(any())).thenAnswer((Answer<Deployment>) invocation -> {
+            if (Deployment.GREEN.equals(active)) {
+                return Deployment.BLUE;
             }
+            return Deployment.GREEN;
         });
-        when(mockActiveDeployment.switchDeployment(any())).thenAnswer(new Answer<Deployment>() {
-            @Override
-            public Deployment answer(InvocationOnMock invocation) throws Throwable {
-                if (Deployment.GREEN.equals(active)) {
-                    return Deployment.BLUE;
-                }
-                return Deployment.GREEN;
-            }
-        });
-        when(mockActiveDeployment.deleteInactiveFiles(any())).thenAnswer(new Answer<Long>() {
-            @Override
-            public Long answer(InvocationOnMock invocation) throws Throwable {
-                LOG.info("No inactive files to delete");
-                return 0l;
-            }
+        when(mockActiveDeployment.deleteInactiveFiles(any())).thenAnswer((Answer<Long>) invocation -> {
+            LOG.info("No inactive files to delete");
+            return 0l;
         });
 
         return mockActiveDeployment;

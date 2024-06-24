@@ -17,6 +17,7 @@ public final class StorageFileName {
     /**
      * Generates the name of the sitemap index file as it is (or should be) stored in the object storage
      * @param type sitemap type (record or entity)
+     * @param blueGreen type of deployment (blue or green)
      * @return sitemap index file name
      */
     public static String getSitemapIndexFileName(SitemapType type, Deployment blueGreen) {

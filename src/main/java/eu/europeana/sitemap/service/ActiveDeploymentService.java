@@ -1,24 +1,20 @@
 package eu.europeana.sitemap.service;
 
-import eu.europeana.domain.StorageObject;
-import eu.europeana.features.ObjectStorageClient;
+import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.StorageFileName;
-import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jclouds.io.Payload;
-import org.jclouds.io.payloads.StringPayload;
-import org.jclouds.openstack.swift.v1.domain.SwiftObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.StringWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
-import java.util.Optional;
 
 
 /**
@@ -35,50 +31,51 @@ public class ActiveDeploymentService {
 
     private static final int PROGRESS_INTERVAL = 100;
 
-    private final ObjectStorageClient objectStorageProvider;
+    private final S3ObjectStorageClient objectStorageProvider;
 
     /**
+     * Initialize the service
      * @param objectStorageClient storage where active deployment info is saved
      */
     @Autowired
-    public ActiveDeploymentService(ObjectStorageClient objectStorageClient) {
+    public ActiveDeploymentService(S3ObjectStorageClient objectStorageClient) {
         LOG.debug("Init");
         this.objectStorageProvider = objectStorageClient;
     }
 
     /**
-     * Returns the active deployment (blue or green), depending which value is in the active file. If no active file is
-     * present we create a new one with the value "green"
-     * @param sitemapType type of sitemap (record or entity)     *
+     * Returns the active deployment (blue or green), depending on which value is in the active file. If no active file
+     * is present we create a new one with the value "green"
+     * @param sitemapType type of sitemap (record or entity)
+     * @return deployment that is active for this type
      */
     public Deployment getActiveDeployment(SitemapType sitemapType) {
         Deployment result = null;
         String activeFileName = StorageFileName.getActiveDeploymentFileName(sitemapType);
         LOG.debug("Reading active file {}", activeFileName);
-        Optional<StorageObject> optional = objectStorageProvider.get(activeFileName);
-        if (optional.isPresent()) {
-            StorageObject storageObject = optional.get();
-            try (InputStream in = storageObject.getPayload().openStream();
-                 StringWriter writer = new StringWriter()) {
-                IOUtils.copy(in, writer);
-                result = Deployment.fromString(writer.toString());
-                storageObject.getPayload().close();
-            } catch (IOException e) {
-                LOG.error("Error while processing the file {} to determine the current active site map", activeFileName, e);
+
+        try (S3Object s3Object = objectStorageProvider.getObject(activeFileName)) {
+            if (s3Object == null) {
+                // if the active file does not exist we create a new one
+                LOG.error("File {} not present. Initializing new active deployment file...", activeFileName);
+                saveToStorageProvider(Deployment.GREEN, activeFileName);
+                result = Deployment.GREEN;
+            } else {
+                String blueGreen = new String(s3Object.getObjectContent().readAllBytes(), StandardCharsets.UTF_8);
+                result = Deployment.fromString(blueGreen);
             }
-        } else {
-            // if the active file does not exist we create a new one
-            // Ideally, it should be present
-            LOG.error("Active not present. Initializing active deployment file...");
-            saveToStorageProvider(Deployment.GREEN, activeFileName);
-            result = Deployment.GREEN;
+        } catch (IOException e) {
+            LOG.error("Error while processing the file {} to determine the current active site map", activeFileName, e);
         }
         LOG.debug("Returning deployment {}", result);
         return result;
     }
 
     /**
-     * Returns the inactive deployment (blue or green)
+     * Returns the inactive deployment (blue or green), depending on which value is in the active file. If no active file
+     * is present we create a new one with the value "green"
+     * @param sitemapType type of sitemap (record or entity)
+     * @return deployment that is active for this type
      */
     public Deployment getInactiveDeployment(SitemapType sitemapType) {
         if (Deployment.BLUE == getActiveDeployment(sitemapType)) {
@@ -88,40 +85,56 @@ public class ActiveDeploymentService {
     }
 
     /**
-     * Deletes all the inactive files
+     * Deletes all the inactive files for the provided type
+     * @param sitemapType type of sitemap (record or entity)
      * @return the number of deleted files
      */
     public long deleteInactiveFiles(SitemapType sitemapType) {
-        List<StorageObject> listFiles = objectStorageProvider.list();
-        if (listFiles.isEmpty()) {
+        ObjectListing listing = objectStorageProvider.list();
+        List<S3ObjectSummary> results = listing.getObjectSummaries();
+        if (results.isEmpty()) {
             LOG.info("No files to remove.");
             return 0;
-        } else {
-            Deployment inactive = this.getInactiveDeployment(sitemapType);
-            String fileNameToDelete = StorageFileName.getSitemapFileName(sitemapType, inactive, null);
-            // remove .xml extension so we delete also the index file
-            fileNameToDelete = fileNameToDelete.split(Constants.XML_EXTENSION)[0];
-   
-            long i = 0;
-            LOG.info("Deleting all old files with the name {} ...", fileNameToDelete);
-            for (StorageObject obj : listFiles) {
-                if (obj.getName().startsWith(fileNameToDelete)) {
-                    LOG.debug("Deleting file {}", obj.getName());
-                    objectStorageProvider.delete(obj.getName());
-                    i++;
-                }
-                // report on progress
-                if (i > 0 && i % PROGRESS_INTERVAL == 0) {
-                    LOG.info("Deleted {} old files", i);
-                }
-            }
-            LOG.info("Deleted all {} old files", i);
-            return i;
         }
+
+        // determine inactive files
+        Deployment inactive = this.getInactiveDeployment(sitemapType);
+        String fileNameToDelete = StorageFileName.getSitemapFileName(sitemapType, inactive, null);
+        // remove .xml extension so we delete also the index file
+        fileNameToDelete = fileNameToDelete.split(Constants.XML_EXTENSION)[0];
+
+        long i = 0;
+        LOG.info("Deleting all old files with name starting with {} ...", fileNameToDelete);
+        while (results != null) {
+            for (S3ObjectSummary obj : results) {
+                i = deleteInactiveFile(obj.getKey(), fileNameToDelete, i);
+            }
+            if (listing.isTruncated()) {
+                results = listing.getObjectSummaries();
+            } else {
+                results = null;
+            }
+        }
+        LOG.info("Deleted all {} old files", i);
+        return i;
+    }
+
+    private long deleteInactiveFile(String fileName, String fileNameToDelete, long filesDeleted) {
+        if (fileName.startsWith(fileNameToDelete)) {
+            LOG.debug("Deleting file {}", fileName);
+            objectStorageProvider.deleteObject(fileName);
+            filesDeleted++;
+            // report on progress
+            if (filesDeleted > 0 && filesDeleted % PROGRESS_INTERVAL == 0) {
+                LOG.info("Deleted {} old files", filesDeleted);
+            }
+        }
+        return filesDeleted;
     }
 
     /**
-     * Switch between blue/green deployment
+     * Switch between blue/green deployment for the provided type
+     * @param sitemapType type of sitemap (record or entity)
      * @return the now active deployment (blue/green)
      */
     public Deployment switchDeployment(SitemapType sitemapType) {
@@ -132,15 +145,13 @@ public class ActiveDeploymentService {
     }
 
     /**
-     * Creates a new active file or updates it's contents
-     *
-     * @param blueGreen corresponds to {@link SwiftObject#getPayload()}
-     * @return {@link SwiftObject#getETag()} of the object.
+     * Creates a new active file or updates its contents
+     * @param blueGreen deployment
+     * @return eTag of the saved object.
      */
     private String saveToStorageProvider(Deployment blueGreen, String activeFileName) {
-        Payload payload = new StringPayload(blueGreen.toString());
         LOG.debug("Saving value {} in file {} ", blueGreen, activeFileName);
-        return objectStorageProvider.put(activeFileName, payload);
+        return objectStorageProvider.putObject(activeFileName, blueGreen.toString());
     }
 
 }
