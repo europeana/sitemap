@@ -22,19 +22,21 @@ import eu.europeana.sitemap.StorageFileName;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.ResponseEntity;
 
 /**
  * Abstract class that provides the basic controller functionality for handling retrieval requests for
  * the various sitemap types
  */
-public abstract class SitemapAbstractController {
+public abstract class AbstractSitemapController {
 
     private SitemapType sitemapType;
     private ActiveDeploymentService activeDeployment;
     private SitemapFileController readController;
 
 
-    public SitemapAbstractController(SitemapType sitemapType, ActiveDeploymentService activeDeployment, SitemapFileController readController) {
+    protected AbstractSitemapController(SitemapType sitemapType, ActiveDeploymentService activeDeployment, SitemapFileController readController) {
         this.sitemapType = sitemapType;
         this.activeDeployment = activeDeployment;
         this.readController = readController;
@@ -46,10 +48,10 @@ public abstract class SitemapAbstractController {
      * @throws SiteMapNotFoundException if the index file wasn't found
      * @return contents of sitemap index file
      */
-    public String getSitemapIndex() throws SiteMapNotFoundException {
+    public ResponseEntity<InputStreamResource> getSitemapIndex() throws SiteMapNotFoundException {
         Deployment active = activeDeployment.getActiveDeployment(sitemapType);
         String fileName = StorageFileName.getSitemapIndexFileName(sitemapType, active);
-        return readController.file(fileName);
+        return readController.fileXml(fileName);
     }
 
     /**
@@ -61,11 +63,11 @@ public abstract class SitemapAbstractController {
      * @throws SiteMapNotFoundException if the sitemap file wasn't found
      * @return contents of sitemap file
      */
-    public String getSitemapFile(String from, String to) throws SiteMapNotFoundException {
+    public ResponseEntity<InputStreamResource> getSitemapFile(String from, String to) throws SiteMapNotFoundException {
         Deployment active = activeDeployment.getActiveDeployment(sitemapType);
         String appendix = "?from=" + from + "&to=" + to;
         String fileName = StorageFileName.getSitemapFileName(sitemapType, active, appendix);
-        return readController.file(fileName);
+        return readController.fileXml(fileName);
     }
 
 }

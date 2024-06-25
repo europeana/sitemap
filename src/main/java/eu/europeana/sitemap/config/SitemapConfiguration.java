@@ -1,10 +1,10 @@
 package eu.europeana.sitemap.config;
 
 
-import eu.europeana.features.ObjectStorageClient;
 import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.mongo.MongoProvider;
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,7 +12,6 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-import jakarta.annotation.PostConstruct;
 import java.net.MalformedURLException;
 import java.net.URL;
 
@@ -30,10 +29,6 @@ public class SitemapConfiguration {
     @Value("${portal.base.url}")
     private String portalBaseUrl;
 
-    @Value("${record.cron.update}")
-    private String recordUpdateInterval;
-    @Value("${record.resubmit}")
-    private boolean recordResubmit;
     @Value("${record.content.tier}")
     private String recordContentTier;
     @Value("${record.metadata.tier}")
@@ -43,10 +38,6 @@ public class SitemapConfiguration {
     @Value("${mongodb.record.dbname}")
     private String mongoDatabase;
 
-    @Value("${entity.cron.update}")
-    private String entityUpdateInterval;
-    @Value("${entity.resubmit}")
-    private boolean entityResubmit;
     @Value("${entity.api.url}")
     private String entityApiUrl;
     @Value("${entity.api.wskey}")
@@ -94,14 +85,11 @@ public class SitemapConfiguration {
     }
 
     /**
-     * Location where all sitemap files are stored (Amazon S3)
+     * Location where all sitemap files are stored
      * @return object storage client
      */
     @Bean
-    public ObjectStorageClient objectStorageClient() {
-        if (StringUtils.isEmpty(endpoint)) {
-            return new S3ObjectStorageClient(key, secret, region, bucket);
-        }
+    public S3ObjectStorageClient objectStorageClient() {
         // for IBM Cloud S3 storage we need to provide an endpoint
         return new S3ObjectStorageClient(key, secret, region, bucket, endpoint);
     }
@@ -115,28 +103,12 @@ public class SitemapConfiguration {
         return portalBaseUrl;
     }
 
-    public String getRecordUpdateInterval() {
-        return recordUpdateInterval;
-    }
-
-    public boolean isRecordResubmit() {
-        return recordResubmit;
-    }
-
     public String getRecordContentTier() {
         return recordContentTier;
     }
 
     public String getRecordMetadataTier() {
         return recordMetadataTier;
-    }
-
-    public String getEntityUpdateInterval() {
-        return entityUpdateInterval;
-    }
-
-    public boolean isEntityResubmit() {
-        return entityResubmit;
     }
 
     public String getEntityApiUrl() {

@@ -2,17 +2,12 @@ package eu.europeana.sitemap.config;
 
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.text.StringEscapeUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
-
-import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Generates the various portal urls that are publicly accessible. This includes record urls, entity urls as well as
@@ -24,8 +19,6 @@ import java.util.regex.Pattern;
 public class PortalUrl {
 
     private static final Logger LOG = LogManager.getLogger(PortalUrl.class);
-
-    private static final Pattern CHAR_NUMBER_OR_DASH = Pattern.compile("[^-a-zA-Z0-9]");
 
     @Value("${portal.base.url}")
     private String portalBaseUrl;
@@ -41,12 +34,11 @@ public class PortalUrl {
      * @return the url of a public sitemap index file
      */
     public String getSitemapIndexUrl(SitemapType type) {
-        StringBuilder s = new StringBuilder(portalBaseUrl)
-                .append(Constants.PATH_SEPARATOR)
-                .append(type.getFileNameBase())
-                .append(Constants.SITEMAP_INDEX_SUFFIX)
-                .append(Constants.XML_EXTENSION);
-        return s.toString();
+        return portalBaseUrl +
+                Constants.PATH_SEPARATOR +
+                type.getFileNameBase() +
+                Constants.SITEMAP_INDEX_SUFFIX +
+                Constants.XML_EXTENSION;
     }
 
     /**
@@ -58,12 +50,11 @@ public class PortalUrl {
      * @return the url of a public sitemap file
      */
     private static String getSitemapUrlPlain(String baseUrl, SitemapType type, String appendix) {
-        StringBuilder s = new StringBuilder(baseUrl)
-                .append(Constants.PATH_SEPARATOR)
-                .append(type.getFileNameBase())
-                .append(Constants.XML_EXTENSION)
-                .append(appendix);
-        return s.toString();
+        return baseUrl +
+                Constants.PATH_SEPARATOR +
+                type.getFileNameBase() +
+                Constants.XML_EXTENSION +
+                appendix;
     }
 
     /**
@@ -89,6 +80,7 @@ public class PortalUrl {
     protected String getSitemapUrlEncoded(SitemapType type, String appendix) {
         return getSitemapUrlEncoded(portalBaseUrl, type, appendix);
     }
+
     /**
      * Return a portal record page url
      * @param europeanaId CHO id of format /<datasetId>/<recordId>
@@ -106,13 +98,12 @@ public class PortalUrl {
      * @return canonical portal entity page url
      */
     public String getEntityUrl(String type, String id) {
-        StringBuilder s = new StringBuilder(portalBaseUrl)
-                .append(entityPortalPath)
-                .append(Constants.PATH_SEPARATOR)
-                .append(convertEntityTypeToPortalPath(type))
-                .append(Constants.PATH_SEPARATOR)
-                .append(getEntityIdNumber(id));
-        return s.toString();
+        return portalBaseUrl +
+                entityPortalPath +
+                Constants.PATH_SEPARATOR +
+                convertEntityTypeToPortalPath(type) +
+                Constants.PATH_SEPARATOR +
+                getEntityIdNumber(id);
     }
 
     /**
@@ -120,23 +111,17 @@ public class PortalUrl {
      * @param language page language
      * @param type entity type (either "agent" or "concept")
      * @param id entity id number, note that this is only unique within an entity type
-     * @param prefLabel english preflabel of the entity, can be empty or null
      * @return a language-specific portal entity page url
      */
-    public String getEntityUrl(String language, String type, String id, String prefLabel) {
-        StringBuilder s = new StringBuilder(portalBaseUrl);
-        s.append(Constants.PATH_SEPARATOR).
-                    append(language).
-                    append(entityPortalPath).
-                    append(Constants.PATH_SEPARATOR).
-                    append(convertEntityTypeToPortalPath(type)).
-                    append(Constants.PATH_SEPARATOR).
-                    append(getEntityIdNumber(id));
-        if (!StringUtils.isEmpty(prefLabel)) {
-            s.append('-');
-            s.append(convertPrefLabel(prefLabel));
-        }
-        return s.toString();
+    public String getEntityUrl(String language, String type, String id) {
+        return portalBaseUrl +
+                Constants.PATH_SEPARATOR +
+                language +
+                entityPortalPath +
+                Constants.PATH_SEPARATOR +
+                convertEntityTypeToPortalPath(type) +
+                Constants.PATH_SEPARATOR +
+                getEntityIdNumber(id);
     }
 
     /**
@@ -168,34 +153,5 @@ public class PortalUrl {
         }
         return result;
     }
-
-    /**
-     * Converts an English(!) preflabel to a String as used by Portal in entity-urls. The idea is that by generating the
-     * precise Portal url we'll prevent including urls in the sitemap that redirect somewhere else (at least as much as
-     * possible).
-     *
-     * @deprecated March 2020: This should return the same results as the Ruby library used by Portal which is https://github.com/rsl/stringex
-     * but sadly it doesn't in all cases, so at the moment this code is not used.
-     *
-     */
-    @Deprecated(since = "March 2020")
-    private String convertPrefLabel(String prefLabel) {
-        String result = prefLabel.replaceAll("\\s", "-").replace("&", "and");
-
-        // strip everything that's not a normal character, number or dash
-        Matcher matcher = CHAR_NUMBER_OR_DASH.matcher(result);
-        return matcher.replaceAll("").toLowerCase(Locale.GERMAN);
-
-        // TODO note that this method doesn't generate the correct url for several entities, including but not limited to:
-        // http://data.europeana.eu/concept/base/443 (name is "Pilón")
-        // http://data.europeana.eu/concept/base/457 (name is "Volkstümliche Musik")
-        // http://data.europeana.eu/concept/base/521 (name is "Batá-rumba")
-        // http://data.europeana.eu/concept/base/488 (name is "Nòva cançon")
-        // http://data.europeana.eu/agent/base/34859 (name is "The B.G.'z")
-        // However since Portal will always redirect to the correct url if we get it wrong we'll let this be for now
-    }
-
-
-
 
 }

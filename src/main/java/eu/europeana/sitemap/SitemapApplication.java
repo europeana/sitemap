@@ -1,7 +1,7 @@
 package eu.europeana.sitemap;
 
 import eu.europeana.sitemap.exceptions.SiteMapException;
-import eu.europeana.sitemap.service.update.UpdateAbstractService;
+import eu.europeana.sitemap.service.update.AbstractUpdateService;
 import eu.europeana.sitemap.service.update.UpdateEntityService;
 import eu.europeana.sitemap.service.update.UpdateRecordService;
 import org.apache.logging.log4j.LogManager;
@@ -80,7 +80,7 @@ public class SitemapApplication implements CommandLineRunner {
             LOG.info("Command-line arguments = {}", Arrays.stream(args).toArray());
             String taskArg = args[0];
             // arg already validated, so we know it's valid at this point
-            UpdateAbstractService updateService =
+            AbstractUpdateService updateService =
                     (RECORD.name().equalsIgnoreCase(taskArg) ? this.updateRecordService : this.updateEntityService);
             LOG.info("Starting automatic updating for {} sitemap...", updateService.getSitemapType());
             try {

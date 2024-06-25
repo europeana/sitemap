@@ -1,12 +1,14 @@
 package eu.europeana.sitemap;
 
-import eu.europeana.domain.StorageObject;
-import eu.europeana.features.ObjectStorageClient;
-import org.jclouds.io.Payload;
-import org.jclouds.io.payloads.ByteArrayPayload;
-import org.mockito.invocation.InvocationOnMock;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
+import com.amazonaws.services.s3.model.S3Object;
+import com.amazonaws.services.s3.model.S3ObjectSummary;
+import eu.europeana.features.S3ObjectStorageClient;
 import org.mockito.stubbing.Answer;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
@@ -16,69 +18,49 @@ import static org.mockito.Mockito.*;
  */
 public class MockObjectStorage {
 
-    private static Map<String, Payload> storageMap = new HashMap<>();
+    private static final Map<String, S3Object> storageMap = new HashMap<>();
 
-    public static ObjectStorageClient setup(ObjectStorageClient mockStorage) {
-        when(mockStorage.put(anyString(), any())).thenAnswer(new Answer<String>() {
-            @Override
-            public String answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                String fileName = (String) args[0];
-                Payload payload = (Payload) args[1];
-                storageMap.put(fileName, payload);
-                return fileName;
-            }
+    public static S3ObjectStorageClient setup(S3ObjectStorageClient mockStorage) {
+        when(mockStorage.listAll(any())).thenAnswer((Answer<ListObjectsV2Result>) invocation ->
+                new ListObjectsV2ResultMock(storageMap)
+        );
+        when(mockStorage.listAll(any(), anyInt())).thenAnswer((Answer<ListObjectsV2Result>) invocation ->
+                new ListObjectsV2ResultMock(storageMap)
+        );
+        when(mockStorage.putObject(anyString(), any())).thenAnswer((Answer<String>) invocation -> {
+            Object[] args = invocation.getArguments();
+            String fileName = (String) args[0];
+            String contents = (String) args[1];
+            S3Object file = new S3Object();
+            file.setObjectContent(new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8)));
+            storageMap.put(fileName, file);
+            return fileName;
         });
-        when(mockStorage.isAvailable(anyString())).thenAnswer(new Answer<Boolean>() {
-            @Override
-            public Boolean answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                String fileName = (String) args[0];
-                return storageMap.keySet().contains(fileName);
-            }
+        when(mockStorage.isObjectAvailable(anyString())).thenAnswer((Answer<Boolean>) invocation -> {
+            Object[] args = invocation.getArguments();
+            String fileName = (String) args[0];
+            return storageMap.keySet().contains(fileName);
         });
-        when(mockStorage.getContent(anyString())).thenAnswer(new Answer<byte[]>() {
-            @Override
-            public byte[] answer(InvocationOnMock invocation)  {
-                Object[] args = invocation.getArguments();
-                String fileName = (String) args[0];
-                Payload result = storageMap.get(fileName);
-                if (result != null) {
-                    return ((ByteArrayPayload) result).getRawContent();
-                }
-                return null;
-            }
+        when(mockStorage.getObject(anyString())).thenAnswer((Answer<S3Object>) invocation -> {
+            Object[] args = invocation.getArguments();
+            String fileName = (String) args[0];
+            return storageMap.get(fileName);
         });
-        when(mockStorage.get(anyString())).thenAnswer(new Answer<Optional<StorageObject>>() {
-            @Override
-            public Optional<StorageObject> answer(InvocationOnMock invocation) {
-                Object[] args = invocation.getArguments();
-                String fileName = (String) args[0];
-                Payload payload = storageMap.get(fileName);
-                if (payload != null) {
-                    return Optional.of(new StorageObject(fileName, null, null, payload));
-                }
-                return Optional.empty();
-            }
+        when(mockStorage.getObjectContent(anyString())).thenAnswer((Answer<byte[]>) invocation -> {
+            Object[] args = invocation.getArguments();
+            String fileName = (String) args[0];
+            return storageMap.get(fileName).getObjectContent().readAllBytes();
         });
-        when(mockStorage.list()).thenAnswer(new Answer<List<StorageObject>>() {
-            @Override
-            public List<StorageObject> answer(InvocationOnMock invocation) {
-                List<StorageObject> result = new ArrayList<>();
-                for (Map.Entry<String, Payload> entry : storageMap.entrySet()) {
-                    result.add(new StorageObject(entry.getKey(), null, null, entry.getValue()));
-                }
-                return result;
-            }
+        when(mockStorage.getObjectStream(anyString())).thenAnswer((Answer<InputStream>) invocation -> {
+            Object[] args = invocation.getArguments();
+            String fileName = (String) args[0];
+            return storageMap.get(fileName).getObjectContent().getDelegateStream();
         });
-        doAnswer(new Answer<Void>() {
-            @Override
-            public Void answer(InvocationOnMock invocation) {
-                String fileName = (String) invocation.getArguments()[0];
-                storageMap.remove(fileName);
-                return null;
-            }
-        }).when(mockStorage).delete(anyString());
+        doAnswer((Answer<Void>) invocation -> {
+            String fileName = (String) invocation.getArguments()[0];
+            storageMap.remove(fileName);
+            return null;
+        }).when(mockStorage).deleteObject(anyString());
 
         return mockStorage;
     }
@@ -89,4 +71,37 @@ public class MockObjectStorage {
     public static void clear() {
         storageMap.clear();
     }
+
+
+    private static final class ListObjectsV2ResultMock extends ListObjectsV2Result {
+
+        private List<S3ObjectSummary> objectSummariesMock;
+
+        public ListObjectsV2ResultMock(Map<String, S3Object> storageMap) {
+            objectSummariesMock = new ArrayList();
+            for (Map.Entry<String, S3Object> entry : storageMap.entrySet()) {
+                S3ObjectSummary summary = new S3ObjectSummary();
+                summary.setKey(entry.getKey());
+                summary.setSize(100); // fake number, just to have some data
+                summary.setLastModified(new Date()); // fake date, just to have some data
+                objectSummariesMock.add(summary);
+            }
+        }
+
+        @Override
+        public List<S3ObjectSummary> getObjectSummaries() {
+            return this.objectSummariesMock;
+        }
+
+        @Override
+        public String getNextContinuationToken() {
+            return null;
+        }
+
+        @Override
+        public int getKeyCount() {
+            return this.objectSummariesMock.size();
+        }
+    }
+
 }

@@ -2,7 +2,7 @@ package eu.europeana.sitemap.service.update;
 
 
 import com.jayway.jsonpath.JsonPath;
-import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
@@ -10,7 +10,6 @@ import eu.europeana.sitemap.exceptions.EntityQueryException;
 import eu.europeana.sitemap.exceptions.InvalidApiKeyException;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
-import eu.europeana.sitemap.service.ReadSitemapService;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -35,7 +34,7 @@ import java.util.HashMap;
  * Created on 01-02-2019
  */
 @Service
-public class UpdateEntityService extends UpdateAbstractService {
+public class UpdateEntityService extends AbstractUpdateService {
 
     private static final Logger LOG = LogManager.getLogger(UpdateEntityService.class);
 
@@ -51,10 +50,9 @@ public class UpdateEntityService extends UpdateAbstractService {
     private CloseableHttpClient httpClient = HttpClients.createDefault();
 
     @Autowired
-    public UpdateEntityService(SitemapConfiguration config, ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
-                               ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
-                               PortalUrl portalUrl) {
-        super(SitemapType.ENTITY, objectStorage, deploymentService, readSitemapService, resubmitService, mailService, ITEMS_PER_SITEMAP_FILE);
+    public UpdateEntityService(SitemapConfiguration config, S3ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
+                               MailService mailService, PortalUrl portalUrl) {
+        super(SitemapType.ENTITY, objectStorage, deploymentService, mailService, ITEMS_PER_SITEMAP_FILE);
         this.config = config;
         this.portalUrl = portalUrl;
     }
@@ -75,7 +73,7 @@ public class UpdateEntityService extends UpdateAbstractService {
             EntityData[] entities = this.parseEntityData(entityData);
             for (EntityData entity : entities) {
                 LOG.debug("Adding entity {} with type {}", entity.getId(), entity.getType());
-                String url = portalUrl.getEntityUrl("en", entity.getType(), entity.getId(), null);
+                String url = portalUrl.getEntityUrl("en", entity.getType(), entity.getId());
                 sitemapGenerator.addItem(url, null, null); // there's no priority or lastmodified for entities
             }
             retrieved = retrieved + entities.length;
@@ -92,22 +90,6 @@ public class UpdateEntityService extends UpdateAbstractService {
     @Override
     public String getWebsiteBaseUrl() {
         return config.getPortalBaseUrl();
-    }
-
-    /**
-     * @see UpdateService#getUpdateInterval()
-     */
-    @Override
-    public String getUpdateInterval() {
-        return config.getEntityUpdateInterval();
-    }
-
-    /**
-     * @see UpdateService#doResubmit()
-     */
-    @Override
-    public boolean doResubmit() {
-        return config.isEntityResubmit();
     }
 
     /**

@@ -21,16 +21,4 @@ public interface UpdateService {
      */
     public SitemapType getSitemapType();
 
-    /**
-     * @return cron style interval for when automatic updates should be done, can be left empty
-     */
-    public String getUpdateInterval();
-
-    /**
-     * Method that allows implementing services to indicate whether a changed sitemap index files should be
-     * resubmitted to search engines or not
-     * @return true if it should be resubmitting, otherwise false
-     */
-    public boolean doResubmit();
-
 }

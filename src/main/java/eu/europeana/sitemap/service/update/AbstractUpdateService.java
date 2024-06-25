@@ -1,14 +1,11 @@
 package eu.europeana.sitemap.service.update;
 
-import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
-import eu.europeana.sitemap.StorageFileName;
 import eu.europeana.sitemap.exceptions.SiteMapException;
-import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
-import eu.europeana.sitemap.service.ReadSitemapService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.Period;
@@ -26,32 +23,27 @@ import java.util.Date;
  *     <li>Notify search engines (if the index file has changed)</li>
  * </ol>
  */
-public abstract class UpdateAbstractService implements UpdateService {
+public abstract class AbstractUpdateService implements UpdateService {
 
-    private static final Logger LOG = LogManager.getLogger(UpdateAbstractService.class);
+    private static final Logger LOG = LogManager.getLogger(AbstractUpdateService.class);
 
     private static final String UPDATE_IN_PROGRESS = "In progress";
     private static final String UPDATE_FINISHED = "Finished";
 
     private final SitemapType sitemapType;
-    private final ObjectStorageClient objectStorage;
+    private final S3ObjectStorageClient objectStorage;
     private final ActiveDeploymentService deploymentService;
-    private final ReadSitemapService readSitemapService;
-    private final ResubmitService resubmitService;
     private final MailService mailService;
     private final int itemsPerSitemap;
 
     private String updateStatus = "initial";
     private Date updateStartTime;
 
-    public UpdateAbstractService(SitemapType type, ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
-                                 ReadSitemapService readSitemapService, ResubmitService resubmitService, MailService mailService,
-                                 int itemsPerSitemap) {
+    protected AbstractUpdateService(SitemapType type, S3ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
+                                    MailService mailService, int itemsPerSitemap) {
         this.sitemapType = type;
         this.objectStorage = objectStorage;
         this.deploymentService = deploymentService;
-        this.readSitemapService = readSitemapService;
-        this.resubmitService = resubmitService;
         this.mailService = mailService;
         this.itemsPerSitemap = itemsPerSitemap;
     }
@@ -77,16 +69,15 @@ public abstract class UpdateAbstractService implements UpdateService {
 
             // 4. Finish generation
             generator.finish();
-            LOG.info("{} sitemap generation completed in {}", sitemapType,
-                    getDurationText(System.currentTimeMillis() - generateStartTime));
+            if (LOG.isInfoEnabled()) {
+                LOG.info("{} sitemap generation completed in {}", sitemapType,
+                        getDurationText(System.currentTimeMillis() - generateStartTime));
+            }
 
             // 5. Switch deployment
             LOG.debug("Switching deployment...");
             Deployment newDeploy = deploymentService.switchDeployment(sitemapType);
             LOG.info("New deployment is now {}", newDeploy);
-
-            // 6. DEPRECATED Notify search engines (only if index changed)
-            // this.notifySearchEngines(sitemapType);
 
         } catch (RuntimeException e) {
             String message = "Error updating " + sitemapType + " sitemap";
@@ -141,37 +132,6 @@ public abstract class UpdateAbstractService implements UpdateService {
             updateStartTime = null;
             updateStatus = UPDATE_FINISHED;
             LOG.info("Update {}", updateStatus);
-        }
-    }
-
-    @SuppressWarnings("squid:S1166") // we intentionally do not log exception stacktrace here when catching SiteMapNotFoundException
-    private void notifySearchEngines(SitemapType sitemapType) {
-        if (this.doResubmit()) {
-            // Check for indexFileChanges commented out for EA-3189. We would like to sent update signal always now
-            //if (indexFileChanged(sitemapType)) {
-                resubmitService.notifySearchEngines(sitemapType);
-            //} else {
-            //    LOG.info("Skipping search engine notification. Generated index is the same as previous index");
-            //}
-        } else {
-            LOG.info("Skipping search engine notification because it's disabled in the configuration");
-        }
-    }
-
-    private boolean indexFileChanged(SitemapType sitemapType) {
-        String blueFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.BLUE);
-        String greenFileName = StorageFileName.getSitemapIndexFileName(sitemapType, Deployment.GREEN);
-        try {
-            String indexBlue = readSitemapService.getFileContent(blueFileName);
-            String indexGreen = readSitemapService.getFileContent(greenFileName);
-            if (indexBlue != null) {
-                return !indexBlue.equalsIgnoreCase(indexGreen);
-            }
-            return true;
-        } catch (SiteMapNotFoundException e) {
-            // Note that the first time we run the application there is no green index, so it will always give a warning then
-            LOG.warn("Could not read file {}", greenFileName, e);
-            return false;
         }
     }
 
