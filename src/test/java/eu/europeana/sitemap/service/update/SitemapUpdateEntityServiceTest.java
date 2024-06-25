@@ -9,12 +9,12 @@ import eu.europeana.sitemap.XmlUtils;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.exceptions.SiteMapException;
+import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapServiceImpl;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,6 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
 @WireMockTest(httpsEnabled = true)
 @TestPropertySource("classpath:sitemap-test.properties")
 @SpringBootTest(classes = {UpdateEntityService.class, SitemapConfiguration.class, PortalUrl.class})
-@Disabled     // TODO FIX AND ENABLE AGAIN
 public class SitemapUpdateEntityServiceTest {
 
     private static final String PORTAL_BASE_URL = "https://www-test.eanadev.org";
@@ -61,6 +60,8 @@ public class SitemapUpdateEntityServiceTest {
     private ReadSitemapServiceImpl mockReadSitemap;
     @MockBean
     private MailService mockMail;
+    @MockBean
+    private MongoProvider mongoProvider;
     @Autowired
     private SitemapConfiguration configuration;
     @Autowired
@@ -70,6 +71,9 @@ public class SitemapUpdateEntityServiceTest {
 
     @BeforeEach
     public void init() throws IOException {
+        LogManager.getLogger(SitemapUpdateEntityServiceTest.class).info("Mock API port {}, httpsPort {}",
+                wmExtension.getPort(), wmExtension.getHttpsPort());
+
         // note that the mocks are not connected to each other, so MockActiveDeployment does not use MockObjectStorage for example
         mockStorage = MockObjectStorage.setup(mockStorage);
         mockDeployment = MockActiveDeployment.setup(mockDeployment);
@@ -77,9 +81,6 @@ public class SitemapUpdateEntityServiceTest {
     }
 
     private void setupEntityApiMock() throws IOException {
-        LogManager.getLogger(SitemapUpdateEntityServiceTest.class).info("Mock API port {}, httpsPort {}",
-                wmExtension.getPort(), wmExtension.getHttpsPort());
-
         String dummyEntitySearchResult = IOUtils.toString(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("dummy_search_result.json"),"UTF-8");
 

@@ -4,9 +4,7 @@ import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
-
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;

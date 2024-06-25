@@ -1,6 +1,6 @@
 package eu.europeana.sitemap;
 
-import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import eu.europeana.features.S3ObjectStorageClient;
@@ -9,10 +9,7 @@ import org.mockito.stubbing.Answer;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static org.mockito.Mockito.*;
 
@@ -21,24 +18,7 @@ import static org.mockito.Mockito.*;
  */
 public class MockObjectStorage {
 
-    private static ObjectListing mockObjectListing = setup(mock(ObjectListing.class));
     private static Map<String, S3Object> storageMap = new HashMap<>();
-
-    // We support limited list functionality with file names only and no pagination
-    public static ObjectListing setup(ObjectListing mockListing) {
-        when(mockListing.isTruncated()).thenAnswer((Answer<Boolean>) invocation -> false);
-        when(mockListing.getObjectSummaries()).thenAnswer((Answer<List<S3ObjectSummary>>) invocation -> {
-            List<S3ObjectSummary> result = new ArrayList<>();
-            for (Map.Entry<String, S3Object> entry : storageMap.entrySet()) {
-                S3ObjectSummary summary = new S3ObjectSummary();
-                S3Object file = entry.getValue();
-                summary.setKey(file.getKey());
-                result.add(summary);
-            }
-            return result;
-        });
-        return mockListing;
-    }
 
     public static S3ObjectStorageClient setup(S3ObjectStorageClient mockStorage) {
         when(mockStorage.putObject(anyString(), anyString())).thenAnswer((Answer<String>) invocation -> {
@@ -70,14 +50,48 @@ public class MockObjectStorage {
             String fileName = (String) args[0];
             return storageMap.get(fileName).getObjectContent().getDelegateStream();
         });
+        when(mockStorage.listAll(anyString())).thenAnswer((Answer<ListObjectsV2Result>) invocation -> {
+            return new ListObjectsV2ResultMock();
+        });
+        when(mockStorage.listAll(anyString(), anyInt())).thenAnswer((Answer<ListObjectsV2Result>) invocation -> {
+            return new ListObjectsV2ResultMock();
+        });
         doAnswer((Answer<Void>) invocation -> {
             String fileName = (String) invocation.getArguments()[0];
             storageMap.remove(fileName);
             return null;
         }).when(mockStorage).deleteObject(anyString());
-        when(mockStorage.list()).thenAnswer((Answer<ObjectListing>) invocation -> mockObjectListing);
 
         return mockStorage;
+    }
+
+
+    private static final class ListObjectsV2ResultMock extends ListObjectsV2Result {
+
+        private List<S3ObjectSummary> objectSummariesMock;
+
+        public ListObjectsV2ResultMock() {
+            objectSummariesMock = new ArrayList();
+            for (Map.Entry<String, S3Object> entry : storageMap.entrySet()) {
+                S3ObjectSummary summary = new S3ObjectSummary();
+                summary.setKey(entry.getKey());
+                summary.setSize(100); // fake number, just to have some data
+                summary.setLastModified(new Date()); // fake date, just to have some data
+                objectSummariesMock.add(summary);
+            }
+        }
+
+        public List<S3ObjectSummary> getObjectSummaries() {
+            return this.objectSummariesMock;
+        }
+
+        public String getNextContinuationToken() {
+            return null;
+        }
+
+        public int getKeyCount() {
+            return storageMap.size();
+        }
     }
 
     /**

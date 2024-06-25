@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.service;
 
-import com.amazonaws.services.s3.model.ObjectListing;
+import com.amazonaws.services.s3.model.ListObjectsV2Result;
 import com.amazonaws.services.s3.model.S3Object;
 import com.amazonaws.services.s3.model.S3ObjectSummary;
 import eu.europeana.features.S3ObjectStorageClient;
@@ -90,12 +90,7 @@ public class ActiveDeploymentService {
      * @return the number of deleted files
      */
     public long deleteInactiveFiles(SitemapType sitemapType) {
-        ObjectListing listing = objectStorageProvider.list();
-        List<S3ObjectSummary> results = listing.getObjectSummaries();
-        if (results.isEmpty()) {
-            LOG.info("No files to remove.");
-            return 0;
-        }
+        long result = 0;
 
         // determine inactive files
         Deployment inactive = this.getInactiveDeployment(sitemapType);
@@ -103,20 +98,24 @@ public class ActiveDeploymentService {
         // remove .xml extension so we delete also the index file
         fileNameToDelete = fileNameToDelete.split(Constants.XML_EXTENSION)[0];
 
-        long i = 0;
-        LOG.info("Deleting all old files with name starting with {} ...", fileNameToDelete);
-        while (results != null) {
-            for (S3ObjectSummary obj : results) {
-                i = deleteInactiveFile(obj.getKey(), fileNameToDelete, i);
-            }
-            if (listing.isTruncated()) {
-                results = listing.getObjectSummaries();
+        // list files
+        String continuationToken = null;
+        do {
+            ListObjectsV2Result list = objectStorageProvider.listAll(continuationToken);
+            continuationToken = list.getNextContinuationToken();
+            List<S3ObjectSummary> results = list.getObjectSummaries();
+            if (results.isEmpty()) {
+                LOG.info("No files to remove.");
             } else {
-                results = null;
+                LOG.info("Deleting all old files with name starting with {} ...", fileNameToDelete);
+                for (S3ObjectSummary obj : results) {
+                    result = deleteInactiveFile(obj.getKey(), fileNameToDelete, result);
+                }
             }
-        }
-        LOG.info("Deleted all {} old files", i);
-        return i;
+        } while (continuationToken != null);
+
+        LOG.info("Deleted {} old files", result);
+        return result;
     }
 
     private long deleteInactiveFile(String fileName, String fileNameToDelete, long filesDeleted) {
