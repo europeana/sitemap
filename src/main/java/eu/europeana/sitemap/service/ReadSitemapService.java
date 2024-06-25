@@ -2,7 +2,9 @@ package eu.europeana.sitemap.service;
 
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * All supported reading sitemap methods
@@ -13,9 +15,10 @@ public interface ReadSitemapService {
 
     /**
      * Retrieve a list of all files that are stored at our object provider's bucket
-     * @return list of stored sitemap files
+     * @param out the outputstream to which to write all data
+     * @throws IOException when there is a problem creating the output stream
      */
-    String getFiles();
+    void getFilesAsStream(OutputStream out) throws IOException;
 
     /**
      * Retrieve the contents of a particular file stored at our object provider's bucket

@@ -2,9 +2,9 @@ package eu.europeana.sitemap.web;
 
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ReadSitemapService;
+import jakarta.validation.constraints.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import jakarta.validation.constraints.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 /**
  * Generic functionality for reading sitemap files (for testing and debugging)
@@ -41,8 +42,9 @@ public class SitemapFileController {
      * @return list of all files in the bucket
      */
     @GetMapping(value = {"list", "files"}, produces = MediaType.TEXT_PLAIN_VALUE)
-    public String files() {
-        return service.getFiles();
+    public ResponseEntity<StreamingResponseBody> filesStream() {
+        StreamingResponseBody responseBody = out -> service.getFilesAsStream(out);
+        return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(responseBody);
     }
 
     /**
