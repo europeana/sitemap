@@ -18,10 +18,16 @@ import static org.mockito.Mockito.*;
  */
 public class MockObjectStorage {
 
-    private static Map<String, S3Object> storageMap = new HashMap<>();
+    private static final Map<String, S3Object> storageMap = new HashMap<>();
 
     public static S3ObjectStorageClient setup(S3ObjectStorageClient mockStorage) {
-        when(mockStorage.putObject(anyString(), anyString())).thenAnswer((Answer<String>) invocation -> {
+        when(mockStorage.listAll(any())).thenAnswer((Answer<ListObjectsV2Result>) invocation ->
+                new ListObjectsV2ResultMock(storageMap)
+        );
+        when(mockStorage.listAll(any(), anyInt())).thenAnswer((Answer<ListObjectsV2Result>) invocation ->
+                new ListObjectsV2ResultMock(storageMap)
+        );
+        when(mockStorage.putObject(anyString(), any())).thenAnswer((Answer<String>) invocation -> {
             Object[] args = invocation.getArguments();
             String fileName = (String) args[0];
             String contents = (String) args[1];
@@ -50,12 +56,6 @@ public class MockObjectStorage {
             String fileName = (String) args[0];
             return storageMap.get(fileName).getObjectContent().getDelegateStream();
         });
-        when(mockStorage.listAll(anyString())).thenAnswer((Answer<ListObjectsV2Result>) invocation -> {
-            return new ListObjectsV2ResultMock();
-        });
-        when(mockStorage.listAll(anyString(), anyInt())).thenAnswer((Answer<ListObjectsV2Result>) invocation -> {
-            return new ListObjectsV2ResultMock();
-        });
         doAnswer((Answer<Void>) invocation -> {
             String fileName = (String) invocation.getArguments()[0];
             storageMap.remove(fileName);
@@ -65,12 +65,19 @@ public class MockObjectStorage {
         return mockStorage;
     }
 
+    /**
+     * Empty the mock storage
+     */
+    public static void clear() {
+        storageMap.clear();
+    }
+
 
     private static final class ListObjectsV2ResultMock extends ListObjectsV2Result {
 
         private List<S3ObjectSummary> objectSummariesMock;
 
-        public ListObjectsV2ResultMock() {
+        public ListObjectsV2ResultMock(Map<String, S3Object> storageMap) {
             objectSummariesMock = new ArrayList();
             for (Map.Entry<String, S3Object> entry : storageMap.entrySet()) {
                 S3ObjectSummary summary = new S3ObjectSummary();
@@ -81,23 +88,20 @@ public class MockObjectStorage {
             }
         }
 
+        @Override
         public List<S3ObjectSummary> getObjectSummaries() {
             return this.objectSummariesMock;
         }
 
+        @Override
         public String getNextContinuationToken() {
             return null;
         }
 
+        @Override
         public int getKeyCount() {
-            return storageMap.size();
+            return this.objectSummariesMock.size();
         }
     }
 
-    /**
-     * Empty the mock storage
-     */
-    public static void clear() {
-        storageMap.clear();
-    }
 }

@@ -5,7 +5,6 @@ import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -60,7 +59,6 @@ public class ActiveDeploymentServiceTest {
     }
 
     @Test
-    @Disabled
     public void testDeleteInactive() {
         ActiveDeploymentService ass = new ActiveDeploymentService(mockStorage);
 
@@ -68,18 +66,16 @@ public class ActiveDeploymentServiceTest {
         String deleteFile1 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "1");
         String deleteFile2 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "2");
         String deleteFile3 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "3");
-        mockStorage.putObject(deleteFile1, null);
-        mockStorage.putObject(deleteFile2, null);
-        mockStorage.putObject(deleteFile3, null);
+        mockStorage.putObject(deleteFile1, "x");
+        mockStorage.putObject(deleteFile2, "y");
+        mockStorage.putObject(deleteFile3, "z");
 
         // 2 files to keep
         String keepFile1 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.GREEN, "1");
         String keepFile2 = StorageFileName.getSitemapFileName(SitemapType.RECORD, Deployment.BLUE, "1");
-        mockStorage.putObject(keepFile1, null);
-        mockStorage.putObject(keepFile2, null);
-
-        // TODO FIX unit test, for some reason the listAll is not working properly because it's by-passing the mock and returning null
-        assertEquals(5, mockStorage.listAll(null).getKeyCount());
+        mockStorage.putObject(keepFile1, "a");
+        mockStorage.putObject(keepFile2, "b");
+        assertEquals(5, mockStorage.listAll("test").getKeyCount());
 
         assertEquals(3, ass.deleteInactiveFiles(SitemapType.ENTITY));
         assertFalse(mockStorage.isObjectAvailable(deleteFile1));
