@@ -18,6 +18,8 @@
             <AppenderRef ref="Console"/>
         </Root>
 
-        <!--<Logger name="eu.europeana.sitemap.service.update.AbstractUpdateService" level="DEBUG"/>-->
+        <!-- <Logger name="eu.europeana.sitemap.service.update.AbstractUpdateService" level="DEBUG"/>
+        <Logger name="eu.europeana.sitemap.service.update.UpdateEntityService" level="DEBUG"/>
+        <Logger name="eu.europeana.sitemap.service.update.UpdateRecordService" level="DEBUG"/> -->
     </Loggers>
 </Configuration>

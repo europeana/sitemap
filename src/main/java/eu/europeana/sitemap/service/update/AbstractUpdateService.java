@@ -79,7 +79,7 @@ public abstract class AbstractUpdateService implements UpdateService {
             Deployment newDeploy = deploymentService.switchDeployment(sitemapType);
             LOG.info("New deployment is now {}", newDeploy);
 
-        } catch (RuntimeException e) {
+        } catch (SiteMapException | RuntimeException e) {
             String message = "Error updating " + sitemapType + " sitemap";
             mailService.sendErrorEmail(message + ": " + e.getMessage(), e);
             // rethrow for GlobalExceptionHandler to handle it (log or not)

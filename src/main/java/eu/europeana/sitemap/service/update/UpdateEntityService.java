@@ -62,7 +62,7 @@ public class UpdateEntityService extends AbstractUpdateService {
      * Never call this manually! It is automatically called by the UpdateAbstractService
      */
     protected void generate(SitemapGenerator sitemapGenerator) throws SiteMapException {
-        long pageNr = 0;
+        long pageNr = 1;
         long retrieved = 0;
         long totalEntities = -1; // we update this value after first request (and check after each new page retrieval)
 
@@ -115,7 +115,8 @@ public class UpdateEntityService extends AbstractUpdateService {
                     throw new InvalidApiKeyException("API key is not valid");
                 } else if (responseCode != HttpStatus.SC_OK) {
                     throw new EntityQueryException("Error retrieving entity data: "
-                            +response.getStatusLine().getReasonPhrase());
+                            + response.getStatusLine().getReasonPhrase()
+                            + ". Response code "+response.getStatusLine().getStatusCode());
                 }
 
                 HttpEntity entity = response.getEntity();
