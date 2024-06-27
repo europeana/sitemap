@@ -100,6 +100,7 @@ public class ActiveDeploymentService {
 
         // list files
         String continuationToken = null;
+        LOG.info("Deleting all old files with name starting with {} ...", fileNameToDelete);
         do {
             ListObjectsV2Result list = objectStorageProvider.listAll(continuationToken);
             continuationToken = list.getNextContinuationToken();
@@ -107,7 +108,6 @@ public class ActiveDeploymentService {
             if (results.isEmpty()) {
                 LOG.info("No files to remove.");
             } else {
-                LOG.info("Deleting all old files with name starting with {} ...", fileNameToDelete);
                 for (S3ObjectSummary obj : results) {
                     result = deleteInactiveFile(obj.getKey(), fileNameToDelete, result);
                 }
