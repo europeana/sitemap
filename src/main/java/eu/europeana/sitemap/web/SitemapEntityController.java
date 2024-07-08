@@ -24,7 +24,9 @@ import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.update.UpdateEntityService;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -42,7 +44,7 @@ import jakarta.servlet.http.HttpServletResponse;
  */
 @RestController
 @RequestMapping(value = "/entity",  produces = {MediaType.TEXT_XML_VALUE, MediaType.APPLICATION_XML_VALUE})
-public class SitemapEntityController extends SitemapAbstractController {
+public class SitemapEntityController extends AbstractSitemapController {
 
     private SitemapConfiguration config;
     private UpdateEntityService updateService;
@@ -55,19 +57,19 @@ public class SitemapEntityController extends SitemapAbstractController {
     }
 
     /**
-     * @see SitemapAbstractController#getSitemapIndex()
+     * @see AbstractSitemapController#getSitemapIndex()
      */
     @GetMapping(value = {"index"+ Constants.XML_EXTENSION,
             Constants.SITEMAP_ENTITY_FILENAME_BASE + Constants.SITEMAP_INDEX_SUFFIX + Constants.XML_EXTENSION})
-    public String getEntitySitemapIndex() throws SiteMapNotFoundException {
+    public ResponseEntity<InputStreamResource> getEntitySitemapIndex() throws SiteMapNotFoundException {
         return super.getSitemapIndex();
     }
 
     /**
-     * @see SitemapAbstractController#getSitemapFile(String, String)
+     * @see AbstractSitemapController#getSitemapFile(String, String)
      */
     @GetMapping(value = Constants.SITEMAP_ENTITY_FILENAME_BASE + Constants.XML_EXTENSION)
-    public String getEntitySitemapFile(@RequestParam(value = "from") String from,
+    public ResponseEntity<InputStreamResource> getEntitySitemapFile(@RequestParam(value = "from") String from,
                                        @RequestParam(value = "to") String to) throws SiteMapNotFoundException {
         return super.getSitemapFile(from, to);
     }

@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.service.update;
 
-import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.XmlUtils;
@@ -27,7 +27,7 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
  */
 public class SitemapGeneratorTest {
 
-    private static ObjectStorageClient mockStorage = mock(ObjectStorageClient.class);
+    private static S3ObjectStorageClient mockStorage = mock(S3ObjectStorageClient.class);
 
     /**
      * Setup mock objectstorage
@@ -59,9 +59,9 @@ public class SitemapGeneratorTest {
         String expectSitemapFileName2 = fileName + "-" + deployment + ".xml?from=4&to=5";
 
         // storage should be empty
-        assertFalse(mockStorage.isAvailable(expectIndexFileName));
-        assertFalse(mockStorage.isAvailable(expectSitemapFileName1));
-        assertFalse(mockStorage.isAvailable(expectSitemapFileName2));
+        assertFalse(mockStorage.isObjectAvailable(expectIndexFileName));
+        assertFalse(mockStorage.isObjectAvailable(expectSitemapFileName1));
+        assertFalse(mockStorage.isObjectAvailable(expectSitemapFileName2));
 
         // generate the files (2 sitemap files, one with 3 items and one with 2 items, also 1 index file)
         int itemsPerSitemap = 3;
@@ -73,12 +73,12 @@ public class SitemapGeneratorTest {
         generator.finish();
 
         // storage should now contain the files
-        assertTrue(expectIndexFileName, mockStorage.isAvailable(expectIndexFileName));
-        assertTrue(expectSitemapFileName1, mockStorage.isAvailable(expectSitemapFileName1));
-        assertTrue(expectSitemapFileName2, mockStorage.isAvailable(expectSitemapFileName2));
+        assertTrue(expectIndexFileName, mockStorage.isObjectAvailable(expectIndexFileName));
+        assertTrue(expectSitemapFileName1, mockStorage.isObjectAvailable(expectSitemapFileName1));
+        assertTrue(expectSitemapFileName2, mockStorage.isObjectAvailable(expectSitemapFileName2));
 
         // check if index refers to the generated files
-        String indexContent =  XmlUtils.harmonizeXml(new String(mockStorage.getContent(expectIndexFileName)));
+        String indexContent =  XmlUtils.harmonizeXml(new String(mockStorage.getObjectContent(expectIndexFileName)));
         assertEquals("Index file should only contain 2 references to sitemap files", 2, StringUtils.countMatches(indexContent, "<sitemap>"));
         String expectFileInIndex1 = websiteBaseUrl + "/" + fileName + ".xml?from=1&amp;to=3";
         String expectFileInIndex2 = websiteBaseUrl + "/" + fileName + ".xml?from=4&amp;to=5";
@@ -86,7 +86,7 @@ public class SitemapGeneratorTest {
         assertTrue("Contains file2", indexContent.contains("<sitemap><loc>" + expectFileInIndex2 + "</loc></sitemap>"));
 
         // check sitemap file 1 contents
-        String sitemap1Content = XmlUtils.harmonizeXml(new String(mockStorage.getContent(expectSitemapFileName1)));
+        String sitemap1Content = XmlUtils.harmonizeXml(new String(mockStorage.getObjectContent(expectSitemapFileName1)));
         assertEquals("Sitemap file " + expectSitemapFileName1 + " should contain 3 items", 3, StringUtils.countMatches(sitemap1Content, "<url>"));
         for (int i = 1; i < 4; i++) {
             String itemLink = websiteBaseUrl + "/item/" + i + ".html";
@@ -94,7 +94,7 @@ public class SitemapGeneratorTest {
         }
 
         // check sitemap file 2 contents
-        String sitemap2Content = XmlUtils.harmonizeXml(new String(mockStorage.getContent(expectSitemapFileName2)));
+        String sitemap2Content = XmlUtils.harmonizeXml(new String(mockStorage.getObjectContent(expectSitemapFileName2)));
         assertEquals("Sitemap file " + expectSitemapFileName2 + " should contain 2 items", 2, StringUtils.countMatches(sitemap2Content, "<url>"));
         for (int i = 4; i < 5; i++) {
             String itemLink = websiteBaseUrl + "/item/" + i + ".html";

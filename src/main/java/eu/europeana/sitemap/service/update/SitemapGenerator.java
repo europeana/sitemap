@@ -1,17 +1,15 @@
 package eu.europeana.sitemap.service.update;
 
-import eu.europeana.features.ObjectStorageClient;
-import eu.europeana.sitemap.config.PortalUrl;
-import eu.europeana.sitemap.StorageFileName;
-import eu.europeana.sitemap.service.Deployment;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
+import eu.europeana.sitemap.StorageFileName;
+import eu.europeana.sitemap.config.PortalUrl;
+import eu.europeana.sitemap.service.Deployment;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.jclouds.io.payloads.ByteArrayPayload;
-import org.springframework.util.StringUtils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
@@ -65,7 +63,7 @@ public class SitemapGenerator {
     private static final long RETRY_SAVE_INTERVAL = 5000;
     private static final int MS_PER_SEC = 1000;
 
-    private final ObjectStorageClient objectStorage;
+    private final S3ObjectStorageClient objectStorage;
     private final SitemapType type;
 
     private Deployment deployment;
@@ -89,7 +87,7 @@ public class SitemapGenerator {
      * @param type sitemap type (record or entity)
      * @param objectStorage interface to S3 file storage
      */
-    public SitemapGenerator(SitemapType type, ObjectStorageClient objectStorage) {
+    public SitemapGenerator(SitemapType type, S3ObjectStorageClient objectStorage) {
         this.objectStorage = objectStorage;
         this.type = type;
     }
@@ -235,7 +233,7 @@ public class SitemapGenerator {
 
         if (dateLastModified != null) {
             this.sitemap.append(LASTMOD_OPENING)
-                    .append(DateFormatUtils.format(dateLastModified, DateFormatUtils.ISO_DATE_FORMAT.getPattern()))
+                    .append(DateFormatUtils.format(dateLastModified, DateFormatUtils.ISO_8601_EXTENDED_DATE_FORMAT.getPattern()))
                     .append(LASTMOD_CLOSING)
                     .append(LN);
         }
@@ -245,39 +243,41 @@ public class SitemapGenerator {
         nrRecords++;
     }
 
-    private boolean saveToStorage(String key, String value) {
+    private boolean saveToStorage(String key, String contents) {
         boolean result = false;
-        try (ByteArrayPayload payload = new ByteArrayPayload(value.getBytes(StandardCharsets.UTF_8))) {
-            LOG.debug("Saving file with key {} and payload {}", key, payload);
-            String eTag = objectStorage.put(key, payload);
 
-            // verify is save was successful
-            int nrSaveAttempts = 1;
-            LOG.debug("Checking if file {} exists...", key);
-            result = checkIfFileExists(key);
-            while ((StringUtils.isEmpty(eTag) || !result) && (nrSaveAttempts < MAX_SAVE_ATTEMPTS)) {
-                long timeout = nrSaveAttempts * RETRY_SAVE_INTERVAL;
-                LOG.warn("Failed to save file {} to storage provider (etag = {}, siteMapCacheFileExists={}). "
-                        +"Waiting {} seconds before trying again...", key, eTag, result, (timeout / MS_PER_SEC));
+        LOG.debug("Saving file with key {} and contents {}", key, contents);
+        String eTag = objectStorage.putObject(key, contents);
+
+        // verify is save was successful
+        int nrSaveAttempts = 1;
+        LOG.debug("Checking if file {} exists...", key);
+        result = checkIfFileExists(key);
+        while ((StringUtils.isEmpty(eTag) || !result) && (nrSaveAttempts < MAX_SAVE_ATTEMPTS)) {
+            long timeout = nrSaveAttempts * RETRY_SAVE_INTERVAL;
+            LOG.warn("Failed to save file {} to storage provider (etag = {}, siteMapCacheFileExists={}). "
+                    + "Waiting {} seconds before trying again...", key, eTag, result, (timeout / MS_PER_SEC));
+            try {
                 Thread.sleep(timeout);
+            } catch (InterruptedException e) {
+                LOG.error("Waiting period to retry saving to storage was interrupted", e);
+                Thread.currentThread().interrupt();
+            }
 
-                LOG.info("Retry saving the file...");
-                eTag = objectStorage.put(key, payload);
-                result = checkIfFileExists(key);
-                nrSaveAttempts++;
-            }
-            if (nrSaveAttempts >= MAX_SAVE_ATTEMPTS) {
-                LOG.error("Failed to save file {} to storage provider. Giving up because we retried it {} times.", key, nrSaveAttempts);
-            }
-        } catch (InterruptedException e) {
-            LOG.error("Saving to storage was interrupted", e);
-            Thread.currentThread().interrupt();
+            LOG.info("Retry saving the file...");
+            eTag = objectStorage.putObject(key, contents);
+            result = checkIfFileExists(key);
+            nrSaveAttempts++;
         }
+        if (nrSaveAttempts >= MAX_SAVE_ATTEMPTS) {
+            LOG.error("Failed to save file {} to storage provider. Giving up because we retried it {} times.", key, nrSaveAttempts);
+        }
+
         return result;
     }
 
     private boolean checkIfFileExists(String id) {
-        return objectStorage.isAvailable(id);
+        return objectStorage.isObjectAvailable(id);
     }
 
 }

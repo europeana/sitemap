@@ -17,6 +17,10 @@ public final class AdminUtils {
     /**
      * Checks if the provided adminKey is not empty and if the provided wskey matches the provided adminKey. If not
      * a SecurityException is thrown.
+     * @param adminKey administrator key (at the moment we only support one)
+     * @param wskey the provided
+     * @return true if the provided wskey is the same as the adminKey
+     * @throws SecurityException when provided wskey is not the same as the adminKey
      */
     public static boolean verifyKey(String adminKey, String wskey) throws SecurityException {
         if (StringUtils.isEmpty(adminKey)) {

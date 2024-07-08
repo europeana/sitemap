@@ -1,6 +1,6 @@
 package eu.europeana.sitemap;
 
-import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
 import org.junit.jupiter.api.BeforeAll;
@@ -19,7 +19,7 @@ import static org.mockito.Mockito.mock;
  */
 public class ActiveDeploymentServiceTest {
 
-    private static ObjectStorageClient mockStorage = mock(ObjectStorageClient.class);
+    private static S3ObjectStorageClient mockStorage = mock(S3ObjectStorageClient.class);
 
     /**
      * Setup mock objectstorage
@@ -66,22 +66,23 @@ public class ActiveDeploymentServiceTest {
         String deleteFile1 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "1");
         String deleteFile2 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "2");
         String deleteFile3 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "3");
-        mockStorage.put(deleteFile1, null);
-        mockStorage.put(deleteFile2, null);
-        mockStorage.put(deleteFile3, null);
+        mockStorage.putObject(deleteFile1, "x");
+        mockStorage.putObject(deleteFile2, "y");
+        mockStorage.putObject(deleteFile3, "z");
 
         // 2 files to keep
         String keepFile1 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.GREEN, "1");
         String keepFile2 = StorageFileName.getSitemapFileName(SitemapType.RECORD, Deployment.BLUE, "1");
-        mockStorage.put(keepFile1, null);
-        mockStorage.put(keepFile2, null);
+        mockStorage.putObject(keepFile1, "a");
+        mockStorage.putObject(keepFile2, "b");
+        assertEquals(5, mockStorage.listAll("test").getKeyCount());
 
         assertEquals(3, ass.deleteInactiveFiles(SitemapType.ENTITY));
-        assertFalse(mockStorage.isAvailable(deleteFile1));
-        assertFalse(mockStorage.isAvailable(deleteFile2));
-        assertFalse(mockStorage.isAvailable(deleteFile3));
-        assertTrue(mockStorage.isAvailable(keepFile1));
-        assertTrue(mockStorage.isAvailable(keepFile2));
+        assertFalse(mockStorage.isObjectAvailable(deleteFile1));
+        assertFalse(mockStorage.isObjectAvailable(deleteFile2));
+        assertFalse(mockStorage.isObjectAvailable(deleteFile3));
+        assertTrue(mockStorage.isObjectAvailable(keepFile1));
+        assertTrue(mockStorage.isObjectAvailable(keepFile2));
     }
 
 }

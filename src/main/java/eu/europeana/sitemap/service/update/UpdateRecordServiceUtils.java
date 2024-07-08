@@ -28,7 +28,7 @@ public final class UpdateRecordServiceUtils {
      * calculate sitemap priority based on Tiers
      * divide the content tier by 4 (total nr of tier values),
      * so priority for  T2=0.5, T3=0.75, T4=1
-     * @param contentTier
+     * @param contentTier contentTier to use for calculating priority
      * @return String
      */
     public static String getPriorityForTiers(int contentTier) {

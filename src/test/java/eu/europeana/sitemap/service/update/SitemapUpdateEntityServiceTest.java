@@ -2,19 +2,19 @@ package eu.europeana.sitemap.service.update;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import eu.europeana.features.ObjectStorageClient;
+import eu.europeana.features.S3ObjectStorageClient;
 import eu.europeana.sitemap.MockActiveDeployment;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.XmlUtils;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
 import eu.europeana.sitemap.exceptions.SiteMapException;
+import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.ReadSitemapServiceImpl;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,7 +42,6 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
 @WireMockTest(httpsEnabled = true)
 @TestPropertySource("classpath:sitemap-test.properties")
 @SpringBootTest(classes = {UpdateEntityService.class, SitemapConfiguration.class, PortalUrl.class})
-@Disabled     // TODO FIX AND ENABLE AGAIN
 public class SitemapUpdateEntityServiceTest {
 
     private static final String PORTAL_BASE_URL = "https://www-test.eanadev.org";
@@ -54,15 +53,15 @@ public class SitemapUpdateEntityServiceTest {
             .build();
 
     @MockBean
-    private ObjectStorageClient mockStorage;
+    private S3ObjectStorageClient mockStorage;
     @MockBean
     private ActiveDeploymentService mockDeployment;
     @MockBean
     private ReadSitemapServiceImpl mockReadSitemap;
     @MockBean
-    private ResubmitService mockSubmit;
-    @MockBean
     private MailService mockMail;
+    @MockBean
+    private MongoProvider mongoProvider;
     @Autowired
     private SitemapConfiguration configuration;
     @Autowired
@@ -72,6 +71,9 @@ public class SitemapUpdateEntityServiceTest {
 
     @BeforeEach
     public void init() throws IOException {
+        LogManager.getLogger(SitemapUpdateEntityServiceTest.class).info("Mock API port {}, httpsPort {}",
+                wmExtension.getPort(), wmExtension.getHttpsPort());
+
         // note that the mocks are not connected to each other, so MockActiveDeployment does not use MockObjectStorage for example
         mockStorage = MockObjectStorage.setup(mockStorage);
         mockDeployment = MockActiveDeployment.setup(mockDeployment);
@@ -79,9 +81,6 @@ public class SitemapUpdateEntityServiceTest {
     }
 
     private void setupEntityApiMock() throws IOException {
-        LogManager.getLogger(SitemapUpdateEntityServiceTest.class).info("Mock API port {}, httpsPort {}",
-                wmExtension.getPort(), wmExtension.getHttpsPort());
-
         String dummyEntitySearchResult = IOUtils.toString(
                 Thread.currentThread().getContextClassLoader().getResourceAsStream("dummy_search_result.json"),"UTF-8");
 
@@ -118,7 +117,7 @@ public class SitemapUpdateEntityServiceTest {
         entityService.update();
 
         // check index file
-        String generatedIndex = new String(mockStorage.getContent("sitemap-entity-blue-index.xml"));
+        String generatedIndex = new String(mockStorage.getObjectContent("sitemap-entity-blue-index.xml"));
         assertNotNull(generatedIndex);
         String expectedSitemapFile = "/sitemap-entity.xml?from=1&amp;to=20";
         String expected = "<loc>" +PORTAL_BASE_URL + expectedSitemapFile + "</loc>";
@@ -126,7 +125,7 @@ public class SitemapUpdateEntityServiceTest {
                 XmlUtils.harmonizeXml(generatedIndex).contains(expected));
 
         // check sitemap file
-        String generatedSitemap = new String(mockStorage.getContent("sitemap-entity-blue.xml?from=1&to=20"));
+        String generatedSitemap = new String(mockStorage.getObjectContent("sitemap-entity-blue.xml?from=1&to=20"));
         assertNotNull(generatedSitemap);
         String expectedEntity = "https://www-test.eanadev.org/en/collections/person/34712";
         expected = "<url><loc>"+expectedEntity+"</loc></url>";
