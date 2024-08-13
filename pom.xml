@@ -227,16 +227,36 @@
         <!-- Set a fixed name for easy deployment -->
         <finalName>sitemap</finalName>
 
+        <!-- Copy resources and do filtering to fill in placeholders in build.properties -->
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <includes>
+                    <include>*.properties</include>
+                    <include>*.yml</include>
+                    <include>*.xml</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>build.properties</include>
+                </includes>
+            </resource>
+        </resources>
+
         <plugins>
             <plugin>
                 <!-- This will be active when running the verify or install goal
                      To skip (e.g. during debugging) use 'mvn clean package')-->
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
-                <version>10.0.2</version>
+                <version>10.0.3</version>
                 <configuration>
                     <nvdApiKeyEnvironmentVariable>NVD_APIKEY</nvdApiKeyEnvironmentVariable>
-                    <knownExploitedUrl>https://artifactory.eanadev.org/artifactory/ext-release-local/gov/cisa/www/known_exploited_vulnerabilities-14-05-2024.json</knownExploitedUrl>
+                    <knownExploitedUrl>https://artifactory.eanadev.org/artifactory/ext-release-local/gov/cisa/www/known_exploited_vulnerabilities.json</knownExploitedUrl>
                     <failBuildOnCVSS>8</failBuildOnCVSS>
                     <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
                     <suppressionFiles>
