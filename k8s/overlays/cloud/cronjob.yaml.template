@@ -64,6 +64,7 @@ spec:
   jobTemplate:
     spec:
       ttlSecondsAfterFinished: 300
+      backoffLimit: 3
       template:
         metadata:
           annotations:

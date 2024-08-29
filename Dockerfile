@@ -7,6 +7,9 @@ LABEL org.opencontainers.image.vendor="Europeana Foundation" \
       org.opencontainers.image.source="https://github.com/europeana/" \
       org.opencontainers.image.licenses="EUPL-1.2"
 
+# Required by snappy (newer versions)
+RUN apk update && apk add --no-cache libc6-compat
+
 # Configure APM and add APM agent
 ENV ELASTIC_APM_VERSION 1.48.1
 ADD https://repo1.maven.org/maven2/co/elastic/apm/elastic-apm-agent/$ELASTIC_APM_VERSION/elastic-apm-agent-$ELASTIC_APM_VERSION.jar /opt/app/elastic-apm-agent.jar
