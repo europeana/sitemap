@@ -2,6 +2,7 @@ package eu.europeana.sitemap.web;
 
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ReadSitemapService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -35,6 +36,16 @@ public class SitemapFileController {
     @Autowired
     public SitemapFileController(ReadSitemapService service) {
         this.service = service;
+    }
+
+    /**
+     * Let request to homepage (root) redirect to portal
+     * @return redirect to www.europeana.eu
+     */
+    @GetMapping
+    public void homepage(HttpServletResponse httpServletResponse) {
+            httpServletResponse.setHeader("Location", "https://www.europeana.eu");
+            httpServletResponse.setStatus(HttpServletResponse.SC_FOUND);
     }
 
     /**
