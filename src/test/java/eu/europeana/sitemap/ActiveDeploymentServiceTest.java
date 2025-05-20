@@ -17,6 +17,7 @@ import static org.mockito.Mockito.mock;
  * @author Patrick Ehlert
  * Created on 28-01-2019
  */
+@SuppressWarnings("java:S5786")
 public class ActiveDeploymentServiceTest {
 
     private static S3ObjectStorageClient mockStorage = mock(S3ObjectStorageClient.class);

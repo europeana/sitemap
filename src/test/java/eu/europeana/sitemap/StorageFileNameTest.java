@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+@SuppressWarnings("java:S5786")
 public class StorageFileNameTest {
 
     @Test

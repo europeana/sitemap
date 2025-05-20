@@ -32,6 +32,10 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
 
     private final S3ObjectStorageClient objectStorageProvider;
 
+    /**
+     * Initialize a new service for reading sitemap files
+     * @param objectStorageProvider autowired storage provider that contains the sitemap files
+     */
     @Autowired
     public ReadSitemapServiceImpl (S3ObjectStorageClient objectStorageProvider) {
         this.objectStorageProvider = objectStorageProvider;
@@ -50,7 +54,7 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
             continuationToken = list.getNextContinuationToken();
             count = count + list.getKeyCount();
             List<S3ObjectSummary> files = list.getObjectSummaries();
-            Collections.sort(files, Comparator.comparing(S3ObjectSummary::getLastModified));
+            files.sort(Comparator.comparing(S3ObjectSummary::getLastModified));
             // sorting may be incorrect because of pagination, but we set a large page size so should be fairly okay
 
             StringBuilder s = new StringBuilder();

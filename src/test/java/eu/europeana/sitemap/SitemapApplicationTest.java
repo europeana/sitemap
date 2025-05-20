@@ -12,8 +12,8 @@ public class SitemapApplicationTest {
 	 * Basic Spring-Boot context load test
 	 */
 	@Test
-	@SuppressWarnings("java:S2699") // no need to use assertions
 	public void contextLoads() {
+		// empty method, this simply tests application loading
 	}
 
 }

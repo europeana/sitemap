@@ -94,6 +94,10 @@ public class SitemapConfiguration {
         return new S3ObjectStorageClient(key, secret, region, bucket, endpoint);
     }
 
+    /**
+     * Create a new Mongo provider bean
+     * @return MongoProvider bean
+     */
     @Bean
     public MongoProvider mongoProvider() {
         return new MongoProvider(mongoConnectionUrl, mongoDatabase);
@@ -117,7 +121,7 @@ public class SitemapConfiguration {
 
     /**
      * Only used for testing purposes
-     * @param entityApi
+     * @param entityApi URL to entity API endpoint
      */
     public void setEntityApi(URL entityApi) {
         this.entityApi = entityApi;
@@ -130,7 +134,8 @@ public class SitemapConfiguration {
 
     /**
      * Only used for testing purposes
-     * @param entityApiKey
+     * @param entityApiKey api key to use to connect to Entity API
+     *
      */
     public void setEntityApiKey(String entityApiKey) {
         this.entityApiKey = entityApiKey;

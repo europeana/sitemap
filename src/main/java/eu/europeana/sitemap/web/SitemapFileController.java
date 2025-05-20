@@ -54,7 +54,7 @@ public class SitemapFileController {
      */
     @GetMapping(value = {"list", "files"}, produces = MediaType.TEXT_PLAIN_VALUE)
     public ResponseEntity<StreamingResponseBody> filesStream() {
-        StreamingResponseBody responseBody = out -> service.getFilesAsStream(out);
+        StreamingResponseBody responseBody = service::getFilesAsStream;
         return ResponseEntity.ok().contentType(MediaType.TEXT_PLAIN).body(responseBody);
     }
 

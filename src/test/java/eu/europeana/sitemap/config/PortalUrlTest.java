@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @TestPropertySource("classpath:sitemap-test.properties")
 @SpringBootTest(classes = {PortalUrl.class})
+@SuppressWarnings("java:S5786")
 public class PortalUrlTest {
 
     @Autowired
@@ -26,10 +27,10 @@ public class PortalUrlTest {
     @Test
     public void testGetSitemapUrl() {
         String appendix = "?from=0&to=10";
-        String encoded_appendix = "?from=0&amp;to=10";
-        assertEquals(PORTAL_BASE_URL + "/sitemap-record.xml" + encoded_appendix,
+        String encodedAppendix = "?from=0&amp;to=10";
+        assertEquals(PORTAL_BASE_URL + "/sitemap-record.xml" + encodedAppendix,
                 fnp.getSitemapUrlEncoded(SitemapType.RECORD, appendix));
-        assertEquals(PORTAL_BASE_URL + "/sitemap-entity.xml" + encoded_appendix,
+        assertEquals(PORTAL_BASE_URL + "/sitemap-entity.xml" + encodedAppendix,
                 fnp.getSitemapUrlEncoded(SitemapType.ENTITY, appendix));
     }
 

@@ -47,8 +47,16 @@ public class UpdateEntityService extends AbstractUpdateService {
     private final SitemapConfiguration config;
     private final PortalUrl portalUrl;
 
-    private CloseableHttpClient httpClient = HttpClients.createDefault();
+    private final CloseableHttpClient httpClient = HttpClients.createDefault();
 
+    /**
+     * Initialize the service for updating entity sitemaps
+     * @param config configuration to use (autowired)
+     * @param objectStorage object storage to use (autowired)
+     * @param deploymentService blue/green deployment service to use (autowired)
+     * @param mailService the mail service to use (autowired)
+     * @param portalUrl URL to location where Portal website is hosted (autowired)
+     */
     @Autowired
     public UpdateEntityService(SitemapConfiguration config, S3ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
                                MailService mailService, PortalUrl portalUrl) {

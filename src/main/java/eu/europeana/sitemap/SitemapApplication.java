@@ -6,6 +6,7 @@ import eu.europeana.sitemap.service.update.UpdateEntityService;
 import eu.europeana.sitemap.service.update.UpdateRecordService;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
@@ -13,6 +14,7 @@ import org.springframework.boot.actuate.autoconfigure.metrics.mongo.MongoMetrics
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.PropertySource;
 
 import java.util.Arrays;
@@ -25,13 +27,19 @@ import static eu.europeana.sitemap.SitemapType.RECORD;
  */
 @SpringBootApplication(exclude = {MongoAutoConfiguration.class, MongoMetricsAutoConfiguration.class})
 @PropertySource("classpath:build.properties")
-public class SitemapApplication implements CommandLineRunner {
+public class SitemapApplication extends SpringBootServletInitializer implements CommandLineRunner {
 
     private static final Logger LOG = LogManager.getLogger(SitemapApplication.class);
 
-    private UpdateEntityService updateEntityService;
-    private UpdateRecordService updateRecordService;
+    private final UpdateEntityService updateEntityService;
+    private final UpdateRecordService updateRecordService;
 
+    /**
+     * Initialize Sitemap application
+     * @param updateRecordService the record update service to use (autowired)
+     * @param updateEntityService the entity update service to use (autowired)
+     */
+    @Autowired
     public SitemapApplication(UpdateRecordService updateRecordService, UpdateEntityService updateEntityService) {
         this.updateRecordService = updateRecordService;
         this.updateEntityService = updateEntityService;
@@ -46,7 +54,7 @@ public class SitemapApplication implements CommandLineRunner {
     // to avoid sonarqube false positive (see https://stackoverflow.com/a/37073154/741249)
     public static void main(String[] args) {
         if (args.length == 0) {
-            LOG.info("Starting web server");
+            LOG.info("Starting web server...");
             SpringApplication.run(SitemapApplication.class, args);
             return;
         }

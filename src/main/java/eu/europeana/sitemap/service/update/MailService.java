@@ -23,6 +23,11 @@ public class MailService {
     private final SitemapConfiguration config;
     private final JavaMailSender mailSender;
 
+    /**
+     * Initialize the mail service
+     * @param config configuration containing mail service properties (autowired)
+     * @param mailSender the Java mail sender (autowired)
+     */
     @Autowired
     public MailService(SitemapConfiguration config, JavaMailSender mailSender) {
         this.config = config;

@@ -25,6 +25,7 @@ import static org.springframework.test.util.AssertionErrors.assertTrue;
  * @author Patrick Ehlert
  * Created on 05-06-2018
  */
+@SuppressWarnings("java:S5786")
 public class SitemapGeneratorTest {
 
     private static S3ObjectStorageClient mockStorage = mock(S3ObjectStorageClient.class);
@@ -112,8 +113,7 @@ public class SitemapGeneratorTest {
     @Test
     public void testGenerateNotStarted2() {
         SitemapGenerator generator = new SitemapGenerator(SitemapType.RECORD, mockStorage);
-        Assertions.assertThrows(IllegalStateException.class, () ->
-                generator.finish());
+        Assertions.assertThrows(IllegalStateException.class, generator::finish);
     }
 
     @Test
@@ -130,8 +130,7 @@ public class SitemapGeneratorTest {
         generator.init(Deployment.BLUE, "https://www.fail.com", 5);
         generator.addItem("http://some.item/1", null, null);
         generator.finish();
-        Assertions.assertThrows(IllegalStateException.class, () ->
-            generator.finish());
+        Assertions.assertThrows(IllegalStateException.class, generator::finish);
     }
 
     @Test
