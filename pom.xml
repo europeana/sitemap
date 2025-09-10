@@ -33,14 +33,14 @@
         <object-storage.version>2.1</object-storage.version>
         <api-commons-sb3.version>0.1.0</api-commons-sb3.version>
 
-        <spring-boot.version>3.2.4</spring-boot.version>
-        <mongo.driver.version>5.1.0</mongo.driver.version>
-        <mongo.snappy.version>1.1.10.5</mongo.snappy.version>
+        <spring-boot.version>3.5.5</spring-boot.version>
+        <mongo.driver.version>5.5.1</mongo.driver.version>
+        <mongo.snappy.version>1.1.10.8</mongo.snappy.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
-        <httpclient.version>4.5.13</httpclient.version>
-        <commons.io.version>2.14.0</commons.io.version>
-        <commons.lang.version>3.12.0</commons.lang.version>
-        <commons.text.version>1.10.0</commons.text.version>
+        <httpclient.version>4.5.14</httpclient.version>
+        <commons.io.version>2.20.0</commons.io.version>
+        <commons.lang.version>3.18.0</commons.lang.version>
+        <commons.text.version>1.14.0</commons.text.version>
 
         <junit-jupiter.version>5.6.0</junit-jupiter.version>
         <mockito.version>3.7.0</mockito.version>
@@ -134,6 +134,7 @@
         </dependency>
 
         <!-- Compression for mongo driver -->
+        <!--https://mvnrepository.com/artifact/org.xerial.snappy/snappy-java -->
         <dependency>
             <groupId>org.xerial.snappy</groupId>
             <artifactId>snappy-java</artifactId>
@@ -146,6 +147,7 @@
         </dependency>
 
         <!-- for retrieving entity data -->
+        <!-- https://mvnrepository.com/artifact/org.apache.httpcomponents/httpclient -->
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
             <artifactId>httpclient</artifactId>
@@ -165,12 +167,14 @@
         </dependency>
 
         <!-- IOUtils, FileUtils -->
+        <!-- https://mvnrepository.com/artifact/commons-io/commons-io -->
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
             <version>${commons.io.version}</version>
         </dependency>
         <!-- StringUtils -->
+        <!-- https://mvnrepository.com/artifact/org.apache.commons/commons-lang3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
@@ -248,29 +252,29 @@
         </resources>
 
         <plugins>
-<!--            <plugin>-->
-<!--                &lt;!&ndash; This will be active when running the verify or install goal-->
-<!--                     To skip (e.g. during debugging) use 'mvn clean package')&ndash;&gt;-->
-<!--                <groupId>org.owasp</groupId>-->
-<!--                <artifactId>dependency-check-maven</artifactId>-->
-<!--                <version>10.0.3</version>-->
-<!--                <configuration>-->
-<!--                    <nvdApiKeyEnvironmentVariable>NVD_APIKEY</nvdApiKeyEnvironmentVariable>-->
-<!--                    <knownExploitedUrl>https://artifactory.eanadev.org/artifactory/ext-release-local/gov/cisa/www/known_exploited_vulnerabilities.json</knownExploitedUrl>-->
-<!--                    <failBuildOnCVSS>8</failBuildOnCVSS>-->
-<!--                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>-->
-<!--                    <suppressionFiles>-->
-<!--                        <suppressionFile>owasp-suppress.xml</suppressionFile>-->
-<!--                    </suppressionFiles>-->
-<!--                </configuration>-->
-<!--                <executions>-->
-<!--                    <execution>-->
-<!--                        <goals>-->
-<!--                            <goal>check</goal>-->
-<!--                        </goals>-->
-<!--                    </execution>-->
-<!--                </executions>-->
-<!--            </plugin>-->
+            <plugin>
+                <!-- This will be active when running the verify or install goal
+                     To skip (e.g. during debugging) use 'mvn clean package')-->
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.1.0</version>
+                <configuration>
+                    <nvdApiKeyEnvironmentVariable>NVD_APIKEY</nvdApiKeyEnvironmentVariable>
+                    <knownExploitedUrl>https://artifactory.eanadev.org/artifactory/ext-release-local/gov/cisa/www/known_exploited_vulnerabilities.json</knownExploitedUrl>
+                    <failBuildOnCVSS>8</failBuildOnCVSS>
+                    <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
+                    <suppressionFiles>
+                        <suppressionFile>owasp-suppress.xml</suppressionFile>
+                    </suppressionFiles>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
 
             <plugin>
                 <groupId>org.springframework.boot</groupId>
