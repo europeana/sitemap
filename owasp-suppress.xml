@@ -1,16 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <suppressions xmlns="https://jeremylong.github.io/DependencyCheck/dependency-suppression.1.3.xsd">
-    <!-- We don't use UriComponentsBuilder -->
-    <suppress>
-        <notes><![CDATA[file name: spring-web-6.1.5.jar]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-web@.*$</packageUrl>
-        <vulnerabilityName>CVE-2024-22262</vulnerabilityName>
-    </suppress>
-    <!-- We don't parse the ETag header -->
-    <suppress>
-        <notes><![CDATA[file name: spring-web-6.1.5.jar]]></notes>
-        <packageUrl regex="true">^pkg:maven/org\.springframework/spring\-web@.*$</packageUrl>
-        <vulnerabilityName>CVE-2024-38809</vulnerabilityName>
-    </suppress>
 
 </suppressions>
