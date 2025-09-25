@@ -22,7 +22,8 @@ spec:
               port: 8081
               path: /actuator/health/readiness
             initialDelaySeconds: 110
-            periodSeconds: 20
+            periodSeconds: 10
+            failureThreshold: 6
           env:
             - name: SPRING_CONFIG_ADDITIONAL_LOCATION
               value: "file:/opt/app/config/sitemap.user.properties"
