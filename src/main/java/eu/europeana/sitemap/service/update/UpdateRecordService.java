@@ -8,6 +8,7 @@ import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
+import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import jakarta.annotation.PreDestroy;
@@ -57,8 +58,11 @@ public class UpdateRecordService extends AbstractUpdateService {
      * Never call this manually! It is automatically called by the UpdateAbstractService
      */
     @Override
-    protected void generate(SitemapGenerator sitemapGenerator) {
+    protected void generate(SitemapGenerator sitemapGenerator) throws SiteMapException {
         MongoCursor<Document> cursor = getRecordData();
+        if (!cursor.hasNext()) {
+            throw new SiteMapException("No record data found!");
+        }
         while (cursor.hasNext()) {
             Document doc = cursor.next();
             // gather the required data
