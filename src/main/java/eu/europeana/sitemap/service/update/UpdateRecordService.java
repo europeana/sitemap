@@ -3,7 +3,7 @@ package eu.europeana.sitemap.service.update;
 
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.config.PortalUrl;
@@ -35,6 +35,14 @@ public class UpdateRecordService extends AbstractUpdateService {
     private final PortalUrl portalUrl;
     private final MongoProvider mongoProvider;
 
+    /**
+     * Initialize the service to update the record sitemap
+     * @param objectStorage the S3 object storage to write files to
+     * @param deploymentService the deployment service
+     * @param mailService the email service
+     * @param portalUrl what url is used by Portal (the website)
+     * @param config the application's configuration
+     */
     @Autowired
     public UpdateRecordService(S3ObjectStorageClient objectStorage, ActiveDeploymentService deploymentService,
                                MailService mailService, PortalUrl portalUrl, SitemapConfiguration config) {
@@ -76,7 +84,6 @@ public class UpdateRecordService extends AbstractUpdateService {
     /**
      * Gets the record data based on contentTier, metadataTier value
      * Note: Don't pass value of the filter (in property file), we do not want to add
-     * @return
      */
     private MongoCursor<Document> getRecordData() {
         MongoCollection<Document> collection = mongoProvider.getCollection();
@@ -89,6 +96,9 @@ public class UpdateRecordService extends AbstractUpdateService {
         return cursor;
     }
 
+    /**
+     * Close all connections to mongo
+     */
     @PreDestroy
     public void stopMongoConnections() {
         if (mongoProvider != null) {

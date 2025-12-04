@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.service.update;
 
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.UpdateAlreadyInProgressException;

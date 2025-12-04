@@ -1,19 +1,18 @@
 package eu.europeana.sitemap.service;
 
 
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
+import software.amazon.awssdk.services.s3.model.S3Object;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -50,38 +49,38 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
         long count = 0;
         String continuationToken = null;
         do {
-            ListObjectsV2Result list = objectStorageProvider.listAll(continuationToken);
-            continuationToken = list.getNextContinuationToken();
-            count = count + list.getKeyCount();
-            List<S3ObjectSummary> files = list.getObjectSummaries();
-            files.sort(Comparator.comparing(S3ObjectSummary::getLastModified));
+            ListObjectsV2Response list = objectStorageProvider.listAll(continuationToken);
+            continuationToken = list.nextContinuationToken();
+            count = count + list.keyCount();
+            List<S3Object> files = list.contents();
+            files.sort(Comparator.comparing(S3Object::lastModified));
             // sorting may be incorrect because of pagination, but we set a large page size so should be fairly okay
 
             StringBuilder s = new StringBuilder();
-            for (S3ObjectSummary file : files) {
-                s.append(file.getLastModified());
+            for (S3Object file : files) {
+                s.append(file.lastModified());
                 s.append('\t');
-                if (file.getSize() < KB) {
-                    s.append(file.getSize()).append(" bytes");
-                } else if (file.getSize() < MB) {
+                if (file.size() < KB) {
+                    s.append(file.size()).append(" bytes");
+                } else if (file.size() < MB) {
                     s.append(String.format(Locale.getDefault(),
-                            "%.2f", file.getSize() / (double) KB)).append("  KB");
-                } else if (file.getSize() < GB) {
+                            "%.2f", file.size() / (double) KB)).append("  KB");
+                } else if (file.size() < GB) {
                     s.append(String.format(Locale.getDefault(),
-                            "%.2f", file.getSize() / (double) MB)).append("  MB");
+                            "%.2f", file.size() / (double) MB)).append("  MB");
                 } else {
                     s.append(String.format(Locale.getDefault(),
-                            "%.2f", file.getSize() / (double) GB)).append("  GB");
+                            "%.2f", file.size() / (double) GB)).append("  GB");
                 }
                 s.append('\t');
-                s.append(file.getKey());
+                s.append(file.key());
                 s.append('\n');
             }
             result.write(s.toString());
         } while (continuationToken != null);
         result.write("\n");
         result.write("Total " + count + " files");
-        result.flush(); // flush is requires here, otherwise we risk returning an incomplete list.
+        result.flush(); // flush is required here, otherwise we risk returning an incomplete list.
     }
 
     /**
@@ -89,7 +88,7 @@ public class ReadSitemapServiceImpl implements ReadSitemapService {
      */
     @Override
     public InputStream getFileAsStream(String fileName) throws SiteMapNotFoundException {
-        InputStream result = objectStorageProvider.getObjectStream(fileName);
+        InputStream result = objectStorageProvider.getObjectAsStream(fileName);
         if (result == null) {
             throw new SiteMapNotFoundException("File " + fileName + " not found!");
         }

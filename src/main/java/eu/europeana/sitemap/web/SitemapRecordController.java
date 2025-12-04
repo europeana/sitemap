@@ -45,9 +45,16 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping(value = "/record", produces = {MediaType.TEXT_XML_VALUE, MediaType.APPLICATION_XML_VALUE})
 public class SitemapRecordController extends AbstractSitemapController {
 
-    private SitemapConfiguration config;
-    private UpdateService updateService;
+    private final SitemapConfiguration config;
+    private final UpdateService updateService;
 
+    /**
+     * Initialize the controller to serve record sitemap requests
+     * @param activeDeployment autowired bean
+     * @param readController autowired bean
+     * @param updateService autowired bean
+     * @param config autowired bean
+     */
     public SitemapRecordController(ActiveDeploymentService activeDeployment, SitemapFileController readController,
                                    UpdateRecordService updateService, SitemapConfiguration config) {
         super(SitemapType.RECORD, activeDeployment, readController);
@@ -78,6 +85,7 @@ public class SitemapRecordController extends AbstractSitemapController {
      * @param wskey apikey that verify access to the update procedure
      * @param response automatically added to method to set response status
      * @return finished message
+     * @throws SiteMapException when the update fails
      */
     @GetMapping(value = "update", produces = MediaType.TEXT_PLAIN_VALUE)
     public String update(@RequestParam(value = "wskey") String wskey,

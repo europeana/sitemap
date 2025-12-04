@@ -24,6 +24,7 @@ import eu.europeana.sitemap.exceptions.SiteMapException;
 import eu.europeana.sitemap.exceptions.SiteMapNotFoundException;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.update.UpdateEntityService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -46,9 +47,17 @@ import jakarta.servlet.http.HttpServletResponse;
 @RequestMapping(value = "/entity",  produces = {MediaType.TEXT_XML_VALUE, MediaType.APPLICATION_XML_VALUE})
 public class SitemapEntityController extends AbstractSitemapController {
 
-    private SitemapConfiguration config;
-    private UpdateEntityService updateService;
+    private final SitemapConfiguration config;
+    private final UpdateEntityService updateService;
 
+    /**
+     * Initialize the controller to serve entity sitemap requests
+     * @param activeDeployment autowired bean
+     * @param readController autowired bean
+     * @param updateService autowired bean
+     * @param config autowired bean
+     */
+    @Autowired
     public SitemapEntityController(ActiveDeploymentService activeDeployment, SitemapFileController readController,
                                    UpdateEntityService updateService, SitemapConfiguration config) {
         super(SitemapType.ENTITY, activeDeployment, readController);
@@ -76,9 +85,10 @@ public class SitemapEntityController extends AbstractSitemapController {
 
     /**
      * Start the sitemap update process for entities
-     * @param wskey apikey that verify access to the update procedure
+     * @param wskey API key that verify access to the update procedure
      * @param response automatically added to method to set response status
      * @return finished message
+     * @throws SiteMapException when the update fails
      */
     @GetMapping(value = "update", produces = MediaType.TEXT_PLAIN_VALUE)
     public String update(@RequestParam(value = "wskey") String wskey,

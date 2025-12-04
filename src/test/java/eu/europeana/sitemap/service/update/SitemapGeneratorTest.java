@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.service.update;
 
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.XmlUtils;
@@ -79,7 +79,7 @@ public class SitemapGeneratorTest {
         assertTrue(expectSitemapFileName2, mockStorage.isObjectAvailable(expectSitemapFileName2));
 
         // check if index refers to the generated files
-        String indexContent =  XmlUtils.harmonizeXml(new String(mockStorage.getObjectContent(expectIndexFileName)));
+        String indexContent =  XmlUtils.harmonizeXml(new String(mockStorage.getObjectAsBytes(expectIndexFileName)));
         assertEquals("Index file should only contain 2 references to sitemap files", 2, StringUtils.countMatches(indexContent, "<sitemap>"));
         String expectFileInIndex1 = websiteBaseUrl + "/" + fileName + ".xml?from=1&amp;to=3";
         String expectFileInIndex2 = websiteBaseUrl + "/" + fileName + ".xml?from=4&amp;to=5";
@@ -87,7 +87,7 @@ public class SitemapGeneratorTest {
         assertTrue("Contains file2", indexContent.contains("<sitemap><loc>" + expectFileInIndex2 + "</loc></sitemap>"));
 
         // check sitemap file 1 contents
-        String sitemap1Content = XmlUtils.harmonizeXml(new String(mockStorage.getObjectContent(expectSitemapFileName1)));
+        String sitemap1Content = XmlUtils.harmonizeXml(new String(mockStorage.getObjectAsBytes(expectSitemapFileName1)));
         assertEquals("Sitemap file " + expectSitemapFileName1 + " should contain 3 items", 3, StringUtils.countMatches(sitemap1Content, "<url>"));
         for (int i = 1; i < 4; i++) {
             String itemLink = websiteBaseUrl + "/item/" + i + ".html";
@@ -95,7 +95,7 @@ public class SitemapGeneratorTest {
         }
 
         // check sitemap file 2 contents
-        String sitemap2Content = XmlUtils.harmonizeXml(new String(mockStorage.getObjectContent(expectSitemapFileName2)));
+        String sitemap2Content = XmlUtils.harmonizeXml(new String(mockStorage.getObjectAsBytes(expectSitemapFileName2)));
         assertEquals("Sitemap file " + expectSitemapFileName2 + " should contain 2 items", 2, StringUtils.countMatches(sitemap2Content, "<url>"));
         for (int i = 4; i < 5; i++) {
             String itemLink = websiteBaseUrl + "/item/" + i + ".html";

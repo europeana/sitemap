@@ -1,7 +1,7 @@
 package eu.europeana.sitemap.config;
 
 
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.exceptions.SiteMapConfigException;
 import eu.europeana.sitemap.mongo.MongoProvider;
 import jakarta.annotation.PostConstruct;
@@ -12,8 +12,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
 
 /**
  * Class that contains all configuration settings
@@ -42,7 +42,7 @@ public class SitemapConfiguration {
     private String entityApiUrl;
     @Value("${entity.api.wskey}")
     private String entityApiKey;
-    private URL entityApi;
+    private URI entityApi;
 
     @Value("${s3.key}")
     private String key;
@@ -75,8 +75,8 @@ public class SitemapConfiguration {
         }
 
         try {
-            this.entityApi = new URL(entityApiUrl);
-        } catch (MalformedURLException e) {
+            this.entityApi = new URI(entityApiUrl);
+        } catch (URISyntaxException e) {
             throw new SiteMapConfigException("Property entity.api.url is incorrect: " + entityApiUrl, e);
         }
 
@@ -87,11 +87,12 @@ public class SitemapConfiguration {
     /**
      * Location where all sitemap files are stored
      * @return object storage client
+     * @throws URISyntaxException when the configured endpoint is not a valid URI
      */
     @Bean
-    public S3ObjectStorageClient objectStorageClient() {
+    public S3ObjectStorageClient objectStorageClient() throws URISyntaxException {
         // for IBM Cloud S3 storage we need to provide an endpoint
-        return new S3ObjectStorageClient(key, secret, region, bucket, endpoint);
+        return new S3ObjectStorageClient(key, secret, region, bucket, new URI(endpoint));
     }
 
     /**
@@ -123,7 +124,7 @@ public class SitemapConfiguration {
      * Only used for testing purposes
      * @param entityApi URL to entity API endpoint
      */
-    public void setEntityApi(URL entityApi) {
+    public void setEntityApi(URI entityApi) {
         this.entityApi = entityApi;
         this.entityApiUrl = entityApi.toString();
     }
@@ -141,7 +142,7 @@ public class SitemapConfiguration {
         this.entityApiKey = entityApiKey;
     }
 
-    public URL getEntityApi() {
+    public URI getEntityApi() {
         return entityApi;
     }
 

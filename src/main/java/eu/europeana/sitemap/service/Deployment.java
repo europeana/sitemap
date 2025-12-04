@@ -10,7 +10,7 @@ import org.apache.logging.log4j.LogManager;
 public enum Deployment {
     BLUE("blue"), GREEN("green");
 
-    private String name;
+    private final String name;
 
     Deployment(String name) {
         this.name = name;

@@ -10,6 +10,10 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.CONFLICT)
 public class UpdateAlreadyInProgressException extends SiteMapException {
 
+    /**
+     * Create new exception that indicates that there is already an update running
+     * @param msg the error message
+     */
     public UpdateAlreadyInProgressException(String msg) {
         super(msg);
     }

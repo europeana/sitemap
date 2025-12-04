@@ -2,7 +2,7 @@ package eu.europeana.sitemap.service.update;
 
 
 import com.jayway.jsonpath.JsonPath;
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.config.PortalUrl;
 import eu.europeana.sitemap.config.SitemapConfiguration;
@@ -23,7 +23,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.net.URL;
+import java.io.Serial;
+import java.net.URI;
 import java.util.HashMap;
 
 /**
@@ -103,7 +104,7 @@ public class UpdateEntityService extends AbstractUpdateService {
     /**
      * Send query to Entity API and retrieve data
      */
-    private String getEntityJson(URL entityApi, String query, long pageNr, String wsKey) throws SiteMapException {
+    private String getEntityJson(URI entityApi, String query, long pageNr, String wsKey) throws SiteMapException {
         String result= null;
 
         StringBuilder request = new StringBuilder(entityApi.toString());
@@ -156,6 +157,7 @@ public class UpdateEntityService extends AbstractUpdateService {
      */
     public static class EntityData extends HashMap<String, Object> {
 
+        @Serial
         private static final long serialVersionUID = 9157945603571553860L;
 
         /**

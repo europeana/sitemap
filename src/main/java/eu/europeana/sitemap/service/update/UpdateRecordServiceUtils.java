@@ -94,7 +94,7 @@ public final class UpdateRecordServiceUtils {
 
     /**
      * Returns the basic fields for projection
-     * @return
+     * @return BasicDBObject from Mongo
      */
     public static BasicDBObject getCommonProjections(){
         return new BasicDBObject(Constants.ABOUT, 1L)

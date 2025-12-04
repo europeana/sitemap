@@ -31,9 +31,9 @@ import org.springframework.http.ResponseEntity;
  */
 public abstract class AbstractSitemapController {
 
-    private SitemapType sitemapType;
-    private ActiveDeploymentService activeDeployment;
-    private SitemapFileController readController;
+    private final SitemapType sitemapType;
+    private final ActiveDeploymentService activeDeployment;
+    private final SitemapFileController readController;
 
 
     protected AbstractSitemapController(SitemapType sitemapType, ActiveDeploymentService activeDeployment, SitemapFileController readController) {

@@ -11,10 +11,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
 public class EntityQueryException extends SiteMapException {
 
-    public EntityQueryException(String msg, Throwable t) {
-        super(msg, t);
+    /**
+     * Create new exception when there is a problem retrieving data from Entity API
+     * @param msg the error message
+     * @param cause the cause of the error
+     */
+    public EntityQueryException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 
+    /**
+     * Create new exception when there is a problem retrieving data from Entity API
+     * @param msg the error message
+     */
     public EntityQueryException(String msg) {
         super(msg);
     }
