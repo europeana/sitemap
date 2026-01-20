@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 
 /**
@@ -102,14 +103,14 @@ public class SitemapFileController {
     }
 
     @GetMapping(value = "error2")
-    public void generateNonUtf8Message() {
-        LOG.error("This is an error message with non-UTF-8 characters in it: [語]");
+    public void generateNonUtf8Message() throws UnsupportedEncodingException {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < 39; i++) {
+                sb.append(new String(new byte[]{(byte)i}, StandardCharsets.UTF_8));
+        }
+        LOG.error("This is an error message with non-UTF-8 characters in it: {} END OF STRING", sb);
     }
 
-    @GetMapping(value = "error3")
-    public void generateNonUtf8Message2() {
-        LOG.error(new String("This is an error message in UTF-16".getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_16));
-    }
 
     @GetMapping(value = "stack1")
     public void generateNormalStacktrace() {
