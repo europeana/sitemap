@@ -113,7 +113,15 @@ public class SitemapFileController {
 
     @GetMapping(value = "error3")
     public void generateNonUtf8Message2() {
-        LOG.error("Second attempt to generate non-utf characters: \u0080 \u0083 \u0099 END OF STRING");
+        char char1 = '\u0080';
+        char char2 = '\u0083';
+        char char3 = '\u0099';
+        LOG.error("Second attempt to generate non-utf characters: " + char1 + char2 + char3 + " END OF STRING");
+    }
+
+    @GetMapping(value = "error4")
+    public void generateNonUtf8Message4() {
+        LOG.error("M\\xC4\\x80r\\xC4\\x83\\xC8\\x99e\\xC8\\x99ti;");
     }
 
 
