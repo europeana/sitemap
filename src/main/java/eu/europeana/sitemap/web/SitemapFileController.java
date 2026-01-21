@@ -105,11 +105,17 @@ public class SitemapFileController {
     @GetMapping(value = "error2")
     public void generateNonUtf8Message() throws UnsupportedEncodingException {
         StringBuilder sb = new StringBuilder();
-        for (int i = 128; i < 254; i++) {
+        for (int i = 1; i < 254; i++) {
                 sb.append(new String(new byte[]{(byte)i}, StandardCharsets.UTF_8));
         }
         LOG.error("This is an error message with non-UTF-8 characters in it: {} END OF STRING", sb);
     }
+
+    @GetMapping(value = "error3")
+    public void generateNonUtf8Message2() {
+        LOG.error("Second attempt to generate non-utf characters: \u0080 \u0083 \u0099 END OF STRING");
+    }
+
 
 
     @GetMapping(value = "stack1")
