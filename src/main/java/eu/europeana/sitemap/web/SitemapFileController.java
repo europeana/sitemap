@@ -6,6 +6,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.Pattern;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
@@ -104,6 +105,7 @@ public class SitemapFileController {
 
     @GetMapping(value = "error2")
     public void generateNonUtf8Message() throws UnsupportedEncodingException {
+        ThreadContext.put("CHARSET", "UTF-16");
         StringBuilder sb = new StringBuilder();
         for (int i = 1; i < 254; i++) {
                 sb.append(new String(new byte[]{(byte)i}, StandardCharsets.UTF_8));
@@ -113,18 +115,12 @@ public class SitemapFileController {
 
     @GetMapping(value = "error3")
     public void generateNonUtf8Message2() {
+        ThreadContext.put("CHARSET", "UTF-16");
         char char1 = '\u0080';
         char char2 = '\u0083';
         char char3 = '\u0099';
         LOG.error("Second attempt to generate non-utf characters: " + char1 + char2 + char3 + " END OF STRING");
     }
-
-    @GetMapping(value = "error4")
-    public void generateNonUtf8Message4() {
-        LOG.error("M\\xC4\\x80r\\xC4\\x83\\xC8\\x99e\\xC8\\x99ti;");
-    }
-
-
 
     @GetMapping(value = "stack1")
     public void generateNormalStacktrace() {
