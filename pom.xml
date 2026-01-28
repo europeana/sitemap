@@ -5,7 +5,7 @@
     <parent>
         <groupId>eu.europeana</groupId>
         <artifactId>europeana-parent-pom</artifactId>
-        <version>2.5</version>
+        <version>3.0</version>
     </parent>
 
     <artifactId>sitemap</artifactId>
@@ -30,10 +30,10 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
 
-        <object-storage.version>2.1</object-storage.version>
+        <object-storage.version>3.0-SNAPSHOT</object-storage.version>
         <api-commons-sb3.version>0.1.0</api-commons-sb3.version>
 
-        <spring-boot.version>3.5.5</spring-boot.version>
+        <spring-boot.version>3.5.8</spring-boot.version>
         <mongo.driver.version>5.5.1</mongo.driver.version>
         <mongo.snappy.version>1.1.10.8</mongo.snappy.version>
         <jaxb-api.version>2.3.1</jaxb-api.version>
@@ -185,6 +185,13 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-text</artifactId>
             <version>${commons.text.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/joda-time/joda-time -->
+        <dependency>
+            <groupId>joda-time</groupId>
+            <artifactId>joda-time</artifactId>
+            <version>2.14.0</version>
         </dependency>
 
 

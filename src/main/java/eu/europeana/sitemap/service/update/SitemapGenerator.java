@@ -1,6 +1,6 @@
 package eu.europeana.sitemap.service.update;
 
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.StorageFileName;
 import eu.europeana.sitemap.config.PortalUrl;
@@ -10,6 +10,7 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
@@ -30,6 +31,7 @@ public class SitemapGenerator {
 
     /** XML definitions **/
     private static final String XML_HEADER = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+    private static final String XML_CONTENT_TYPE = "application/xml";
 
     private static final String SITEMAP_HEADER_OPENING = "<sitemapindex xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">";
     private static final String SITEMAP_HEADER_CLOSING = "</sitemapindex>";
@@ -244,10 +246,10 @@ public class SitemapGenerator {
     }
 
     private boolean saveToStorage(String key, String contents) {
-        boolean result = false;
+        boolean result;
 
         LOG.debug("Saving file with key {} and contents {}", key, contents);
-        String eTag = objectStorage.putObject(key, contents);
+        String eTag = objectStorage.putObject(key, XML_CONTENT_TYPE, contents.getBytes(StandardCharsets.UTF_8));
 
         // verify is save was successful
         int nrSaveAttempts = 1;
@@ -265,7 +267,7 @@ public class SitemapGenerator {
             }
 
             LOG.info("Retry saving the file...");
-            eTag = objectStorage.putObject(key, contents);
+            eTag = objectStorage.putObject(key, XML_CONTENT_TYPE, contents.getBytes(StandardCharsets.UTF_8));
             result = checkIfFileExists(key);
             nrSaveAttempts++;
         }

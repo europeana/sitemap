@@ -2,7 +2,7 @@ package eu.europeana.sitemap.service.update;
 
 import com.github.tomakehurst.wiremock.junit5.WireMockExtension;
 import com.github.tomakehurst.wiremock.junit5.WireMockTest;
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.MockActiveDeployment;
 import eu.europeana.sitemap.MockObjectStorage;
 import eu.europeana.sitemap.XmlUtils;
@@ -19,12 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URL;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.wireMockConfig;
@@ -52,15 +53,15 @@ public class SitemapUpdateEntityServiceTest {
             .options(wireMockConfig().dynamicPort().dynamicHttpsPort())
             .build();
 
-    @MockBean
+    @MockitoBean
     private S3ObjectStorageClient mockStorage;
-    @MockBean
+    @MockitoBean
     private ActiveDeploymentService mockDeployment;
-    @MockBean
+    @MockitoBean
     private ReadSitemapServiceImpl mockReadSitemap;
-    @MockBean
+    @MockitoBean
     private MailService mockMail;
-    @MockBean
+    @MockitoBean
     private MongoProvider mongoProvider;
     @Autowired
     private SitemapConfiguration configuration;
@@ -82,7 +83,8 @@ public class SitemapUpdateEntityServiceTest {
 
     private void setupEntityApiMock() throws IOException {
         String dummyEntitySearchResult = IOUtils.toString(
-                Thread.currentThread().getContextClassLoader().getResourceAsStream("dummy_search_result.json"),"UTF-8");
+                Thread.currentThread().getContextClassLoader().getResourceAsStream("dummy_search_result.json"),
+                StandardCharsets.UTF_8);
 
         // return 401 for all unknown wskeys
         wmExtension.stubFor(get(urlPathMatching("/entity/search"))
@@ -100,10 +102,10 @@ public class SitemapUpdateEntityServiceTest {
                         .withBody(dummyEntitySearchResult)));
     }
 
-    private URL getMockEntityApiUrl() {
+    private URI getMockEntityApiUrl() {
         try {
-            return new URL("http://localhost:" + wmExtension.getPort() +"/entity/search");
-        } catch (MalformedURLException mue) {
+            return new URI("http://localhost:" + wmExtension.getPort() +"/entity/search");
+        } catch (URISyntaxException use) {
             throw new RuntimeException("Malformed server URL");
         }
     }
@@ -117,7 +119,7 @@ public class SitemapUpdateEntityServiceTest {
         entityService.update();
 
         // check index file
-        String generatedIndex = new String(mockStorage.getObjectContent("sitemap-entity-blue-index.xml"));
+        String generatedIndex = new String(mockStorage.getObjectAsBytes("sitemap-entity-blue-index.xml"));
         assertNotNull(generatedIndex);
         String expectedSitemapFile = "/sitemap-entity.xml?from=1&amp;to=20";
         String expected = "<loc>" +PORTAL_BASE_URL + expectedSitemapFile + "</loc>";
@@ -125,7 +127,7 @@ public class SitemapUpdateEntityServiceTest {
                 XmlUtils.harmonizeXml(generatedIndex).contains(expected));
 
         // check sitemap file
-        String generatedSitemap = new String(mockStorage.getObjectContent("sitemap-entity-blue.xml?from=1&to=20"));
+        String generatedSitemap = new String(mockStorage.getObjectAsBytes("sitemap-entity-blue.xml?from=1&to=20"));
         assertNotNull(generatedSitemap);
         String expectedEntity = "https://www-test.eanadev.org/en/collections/person/34712";
         expected = "<url><loc>"+expectedEntity+"</loc></url>";

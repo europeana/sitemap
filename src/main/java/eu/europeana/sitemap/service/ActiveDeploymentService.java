@@ -1,9 +1,7 @@
 package eu.europeana.sitemap.service;
 
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3Object;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.Constants;
 import eu.europeana.sitemap.SitemapType;
 import eu.europeana.sitemap.StorageFileName;
@@ -11,6 +9,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -28,6 +27,8 @@ import java.util.List;
 public class ActiveDeploymentService {
 
     private static final Logger LOG = LogManager.getLogger(ActiveDeploymentService.class);
+
+    private static final String CONTENT_TYPE_DEPLOYMENT_FILE = "text/plain";
 
     private static final int PROGRESS_INTERVAL = 100;
 
@@ -61,7 +62,7 @@ public class ActiveDeploymentService {
                 saveToStorageProvider(Deployment.GREEN, activeFileName);
                 result = Deployment.GREEN;
             } else {
-                String blueGreen = new String(s3Object.getObjectContent().readAllBytes(), StandardCharsets.UTF_8);
+                String blueGreen = new String(s3Object.inputStream().readAllBytes(), StandardCharsets.UTF_8);
                 result = Deployment.fromString(blueGreen);
             }
         } catch (IOException e) {
@@ -102,14 +103,14 @@ public class ActiveDeploymentService {
         String continuationToken = null;
         LOG.info("Deleting all old files with name starting with {} ...", fileNameToDelete);
         do {
-            ListObjectsV2Result list = objectStorageProvider.listAll(continuationToken);
-            continuationToken = list.getNextContinuationToken();
-            List<S3ObjectSummary> results = list.getObjectSummaries();
+            ListObjectsV2Response list = objectStorageProvider.listAll(continuationToken);
+            continuationToken = list.nextContinuationToken();
+            List<software.amazon.awssdk.services.s3.model.S3Object> results = list.contents();
             if (results.isEmpty()) {
                 LOG.info("No files to remove.");
             } else {
-                for (S3ObjectSummary obj : results) {
-                    result = deleteInactiveFile(obj.getKey(), fileNameToDelete, result);
+                for (software.amazon.awssdk.services.s3.model.S3Object obj : results) {
+                    result = deleteInactiveFile(obj.key(), fileNameToDelete, result);
                 }
             }
         } while (continuationToken != null);
@@ -150,7 +151,8 @@ public class ActiveDeploymentService {
      */
     private String saveToStorageProvider(Deployment blueGreen, String activeFileName) {
         LOG.debug("Saving value {} in file {} ", blueGreen, activeFileName);
-        return objectStorageProvider.putObject(activeFileName, blueGreen.toString());
+        return objectStorageProvider.putObject(activeFileName, CONTENT_TYPE_DEPLOYMENT_FILE,
+                blueGreen.toString().getBytes(StandardCharsets.UTF_8));
     }
 
 }

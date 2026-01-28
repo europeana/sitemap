@@ -15,7 +15,7 @@ public interface ReadSitemapService {
 
     /**
      * Retrieve a list of all files that are stored at our object provider's bucket
-     * @param out the outputstream to which to write all data
+     * @param out the output stream to which to write all data
      * @throws IOException when there is a problem creating the output stream
      */
     void getFilesAsStream(OutputStream out) throws IOException;

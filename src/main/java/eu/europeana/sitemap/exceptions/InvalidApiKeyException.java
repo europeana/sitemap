@@ -11,10 +11,19 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 @ResponseStatus(HttpStatus.UNAUTHORIZED)
 public class InvalidApiKeyException extends SiteMapException {
 
-    public InvalidApiKeyException(String msg, Throwable t) {
-        super(msg, t);
+    /**
+     * Create new exception when the provided API key is not valid
+     * @param msg the error message
+     * @param cause the cause of the error
+     */
+    public InvalidApiKeyException(String msg, Throwable cause) {
+        super(msg, cause);
     }
 
+    /**
+     * Create new exception when the provided API key is not valid
+     * @param msg the error message
+     */
     public InvalidApiKeyException(String msg) {
         super(msg);
     }

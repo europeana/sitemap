@@ -1,60 +1,73 @@
 package eu.europeana.sitemap;
 
-import com.amazonaws.services.s3.model.ListObjectsV2Result;
-import com.amazonaws.services.s3.model.S3Object;
-import com.amazonaws.services.s3.model.S3ObjectSummary;
-import eu.europeana.features.S3ObjectStorageClient;
+
+import eu.europeana.s3.S3Object;
+import eu.europeana.s3.S3ObjectStorageClient;
 import org.mockito.stubbing.Answer;
+import software.amazon.awssdk.services.s3.model.ListObjectsV2Response;
 
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
+import java.time.Instant;
 import java.util.*;
 
 import static org.mockito.Mockito.*;
 
 /**
- * This mocks our ObjectStorage library
+ * This mocks an S3 object storage.
  */
 public class MockObjectStorage {
 
     private static final Map<String, S3Object> storageMap = new HashMap<>();
 
     public static S3ObjectStorageClient setup(S3ObjectStorageClient mockStorage) {
-        when(mockStorage.listAll(any())).thenAnswer((Answer<ListObjectsV2Result>) invocation ->
-                new ListObjectsV2ResultMock(storageMap)
+        // simple mocking of listAll, we don't really support continuationTokens or maxPageSize
+        when(mockStorage.listAll(any())).thenAnswer((Answer< ListObjectsV2Response>) invocation ->
+                ListObjectsV2Response.builder().contents(
+                        convertToS3Objects(storageMap.values()))
+                        .keyCount(storageMap.size())
+                        .build()
         );
-        when(mockStorage.listAll(any(), anyInt())).thenAnswer((Answer<ListObjectsV2Result>) invocation ->
-                new ListObjectsV2ResultMock(storageMap)
+        when(mockStorage.listAll(any(), any(Integer.class))).thenAnswer((Answer<ListObjectsV2Response>) invocation ->
+                ListObjectsV2Response.builder().contents(
+                        convertToS3Objects(storageMap.values()))
+                        .keyCount(storageMap.size())
+                        .build()
         );
-        when(mockStorage.putObject(anyString(), any())).thenAnswer((Answer<String>) invocation -> {
+        when(mockStorage.putObject(anyString(), anyString(), any(byte[].class))).thenAnswer((Answer<String>) invocation -> {
             Object[] args = invocation.getArguments();
-            String fileName = (String) args[0];
-            String contents = (String) args[1];
-            S3Object file = new S3Object();
-            file.setObjectContent(new ByteArrayInputStream(contents.getBytes(StandardCharsets.UTF_8)));
-            storageMap.put(fileName, file);
-            return fileName;
+            String id = (String) args[0];
+            String contentType = (String) args[1];
+            byte[] content = (byte[]) args[2];
+            // generate some fake metadata
+            Map<String, Object> metadata = new HashMap<>();
+            String eTag = UUID.randomUUID().toString();
+            metadata.put(S3Object.ETAG, eTag);
+            metadata.put(S3Object.LAST_MODIFIED, Instant.now());
+            metadata.put(S3Object.CONTENT_TYPE, contentType);
+            metadata.put(S3Object.CONTENT_LENGTH, content.length);
+            storageMap.put(id, new S3Object(id, new ByteArrayInputStream(content), metadata));
+            return eTag;
         });
         when(mockStorage.isObjectAvailable(anyString())).thenAnswer((Answer<Boolean>) invocation -> {
             Object[] args = invocation.getArguments();
-            String fileName = (String) args[0];
-            return storageMap.keySet().contains(fileName);
+            String id = (String) args[0];
+            return storageMap.containsKey(id);
         });
         when(mockStorage.getObject(anyString())).thenAnswer((Answer<S3Object>) invocation -> {
             Object[] args = invocation.getArguments();
-            String fileName = (String) args[0];
-            return storageMap.get(fileName);
+            String id = (String) args[0];
+            return storageMap.get(id);
         });
-        when(mockStorage.getObjectContent(anyString())).thenAnswer((Answer<byte[]>) invocation -> {
+        when(mockStorage.getObjectAsBytes(anyString())).thenAnswer((Answer<byte[]>) invocation -> {
             Object[] args = invocation.getArguments();
             String fileName = (String) args[0];
-            return storageMap.get(fileName).getObjectContent().readAllBytes();
+            return storageMap.get(fileName).inputStream().readAllBytes();
         });
-        when(mockStorage.getObjectStream(anyString())).thenAnswer((Answer<InputStream>) invocation -> {
+        when(mockStorage.getObjectAsStream(anyString())).thenAnswer((Answer<InputStream>) invocation -> {
             Object[] args = invocation.getArguments();
             String fileName = (String) args[0];
-            return storageMap.get(fileName).getObjectContent().getDelegateStream();
+            return storageMap.get(fileName).inputStream();
         });
         doAnswer((Answer<Void>) invocation -> {
             String fileName = (String) invocation.getArguments()[0];
@@ -72,36 +85,21 @@ public class MockObjectStorage {
         storageMap.clear();
     }
 
+    private static software.amazon.awssdk.services.s3.model.S3Object convertToS3Summary(S3Object s3Object) {
+        return software.amazon.awssdk.services.s3.model.S3Object.builder()
+                .key(s3Object.key())
+                .eTag(s3Object.getETag())
+                .size(s3Object.getContentLength())
+                .lastModified(s3Object.getLastModified())
+                .build();
+    }
 
-    private static final class ListObjectsV2ResultMock extends ListObjectsV2Result {
-
-        private List<S3ObjectSummary> objectSummariesMock;
-
-        public ListObjectsV2ResultMock(Map<String, S3Object> storageMap) {
-            objectSummariesMock = new ArrayList();
-            for (Map.Entry<String, S3Object> entry : storageMap.entrySet()) {
-                S3ObjectSummary summary = new S3ObjectSummary();
-                summary.setKey(entry.getKey());
-                summary.setSize(100); // fake number, just to have some data
-                summary.setLastModified(new Date()); // fake date, just to have some data
-                objectSummariesMock.add(summary);
-            }
+    private static List<software.amazon.awssdk.services.s3.model.S3Object> convertToS3Objects(Collection<S3Object> s3Objects)  {
+        List<software.amazon.awssdk.services.s3.model.S3Object> list = new ArrayList<>();
+        for (S3Object s3Object : s3Objects) {
+            list.add(convertToS3Summary(s3Object));
         }
-
-        @Override
-        public List<S3ObjectSummary> getObjectSummaries() {
-            return this.objectSummariesMock;
-        }
-
-        @Override
-        public String getNextContinuationToken() {
-            return null;
-        }
-
-        @Override
-        public int getKeyCount() {
-            return this.objectSummariesMock.size();
-        }
+        return list;
     }
 
 }

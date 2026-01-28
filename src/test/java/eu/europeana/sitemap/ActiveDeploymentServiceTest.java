@@ -1,11 +1,13 @@
 package eu.europeana.sitemap;
 
-import eu.europeana.features.S3ObjectStorageClient;
+import eu.europeana.s3.S3ObjectStorageClient;
 import eu.europeana.sitemap.service.ActiveDeploymentService;
 import eu.europeana.sitemap.service.Deployment;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+
+import java.nio.charset.StandardCharsets;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -67,16 +69,16 @@ public class ActiveDeploymentServiceTest {
         String deleteFile1 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "1");
         String deleteFile2 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "2");
         String deleteFile3 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.BLUE, "3");
-        mockStorage.putObject(deleteFile1, "x");
-        mockStorage.putObject(deleteFile2, "y");
-        mockStorage.putObject(deleteFile3, "z");
+        writeToMockStorage(deleteFile1, "x");
+        writeToMockStorage(deleteFile2, "y");
+        writeToMockStorage(deleteFile3, "z");
 
         // 2 files to keep
         String keepFile1 = StorageFileName.getSitemapFileName(SitemapType.ENTITY, Deployment.GREEN, "1");
         String keepFile2 = StorageFileName.getSitemapFileName(SitemapType.RECORD, Deployment.BLUE, "1");
-        mockStorage.putObject(keepFile1, "a");
-        mockStorage.putObject(keepFile2, "b");
-        assertEquals(5, mockStorage.listAll("test").getKeyCount());
+        writeToMockStorage(keepFile1, "a");
+        writeToMockStorage(keepFile2, "b");
+        assertEquals(5, mockStorage.listAll("test").keyCount());
 
         assertEquals(3, ass.deleteInactiveFiles(SitemapType.ENTITY));
         assertFalse(mockStorage.isObjectAvailable(deleteFile1));
@@ -84,6 +86,10 @@ public class ActiveDeploymentServiceTest {
         assertFalse(mockStorage.isObjectAvailable(deleteFile3));
         assertTrue(mockStorage.isObjectAvailable(keepFile1));
         assertTrue(mockStorage.isObjectAvailable(keepFile2));
+    }
+
+    public void writeToMockStorage(String id, String text) {
+        mockStorage.putObject(id, "text/plain", text.getBytes(StandardCharsets.UTF_8));
     }
 
 }
